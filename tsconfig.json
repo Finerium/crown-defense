@@ -6,6 +6,7 @@
     { "path": "packages/simulator" },
     { "path": "packages/detection" },
     { "path": "packages/agent" },
+    { "path": "packages/containment" },
     { "path": "packages/test-infra" }
   ]
 }

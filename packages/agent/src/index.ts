@@ -7,3 +7,4 @@
 export { entropy, formatValid, inferType, magicChanged } from './inspect.js';
 export { type ObserverOptions, FsObserver, extOf } from './observer.js';
 export { type Canary, CanaryManager } from './canary.js';
+export { AgentContainment } from './containment-exec.js';

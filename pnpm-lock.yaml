@@ -21,6 +21,9 @@ importers:
       '@crown/agent':
         specifier: workspace:*
         version: link:packages/agent
+      '@crown/containment':
+        specifier: workspace:*
+        version: link:packages/containment
       '@crown/contracts':
         specifier: workspace:*
         version: link:packages/contracts
@@ -67,6 +70,12 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
+  packages/containment:
+    dependencies:
+      '@crown/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/contracts:
     dependencies:
       zod:
@@ -90,6 +99,9 @@ importers:
       '@crown/agent':
         specifier: workspace:*
         version: link:../agent
+      '@crown/containment':
+        specifier: workspace:*
+        version: link:../containment
       '@crown/contracts':
         specifier: workspace:*
         version: link:../contracts
