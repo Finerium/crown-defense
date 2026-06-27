@@ -1,20 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Approvals, Fleet, Incident, Overview, type ReportState, System } from '../components/screens';
+import { Fleet } from '../components/screens/Fleet';
+import { Incident, type ReportState } from '../components/screens/Incident';
+import { Overview } from '../components/screens/Overview';
+import { System } from '../components/screens/System';
 import { Glyph } from '../components/ui';
 import { PRODUCT_NAME, demoScenario } from '../lib/data';
 import { type Lang, t } from '../lib/i18n';
 import './dashboard.css';
 
-const SCREENS: {
-  id: string;
-  key: 'nav_overview' | 'nav_incident' | 'nav_fleet' | 'nav_system' | 'nav_approvals';
-}[] = [
+// Faithful to the design's 4-tab nav (Overview · Incident · Fleet · System). The autonomy dial lives in the
+// System screen's Autonomy Policy panel and the dual-control approvals live in the Incident response plan —
+// exactly where the design places them — so there is no separate Dial/Approvals tab.
+const SCREENS: { id: string; key: 'nav_overview' | 'nav_incident' | 'nav_fleet' | 'nav_system' }[] = [
   { id: 'overview', key: 'nav_overview' },
   { id: 'incident', key: 'nav_incident' },
   { id: 'fleet', key: 'nav_fleet' },
   { id: 'system', key: 'nav_system' },
-  { id: 'approvals', key: 'nav_approvals' },
 ];
 
 function useClock() {
@@ -104,7 +106,7 @@ export default function Page() {
             title={t('tip_open_incident', lang)}
           >
             <Glyph k="tri" size={8} />
-            {s.incident.incident_id} · {Math.round(s.incident.confidence * 100)}%
+            {s.incident.id} · {Math.round(s.incident.confidence * 100)}%
           </button>
           <span className="clock">
             <b>{clock}</b> UTC
@@ -138,13 +140,12 @@ export default function Page() {
       </div>
 
       <main className="app-main">
-        {screen === 'overview' ? <Overview s={s} lang={lang} dial={dial} setDial={setDial} /> : null}
+        {screen === 'overview' ? <Overview s={s} lang={lang} onOpen={() => setScreen('incident')} /> : null}
         {screen === 'incident' ? (
           <Incident s={s} lang={lang} report={report} onGenerate={generate} generating={generating} />
         ) : null}
         {screen === 'fleet' ? <Fleet s={s} lang={lang} /> : null}
-        {screen === 'system' ? <System s={s} lang={lang} /> : null}
-        {screen === 'approvals' ? <Approvals s={s} lang={lang} /> : null}
+        {screen === 'system' ? <System s={s} lang={lang} dial={dial} setDial={setDial} /> : null}
       </main>
     </>
   );
