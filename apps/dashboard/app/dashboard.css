@@ -1,0 +1,75 @@
+/* Supplementary layout + components for the Next dashboard (extends talos.css tokens). */
+
+.demo-banner {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0; padding: 8px 20px;
+  background: var(--med-soft); border-bottom: 1px solid var(--line-soft);
+  color: var(--med); font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.03em;
+}
+
+/* Overview grid */
+.ov-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas: "kpi kpi" "chart dial" "feed dial";
+}
+.ov-grid .kpi-row { grid-area: kpi; margin-bottom: 0; }
+.ov-chart { grid-area: chart; }
+.ov-feed { grid-area: feed; }
+.ov-dial { grid-area: dial; }
+@media (max-width: 1100px) {
+  .ov-grid { grid-template-columns: 1fr; grid-template-areas: "kpi" "chart" "dial" "feed"; }
+}
+
+.panel-b.scroll { max-height: 360px; overflow-y: auto; }
+
+/* action / audit feed */
+.feed { display: flex; flex-direction: column; gap: 0; list-style: none; margin: 0; padding: 0; }
+.feed-row {
+  display: grid; grid-template-columns: 64px auto 1fr auto; gap: 10px; align-items: center;
+  padding: 9px 14px; border-bottom: 1px solid var(--line-soft);
+}
+.feed-row:last-child { border-bottom: none; }
+.feed-t { font-size: 11px; color: var(--t3); }
+.feed-detail { font-size: 11.5px; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* incident timeline */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.tl-item { padding: 10px 14px; border-left: 2px solid var(--line); margin-left: 6px; position: relative; }
+.tl-item::before { content: ""; position: absolute; left: -5px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+.tl-phase { font-family: var(--f-disp); font-size: 12px; font-weight: 600; color: var(--t1); }
+.tl-at { font-size: 10px; color: var(--t3); margin-left: 8px; }
+.tl-desc { margin: 4px 0 0; font-size: 11.5px; color: var(--t2); line-height: 1.5; }
+
+/* recovery plan */
+.plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.plan-step { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px; background: var(--bg2); border-radius: 6px; }
+.plan-action { font-size: 12px; color: var(--t1); }
+.plan-cite { font-size: 9.5px; color: var(--t3); margin-top: 2px; }
+
+/* fleet */
+.fleet-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.pager { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; }
+.drawer {
+  position: fixed; top: 0; right: 0; width: 360px; height: 100vh; z-index: 100;
+  background: var(--bg1); border-left: 1px solid var(--line); box-shadow: var(--shadow);
+  padding: 16px; overflow-y: auto;
+}
+.drawer-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.kv { display: grid; grid-template-columns: 90px 1fr; gap: 8px 14px; margin: 0; }
+.kv dt { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); }
+.kv dd { margin: 0; font-size: 12px; color: var(--t1); }
+
+/* approvals */
+.approval { padding: 14px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; background: var(--bg2); }
+.approval-h { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.approval-just { font-size: 12.5px; color: var(--t1); line-height: 1.55; margin: 0 0 8px; }
+.approval-meta { font-size: 10.5px; color: var(--t3); }
+.approval-note { font-size: 11px; color: var(--high); margin: 6px 0; }
+.approval-actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--crit); display: inline-block; }
+
+/* btn primary fallback (in case talos.css differs) */
+.btn.primary { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); }
+.btn.primary:hover:not(:disabled) { background: var(--acc-strong); }

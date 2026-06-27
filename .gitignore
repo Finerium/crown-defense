@@ -25,6 +25,11 @@ out/
 coverage/
 *.tsbuildinfo
 
+# Tooling output
+.playwright-mcp/
+.vercel/
+apps/*/.env.local
+
 # OS / editor
 .DS_Store
 *.log
