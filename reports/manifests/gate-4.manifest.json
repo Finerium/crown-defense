@@ -1,0 +1,17 @@
+{
+  "_comment": "Phase 4 / Gate 4 evidence manifest — LLM orchestration (self-hosted abstraction, RAG, faithfulness gate, C7). Parsed fail-closed. The LLM is ADVISORY: it never emits an ActionRecord or AgentCommand. Cloud DeepSeek is dev/test ONLY (ADR-002).",
+  "gate": 4,
+  "phase": "LLM orchestration layer (self-hosted, RAG)",
+  "depends_on": ["gate-2"],
+  "criteria": [
+    { "id": "AC-LLM-01", "title": "Recovery plan recs traceable to playbook; untraceable blocked", "test_id": "llm_faithfulness_gate", "expected": "faithful plan: zero unsupported claims, passed=true", "artifact": "reports/llm/faithfulness.json" },
+    { "id": "AC-LLM-02", "title": "Report conforms to the structured C7 JSON schema", "test_id": "llm_schema_conformance", "expected": "IncidentReport + RecoveryPlan parse against C7", "artifact": "reports/llm/schema.json" },
+    { "id": "AC-LLM-03", "title": "Low-faithfulness generation rejected/routed", "test_id": "llm_negative_faithfulness", "expected": "fabricated/unsupported output => BLOCKED_LOW_FAITHFULNESS, routed_to_human", "artifact": "reports/llm/negative.json" },
+    { "id": "AC-LLMART-01", "title": "Report/map/plan conform to C7; every plan step has playbook_ref", "test_id": "llmart_schema", "expected": "every RecoveryPlan step carries a non-empty playbook_ref; blast-radius derived from context", "artifact": "reports/llm/artifacts.json" },
+    { "id": "AC-FAIL-01", "title": "LLM down: detection+containment continue, report queues", "test_id": "fail_llm_down", "expected": "LLM_UNAVAILABLE, degraded=true, no crash, blast-radius still returned", "artifact": "reports/resilience/llm_down.json" }
+  ],
+  "gate_checks": [
+    { "id": "tests", "check": "vitest run packages/test-infra/src/llm.test.ts (incl. LIVE DeepSeek integration)", "expected": "all pass" },
+    { "id": "review", "check": "fresh-context evaluation of the faithfulness gate", "expected": "no open CRITICAL/HIGH" }
+  ]
+}

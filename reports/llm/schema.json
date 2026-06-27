@@ -1,0 +1,10 @@
+{
+  "id": "AC-LLM-02",
+  "gate": 4,
+  "generated_at": "2026-06-27T19:29:09.176Z",
+  "pass": true,
+  "detail": {
+    "report_conforms": true,
+    "plan_conforms": true
+  }
+}

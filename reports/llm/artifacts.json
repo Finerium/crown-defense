@@ -1,0 +1,11 @@
+{
+  "id": "AC-LLMART-01",
+  "gate": 4,
+  "generated_at": "2026-06-27T19:29:09.177Z",
+  "pass": true,
+  "detail": {
+    "every_step_has_playbook_ref": true,
+    "blast_radius_derived_from_context": true,
+    "nodes": 2
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "AC-ACT-02",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.727Z",
+  "pass": true,
+  "detail": {
+    "live_db": true,
+    "order": [
+      "audit",
+      "command",
+      "audit"
+    ],
+    "chain_valid": true,
+    "record_persisted": true
+  }
+}

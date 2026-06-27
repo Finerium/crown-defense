@@ -11,6 +11,9 @@ import tls from 'node:tls';
  * Production hardens further: hierarchical keys with forward secrecy, non-exportable private keys, HSM
  * custody, short-lived session certs, OCSP/CRL. The mutual-auth + identity-binding property is here.
  */
+/** Max bytes of a single (newline-framed) message — bounds memory on the most security-sensitive channel. */
+const MAX_LINE_BYTES = 1024 * 1024;
+
 export interface MtlsCerts {
   key: string | Buffer;
   cert: string | Buffer;
@@ -40,6 +43,12 @@ export class SecureControlPlane {
         socket.setEncoding('utf8');
         socket.on('data', async (chunk) => {
           buf += chunk;
+          // Bounded resource (invariant #5): an authenticated-but-compromised peer cannot exhaust memory
+          // by streaming without a newline. Cap the pending line and drop the connection.
+          if (buf.length > MAX_LINE_BYTES) {
+            socket.destroy(new Error('control-plane message exceeded the maximum line length'));
+            return;
+          }
           let nl = buf.indexOf('\n');
           while (nl >= 0) {
             const line = buf.slice(0, nl);

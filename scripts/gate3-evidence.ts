@@ -2,6 +2,7 @@
  * Gate-3 evidence generator (main-thread). Exercises containment + self-protection and writes
  * manifest-conformant artifacts. Run: `pnpm tsx scripts/gate3-evidence.ts`.
  */
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AgentContainment, AgentSelfProtection } from '@crown/agent';
@@ -13,6 +14,19 @@ import { evidence, genTestPki, writeReport } from '@crown/test-infra';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const REP = (p: string) => resolve(ROOT, 'reports', p);
+
+// Load .env so the live-audit (AC-ACT-02) step can reach the audit DB (vitest does this for tests).
+function loadEnv(): void {
+  try {
+    for (const line of readFileSync(resolve(ROOT, '.env'), 'utf8').split('\n')) {
+      const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (m?.[1] && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
+    }
+  } catch {
+    /* env may already be in the environment */
+  }
+}
+loadEnv();
 
 function isolate(over: Partial<DetectionVerdict> = {}): DetectionVerdict {
   return {
@@ -43,7 +57,7 @@ function ping(): AgentCommand {
     target_host_id: 'host-1',
     command_type: 'PING',
     params: { pid: null, share_paths: null, update_ref: null },
-    authorization: { autonomy_mode: 'FULL_AUTO', verdict_id: 'v', approver_id: null, action_record_id: 'a' },
+    authorization: { autonomy_mode: 'FULL_AUTO', verdict_id: 'v', approver_id: null, requestor_id: null, action_record_id: 'a' },
     rollback_deadline: null,
   };
 }
@@ -106,7 +120,7 @@ async function main() {
   {
     const pki = genTestPki('control-plane-001', 'agent-001');
     const agent = new AgentContainment('agent-001');
-    const server = new AgentCommandServer({ key: pki.serverKey, cert: pki.serverCert, ca: [pki.ca] }, (c) => agent.execute(c), { agentId: 'agent-001' });
+    const server = new AgentCommandServer({ key: pki.serverKey, cert: pki.serverCert, ca: [pki.ca] }, (c) => agent.execute(c), { agentId: 'agent-001', trustedIssuerCN: 'control-plane-001' });
     const port = await server.listen();
     let good = false;
     let rogueRejected = false;
@@ -148,7 +162,7 @@ async function main() {
   // AC-ACT-01: command authz (endpoint rejects unauthorized destructive commands).
   {
     const agent = new AgentContainment('agent-001');
-    const dmk = (mode: AgentCommand['authorization']['autonomy_mode'], approver: string | null): AgentCommand => ({ ...ping(), command_id: `${mode}`, command_type: 'ISOLATE_HOST', authorization: { autonomy_mode: mode, verdict_id: 'v', approver_id: approver, action_record_id: 'a' } });
+    const dmk = (mode: AgentCommand['authorization']['autonomy_mode'], approver: string | null): AgentCommand => ({ ...ping(), command_id: `${mode}`, command_type: 'ISOLATE_HOST', authorization: { autonomy_mode: mode, verdict_id: 'v', approver_id: approver, requestor_id: 'requestor-1', action_record_id: 'a' } });
     const monitorRej = agent.execute(dmk('MONITOR_ONLY', null)).outcome === 'REJECTED';
     const gatedNoApprover = agent.execute(dmk('HUMAN_GATED', null)).outcome === 'REJECTED';
     const gatedApproved = agent.execute(dmk('HUMAN_GATED', 'analyst-2')).outcome === 'EXECUTED';

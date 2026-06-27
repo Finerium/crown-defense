@@ -26,15 +26,44 @@ export class AgentContainment {
   private killedPids: number[] = [];
   private now: () => string;
 
-  constructor(agentId: string, now: () => string = () => new Date().toISOString()) {
+  private auditVerifier: ((actionRecordId: string) => boolean) | null;
+
+  constructor(
+    agentId: string,
+    now: () => string = () => new Date().toISOString(),
+    opts: { auditVerifier?: (actionRecordId: string) => boolean } = {}
+  ) {
     this.agentId = agentId;
     this.now = now;
+    this.auditVerifier = opts.auditVerifier ?? null;
   }
 
   /** Execute (or reject) a command. Returns the C6 result; the caller audits it. */
   execute(cmd: AgentCommand): AgentCommandResult {
+    // Target binding: a command addressed to another agent must NOT execute here (review MEDIUM).
+    if (cmd.target_agent_id !== this.agentId) {
+      return this.result(
+        cmd.command_id,
+        'REJECTED',
+        `command targets ${cmd.target_agent_id}, not this agent ${this.agentId}`
+      );
+    }
     const reject = rejectionReason(cmd);
     if (reject) return this.result(cmd.command_id, 'REJECTED', reject);
+
+    // Audit-precedes-action, verifiable: for a DESTRUCTIVE command, if an audit verifier is wired the
+    // bound record MUST resolve to a real persisted record (closes the "fabricated action_record_id" gap).
+    if (
+      isDestructiveCommand(cmd.command_type) &&
+      this.auditVerifier &&
+      !this.auditVerifier(cmd.authorization.action_record_id)
+    ) {
+      return this.result(
+        cmd.command_id,
+        'REJECTED',
+        'bound action_record_id does not resolve to a persisted audit record'
+      );
+    }
 
     switch (cmd.command_type) {
       case 'ISOLATE_HOST':

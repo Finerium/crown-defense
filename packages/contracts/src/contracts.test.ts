@@ -151,6 +151,7 @@ describe('C6 command authorization (AC-ACT-01)', () => {
       autonomy_mode: 'FULL_AUTO' as const,
       verdict_id: 'v1',
       approver_id: null,
+      requestor_id: null,
       action_record_id: 'act1',
     },
     rollback_deadline: null,
@@ -167,6 +168,41 @@ describe('C6 command authorization (AC-ACT-01)', () => {
     expect(
       rejectionReason({ ...cmd, authorization: { ...cmd.authorization, autonomy_mode: 'HUMAN_GATED' } })
     ).toMatch(/dual control/);
+  });
+  it('rejects HUMAN_GATED destructive where the approver is NOT distinct from the requestor (self-approval)', () => {
+    expect(
+      rejectionReason({
+        ...cmd,
+        authorization: {
+          ...cmd.authorization,
+          autonomy_mode: 'HUMAN_GATED',
+          approver_id: 'analyst-1',
+          requestor_id: 'analyst-1',
+        },
+      })
+    ).toMatch(/DISTINCT/);
+  });
+  it('allows HUMAN_GATED destructive with a DISTINCT approver', () => {
+    expect(
+      rejectionReason({
+        ...cmd,
+        authorization: {
+          ...cmd.authorization,
+          autonomy_mode: 'HUMAN_GATED',
+          approver_id: 'analyst-2',
+          requestor_id: 'analyst-1',
+        },
+      })
+    ).toBeNull();
+  });
+  it('rejects destructive in an UNRECOGNIZED mode (fail-closed allow-list)', () => {
+    expect(
+      rejectionReason({
+        ...cmd,
+        // biome-ignore lint/suspicious/noExplicitAny: deliberately exercising an out-of-enum value
+        authorization: { ...cmd.authorization, autonomy_mode: 'SOMETHING_ELSE' as any },
+      })
+    ).toMatch(/not permitted/);
   });
   it('allows authorized FULL_AUTO command', () => {
     expect(rejectionReason(cmd)).toBeNull();

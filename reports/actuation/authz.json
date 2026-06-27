@@ -1,0 +1,11 @@
+{
+  "id": "AC-ACT-01",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.676Z",
+  "pass": true,
+  "detail": {
+    "monitor_only_rejected": true,
+    "human_gated_no_approver_rejected": true,
+    "human_gated_distinct_approver_allowed": true
+  }
+}

@@ -6,6 +6,7 @@ import {
   type AutonomyMode,
   type CommandType,
   type DetectionVerdict,
+  DetectionVerdict as DetectionVerdictSchema,
   SCHEMA_VERSION,
 } from '@crown/contracts';
 import { type ContainmentDecision, decideContainment } from './policy.js';
@@ -69,17 +70,56 @@ export class ContainmentModule {
     controlPlaneReachable: boolean,
     opts: { incidentId?: string } = {}
   ): Promise<ContainmentOutcome> {
-    const decision = decideContainment(verdict, configuredMode, controlPlaneReachable);
+    // Validate the verdict at this trust boundary (assume an unvalidated/hostile producer) and re-assert
+    // the C2 destructive invariant; a verdict that fails is treated as non-actionable (review MEDIUM).
+    const v = DetectionVerdictSchema.safeParse(verdict);
+    const c2ok =
+      v.success &&
+      (verdict.recommended_action !== 'ISOLATE_HOST' ||
+        verdict.corroborating_count >= 2 ||
+        verdict.fast_path);
+    const decision = c2ok
+      ? decideContainment(verdict, configuredMode, controlPlaneReachable)
+      : ({
+          configuredMode,
+          effectiveMode: configuredMode,
+          action: null,
+          classification: null,
+          disposition: 'MONITOR_ONLY',
+          reason: 'verdict failed C2 validation; treated as non-actionable (fail-safe)',
+        } as ContainmentDecision);
     const incidentId = opts.incidentId ?? null;
 
     if (decision.disposition === 'EXECUTE' && decision.action) {
-      // === AUDIT PRECEDES ACTION ===
-      const record = await this.audit.append(
-        this.actionRecord(decision.action, 'EXECUTED', decision, verdict, incidentId, true)
+      // === AUDIT PRECEDES ACTION (two-phase) ===
+      // Phase 1: append the QUEUED intent BEFORE issuing; the command is bound to this record's id.
+      const intent = await this.audit.append(
+        this.actionRecord(decision.action, 'QUEUED', decision, verdict, incidentId, true)
       );
-      const command = this.command(decision.action, record.action_id, verdict, decision.effectiveMode, true);
-      const result = await this.issuer.issue(command);
-      return { decision, actionRecordId: record.action_id, command, result, auditPrecededCommand: true };
+      const command = this.command(decision.action, intent.action_id, verdict, decision.effectiveMode, true);
+      let result: AgentCommandResult | null = null;
+      try {
+        result = await this.issuer.issue(command);
+      } catch (e) {
+        // Phase 2 (failure): the append-only log must not overstate reality — record the FAILED terminal.
+        await this.audit.append(
+          this.actionRecord(decision.action, 'FAILED', decision, verdict, incidentId, true, String(e))
+        );
+        return {
+          decision,
+          actionRecordId: intent.action_id,
+          command,
+          result: null,
+          auditPrecededCommand: true,
+        };
+      }
+      // Phase 2 (terminal): record the ACTUAL outcome carried by the agent's result.
+      const terminal =
+        result.outcome === 'EXECUTED' ? 'EXECUTED' : result.outcome === 'REJECTED' ? 'BLOCKED' : 'FAILED';
+      await this.audit.append(
+        this.actionRecord(decision.action, terminal, decision, verdict, incidentId, true, result.reason)
+      );
+      return { decision, actionRecordId: intent.action_id, command, result, auditPrecededCommand: true };
     }
 
     if (decision.disposition === 'PROPOSE' && decision.action) {
@@ -117,7 +157,8 @@ export class ContainmentModule {
     decision: ContainmentDecision,
     verdict: DetectionVerdict,
     incidentId: string | null,
-    reversible: boolean
+    reversible: boolean,
+    detail?: string | null
   ): Omit<ActionRecord, 'chain_seq' | 'prev_hash' | 'record_hash'> {
     const destructive = action === 'ISOLATE_HOST';
     return {
@@ -139,7 +180,7 @@ export class ContainmentModule {
       reversible,
       rollback_deadline: destructive && outcome === 'EXECUTED' ? this.deadline() : null,
       outcome,
-      detail: decision.reason,
+      detail: detail ?? decision.reason,
     };
   }
 
@@ -161,7 +202,8 @@ export class ContainmentModule {
       authorization: {
         autonomy_mode: mode,
         verdict_id: verdict.verdict_id,
-        approver_id: null, // FULL_AUTO needs no approver; HUMAN_GATED would carry one (Phase 7)
+        approver_id: null, // FULL_AUTO needs no approver; HUMAN_GATED carries a DISTINCT one (Phase 7)
+        requestor_id: this.actorId, // who requested it — enables the agent's dual-control distinctness check
         action_record_id: actionRecordId, // bound to the audit record that PRECEDED this command
       },
       rollback_deadline: timeBoxed ? this.deadline() : null,

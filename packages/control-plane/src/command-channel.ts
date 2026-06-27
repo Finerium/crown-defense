@@ -5,16 +5,19 @@ import {
   AgentCommand as AgentCommandSchema,
   SCHEMA_VERSION,
 } from '@crown/contracts';
+import type { AuthorizationPolicy } from './authz.js';
 import { type MtlsCerts, SecureControlPlane, secureSend } from './mtls.js';
 
 /** Applies a command locally (the agent's containment executor); injected to avoid a package cycle. */
 export type CommandExecutor = (cmd: AgentCommand) => AgentCommandResult | Promise<AgentCommandResult>;
 
 /**
- * Agent-side actuation endpoint: an mTLS server that accepts C6 AgentCommands ONLY from a control plane
- * whose certificate chains to the trusted CA (and, optionally, whose CN matches the pinned issuer). An
- * unauthenticated/rogue caller never gets past the TLS handshake (AC-SEC-01). The command is schema-
- * validated at the boundary, then executed; the agent's own C6 authz (rejectionReason) still applies.
+ * Agent-side actuation endpoint: an mTLS server that accepts C6 AgentCommands ONLY from the AUTHORIZED
+ * control plane. mTLS proves the peer chains to the fleet CA; that is NECESSARY but NOT SUFFICIENT (a
+ * compromised peer agent reuses a fleet cert), so issuer identity MUST be authorized too (deny-by-default,
+ * review HIGH): either the peer CN matches the pinned trustedIssuerCN, OR an AuthorizationPolicy grants it
+ * ISSUE_COMMAND. With NEITHER configured the server denies every command (fail-closed). The command is then
+ * schema-validated and the agent's own C6 authz (rejectionReason) applies.
  */
 export class AgentCommandServer {
   private cp: SecureControlPlane;
@@ -22,7 +25,7 @@ export class AgentCommandServer {
   constructor(
     certs: MtlsCerts,
     executor: CommandExecutor,
-    opts: { trustedIssuerCN?: string; agentId?: string } = {}
+    opts: { trustedIssuerCN?: string; authz?: AuthorizationPolicy; agentId?: string } = {}
   ) {
     this.cp = new SecureControlPlane(certs, async (msg, peerCN) => {
       const reject = (reason: string): AgentCommandResult => ({
@@ -33,8 +36,13 @@ export class AgentCommandServer {
         outcome: 'REJECTED',
         reason,
       });
-      if (opts.trustedIssuerCN && peerCN !== opts.trustedIssuerCN) {
-        return reject(`untrusted control-plane identity '${peerCN}'`);
+      // MANDATORY issuer authorization (deny-by-default): bare CA-chain membership is NOT authority.
+      const pinned = opts.trustedIssuerCN !== undefined && peerCN === opts.trustedIssuerCN;
+      const granted = opts.authz?.authorize(peerCN, 'ISSUE_COMMAND').allowed === true;
+      if (!pinned && !granted) {
+        return reject(
+          `unauthorized control-plane identity '${peerCN}' (no trusted issuer / ISSUE_COMMAND grant)`
+        );
       }
       const parsed = AgentCommandSchema.safeParse(msg);
       if (!parsed.success) return reject('malformed AgentCommand (schema rejected at boundary)');

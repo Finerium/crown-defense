@@ -66,7 +66,8 @@ describe.runIf(!!url && !!key)('live audit binding (immutable record precedes ac
     const cm = new ContainmentModule({ audit, issuer });
     const out = await cm.handleVerdict(verdict(), 'FULL_AUTO', true, { incidentId: 'inc-live-1' });
 
-    expect(order).toEqual(['audit', 'command']); // AUDIT PRECEDES ACTION
+    // two-phase: the QUEUED intent (audit) precedes the command; a terminal audit record follows the result.
+    expect(order.slice(0, 2)).toEqual(['audit', 'command']); // AUDIT PRECEDES ACTION
     expect(out.command?.authorization.action_record_id).toBe(out.actionRecordId);
 
     // the persisted record is real, attributable, and the whole chain still verifies (tamper-evident)

@@ -29,7 +29,13 @@ function ping(): AgentCommand {
     target_host_id: 'host-1',
     command_type: 'PING',
     params: { pid: null, share_paths: null, update_ref: null },
-    authorization: { autonomy_mode: 'FULL_AUTO', verdict_id: 'v', approver_id: null, action_record_id: 'a' },
+    authorization: {
+      autonomy_mode: 'FULL_AUTO',
+      verdict_id: 'v',
+      approver_id: null,
+      requestor_id: null,
+      action_record_id: 'a',
+    },
     rollback_deadline: null,
   };
 }
@@ -59,6 +65,7 @@ describe('AC-SEC-01: mutual-TLS agent <-> control-plane channel', () => {
       (cmd) => agent.execute(cmd),
       {
         agentId: 'agent-001',
+        trustedIssuerCN: 'control-plane-001',
       }
     );
     const port = await server.listen();
@@ -105,7 +112,7 @@ describe('AC-SEC-01: mutual-TLS agent <-> control-plane channel', () => {
       });
       const r = await chan.issue(ping());
       expect(r.outcome).toBe('REJECTED');
-      expect(r.reason).toContain('untrusted control-plane identity');
+      expect(r.reason).toContain('unauthorized control-plane identity');
     } finally {
       await server.close();
     }
@@ -158,6 +165,7 @@ describe('secure end-to-end: verdict -> audit -> mTLS command -> agent isolates'
       (cmd) => agent.execute(cmd),
       {
         agentId: 'agent-001',
+        trustedIssuerCN: 'control-plane-001',
       }
     );
     const port = await server.listen();
@@ -178,11 +186,56 @@ describe('secure end-to-end: verdict -> audit -> mTLS command -> agent isolates'
       expect(out.decision.disposition).toBe('EXECUTE');
       expect(out.result?.outcome).toBe('EXECUTED');
       expect(agent.isIsolated('host-1')).toBe(true);
-      expect(appended).toEqual(['ISOLATE_HOST']); // audit happened (before the command)
+      // two-phase audit: QUEUED intent (audit precedes the command) + EXECUTED terminal (records the result)
+      expect(appended).toEqual(['ISOLATE_HOST', 'ISOLATE_HOST']);
     } finally {
       await server.close();
     }
   });
+});
+
+describe('control-plane review fixes: fail-closed issuer authorization', () => {
+  it('a CA-trusted client with NO pinned issuer / NO grant is DENIED (CA membership is not authority)', async () => {
+    const agent = new AgentContainment('agent-001');
+    // server configured with NEITHER trustedIssuerCN NOR an authz policy => deny-by-default
+    const server = new AgentCommandServer(
+      { key: pki.serverKey, cert: pki.serverCert, ca: [pki.ca] },
+      (c) => agent.execute(c),
+      { agentId: 'agent-001' }
+    );
+    const port = await server.listen();
+    try {
+      const chan = new MtlsCommandChannel({
+        port,
+        certs: { key: pki.clientKey, cert: pki.clientCert, ca: [pki.ca] },
+      });
+      const r = await chan.issue(ping());
+      expect(r.outcome).toBe('REJECTED');
+      expect(r.reason).toContain('unauthorized control-plane identity');
+    } finally {
+      await server.close();
+    }
+  }, 15000);
+
+  it('an explicit ISSUE_COMMAND grant authorizes the control plane', async () => {
+    const agent = new AgentContainment('agent-001');
+    const authz = new AuthorizationPolicy().grant('control-plane-001', 'ISSUE_COMMAND');
+    const server = new AgentCommandServer(
+      { key: pki.serverKey, cert: pki.serverCert, ca: [pki.ca] },
+      (c) => agent.execute(c),
+      { agentId: 'agent-001', authz }
+    );
+    const port = await server.listen();
+    try {
+      const chan = new MtlsCommandChannel({
+        port,
+        certs: { key: pki.clientKey, cert: pki.clientCert, ca: [pki.ca] },
+      });
+      expect((await chan.issue(ping())).outcome).toBe('EXECUTED');
+    } finally {
+      await server.close();
+    }
+  }, 15000);
 });
 
 afterAll(() => {

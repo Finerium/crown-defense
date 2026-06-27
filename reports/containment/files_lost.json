@@ -1,0 +1,11 @@
+{
+  "id": "AC-CONT-03",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.299Z",
+  "pass": true,
+  "detail": {
+    "source": "reports/detection/coverage.json + low_slow.json",
+    "max_files_lost": 2,
+    "budget": 10
+  }
+}

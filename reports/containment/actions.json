@@ -1,0 +1,12 @@
+{
+  "id": "AC-CONT-04",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.299Z",
+  "pass": true,
+  "detail": {
+    "kill": "EXECUTED",
+    "lock": "EXECUTED",
+    "killed": 1,
+    "locked": 1
+  }
+}

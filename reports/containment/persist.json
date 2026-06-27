@@ -1,0 +1,12 @@
+{
+  "id": "AC-CONT-02",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.298Z",
+  "pass": true,
+  "detail": {
+    "isolated_before": true,
+    "partition_disposition": "DENY_FAILSAFE",
+    "host1_still_isolated": true,
+    "host2_not_isolated": true
+  }
+}

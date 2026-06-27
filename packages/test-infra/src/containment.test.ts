@@ -69,7 +69,8 @@ describe('AC-ACT: actuation authorization + audit-precedes-action', () => {
     });
     const out = await cm.handleVerdict(isolateVerdict(), 'FULL_AUTO', true);
     expect(out.decision.disposition).toBe('EXECUTE');
-    expect(order).toEqual(['audit:ISOLATE_HOST', 'command:ISOLATE_HOST']); // audit FIRST
+    // two-phase: QUEUED intent (audit) precedes the command; a terminal audit record follows the result.
+    expect(order.slice(0, 2)).toEqual(['audit:ISOLATE_HOST', 'command:ISOLATE_HOST']); // audit FIRST
     // the command is bound to the audit record that preceded it
     expect(out.command?.authorization.action_record_id).toBe(out.actionRecordId);
   });
@@ -88,6 +89,7 @@ describe('AC-ACT: actuation authorization + audit-precedes-action', () => {
         autonomy_mode: 'MONITOR_ONLY',
         verdict_id: 'v',
         approver_id: null,
+        requestor_id: null,
         action_record_id: 'a',
       },
       rollback_deadline: null,
@@ -111,13 +113,18 @@ describe('AC-ACT: actuation authorization + audit-precedes-action', () => {
         autonomy_mode: 'HUMAN_GATED',
         verdict_id: 'v',
         approver_id: null,
+        requestor_id: 'analyst-1', // the operator who requested the action
         action_record_id: 'a',
       },
       rollback_deadline: null,
     };
     expect(agent.execute(base).outcome).toBe('REJECTED'); // no approver
+    // self-approval (approver == requestor) is rejected — dual control requires a DISTINCT approver
+    const selfApproved = { ...base, authorization: { ...base.authorization, approver_id: 'analyst-1' } };
+    expect(agent.execute(selfApproved).outcome).toBe('REJECTED');
+    // a DISTINCT second approver is allowed
     const approved = { ...base, authorization: { ...base.authorization, approver_id: 'analyst-2' } };
-    expect(agent.execute(approved).outcome).toBe('EXECUTED'); // distinct approver => allowed
+    expect(agent.execute(approved).outcome).toBe('EXECUTED');
   });
 
   it('AC-CONT-04: process termination + share lockdown execute and are recorded', () => {
@@ -134,6 +141,7 @@ describe('AC-ACT: actuation authorization + audit-precedes-action', () => {
         autonomy_mode: 'FULL_AUTO',
         verdict_id: 'v',
         approver_id: null,
+        requestor_id: null,
         action_record_id: 'a',
       },
       rollback_deadline: null,
@@ -207,5 +215,88 @@ describe('AC-CONT-01: containment pipeline latency p95 < 10s', () => {
     lat.sort((a, b) => a - b);
     const p95 = lat[Math.floor(0.95 * lat.length)] as number;
     expect(p95).toBeLessThan(10000); // 10s budget; the build pipeline is sub-millisecond
+  });
+});
+
+describe('control-plane review fixes: endpoint hardening', () => {
+  it('target binding: a command addressed to a DIFFERENT agent is rejected', () => {
+    const agent = new AgentContainment('agent-1');
+    const cmd: AgentCommand = {
+      schema_version: SCHEMA_VERSION,
+      command_id: 'c',
+      issued_at: '2026-06-28T00:00:00.000Z',
+      target_agent_id: 'some-other-agent',
+      target_host_id: 'host-1',
+      command_type: 'ISOLATE_HOST',
+      params: { pid: null, share_paths: null, update_ref: null },
+      authorization: {
+        autonomy_mode: 'FULL_AUTO',
+        verdict_id: 'v',
+        approver_id: null,
+        requestor_id: null,
+        action_record_id: 'a',
+      },
+      rollback_deadline: null,
+    };
+    expect(agent.execute(cmd).outcome).toBe('REJECTED');
+    expect(agent.isIsolated('host-1')).toBe(false);
+  });
+
+  it('audit-record verifiability: a destructive command bound to an UNRESOLVABLE record is rejected', () => {
+    const agent = new AgentContainment('agent-1', undefined, { auditVerifier: (id) => id === 'real-record' });
+    const mk = (recId: string): AgentCommand => ({
+      schema_version: SCHEMA_VERSION,
+      command_id: `c-${recId}`,
+      issued_at: '2026-06-28T00:00:00.000Z',
+      target_agent_id: 'agent-1',
+      target_host_id: 'host-1',
+      command_type: 'ISOLATE_HOST',
+      params: { pid: null, share_paths: null, update_ref: null },
+      authorization: {
+        autonomy_mode: 'FULL_AUTO',
+        verdict_id: 'v',
+        approver_id: null,
+        requestor_id: null,
+        action_record_id: recId,
+      },
+      rollback_deadline: null,
+    });
+    expect(agent.execute(mk('fabricated')).outcome).toBe('REJECTED'); // record does not resolve
+    expect(agent.execute(mk('real-record')).outcome).toBe('EXECUTED'); // record resolves
+  });
+
+  it('the containment boundary rejects a verdict that fails the C2 invariant (defense in depth)', async () => {
+    const order: string[] = [];
+    let seq = 0;
+    const audit: AuditSink = {
+      async append(rec) {
+        return { ...rec, chain_seq: seq++, prev_hash: '0', record_hash: 'h' } as ActionRecord;
+      },
+    };
+    const issuer: CommandIssuer = {
+      async issue(cmd) {
+        order.push('command');
+        return {
+          schema_version: SCHEMA_VERSION,
+          command_id: cmd.command_id,
+          agent_id: cmd.target_agent_id,
+          completed_at: '2026-06-28T00:00:00.000Z',
+          outcome: 'EXECUTED',
+          reason: null,
+        };
+      },
+    };
+    const cm = new ContainmentModule({ audit, issuer });
+    // ISOLATE_HOST recommended but only 1 corroborating signal and no fast-path => violates C2.
+    const bad = {
+      ...isolateVerdict(),
+      corroborating_count: 1,
+      fast_path: false,
+      signals: [{ signal_type: 'OP_FREQUENCY' as const, fired: true, score: 0.5, detail: 'x' }],
+    };
+    const out = await cm.handleVerdict(bad as DetectionVerdict, 'FULL_AUTO', true);
+    expect(out.decision.disposition).not.toBe('EXECUTE'); // not actioned
+    expect(out.command).toBeNull();
+    expect(order).toEqual([]); // no command ever issued
   });
 });

@@ -1,0 +1,11 @@
+{
+  "id": "AC-CONT-01",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.294Z",
+  "pass": true,
+  "detail": {
+    "runs": 200,
+    "p95_ms": 0.066,
+    "budget_ms": 10000
+  }
+}

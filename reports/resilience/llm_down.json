@@ -1,0 +1,13 @@
+{
+  "id": "AC-FAIL-01",
+  "gate": 4,
+  "generated_at": "2026-06-27T19:29:09.177Z",
+  "pass": true,
+  "detail": {
+    "status": "LLM_UNAVAILABLE",
+    "degraded": true,
+    "no_crash": true,
+    "blast_radius_still_returned": true,
+    "note": "detection + containment are unaffected by LLM loss (the LLM is advisory and runs after containment)"
+  }
+}

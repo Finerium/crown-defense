@@ -243,3 +243,36 @@ limits, not unresolved defects.
 **GATE 2 CLOSED (with documented residuals).** 101 tests, tsc+biome clean, AC-DET-01..06 + AC-FP-01..02 pass.
 Three review cycles (build review FAIL->redesign, re-verify->fixes, re-verify->domain limits) — fresh-context
 review repeatedly caught real wrongful-isolation bugs the author would have shipped.
+
+## Gate 3 (containment + self-protection) — built, REVIEWED (FAIL->fixed), closed
+
+@crown/containment (dial-gated, audit-precedes-action, fail-safe) + @crown/control-plane (real mTLS via
+Node tls + OpenSSL test PKI, deny-by-default authz) + agent anti-tamper + live hash-chained audit binding.
+Adversarial review (4-lens, sanitized) returned FAIL with real security gaps; ALL CRITICAL/HIGH + key MEDIUMs fixed:
+- **CRITICAL/HIGH (issuer identity + audit binding):** the actuation boundary trusted ANY CA-chained peer and
+  presence-checked action_record_id. FIXED: AgentCommandServer now requires MANDATORY issuer authorization
+  (pinned trustedIssuerCN OR an AuthorizationPolicy ISSUE_COMMAND grant; NEITHER => deny-by-default), so bare
+  CA membership is not authority; AgentContainment adds target-agent binding + an optional audit-record
+  verifier (destructive command bound to an unresolvable record => rejected).
+- **HIGH (dual control distinctness):** rejectionReason was presence-only. FIXED: fail-closed ALLOW-LIST
+  (destructive permitted only as FULL_AUTO+verdict_id or HUMAN_GATED+DISTINCT approver); self-approval rejected.
+- **MEDIUMs:** verdict re-parsed + C2 invariant re-asserted at the containment boundary; two-phase audit
+  (QUEUED intent precedes command, terminal EXECUTED/FAILED/BLOCKED records the real result); bounded mTLS
+  line buffer (1 MiB cap, invariant #5); unknown-autonomy-mode now fail-closed.
+Regression tests added for every fix (issuer-auth fail-closed, target binding, audit-verifiability, self-approval,
+C2-reassert). 38 security/containment tests pass; gate3 evidence all 9 AC pass (AC-ACT-02 against the LIVE DB).
+
+### BLUEPRINT-CONFLICT surfaced (C6) — for Report.md
+C6 (frozen) says a HUMAN_GATED destructive command must carry a "distinct approver_id", but C6.authorization
+provided NO requestor/actor id to compare against — distinctness is unenforceable at the agent as written.
+RESOLUTION (most defensible reading of the stated intent): added a nullable `requestor_id` to
+C6.AgentCommand.authorization and enforce approver_id !== requestor_id in rejectionReason. This is a contract
+REFINEMENT (additive, nullable), surfaced here per the anti-divergence rule rather than silently changed. The
+distinctness is ALSO enforced upstream by the C4 ActionRecord refine; this closes the agent-side gap.
+
+## Gate 4 (LLM orchestration) — built + verified incl. LIVE DeepSeek
+@crown/llm: model-agnostic client (DeepSeek dev/test behind the same interface as the prod self-hosted model),
+RAG over a scaffolded IR playbook (NIST 800-61 + MITRE), faithfulness gate (every step/citation must trace to a
+retrieved passage; fabricated/unsupported => BLOCKED + routed-to-human), C7-conformant output, blast-radius
+DERIVED from context (not the model), graceful degradation when the model is down. ADVISORY ONLY. 8 LLM tests
+pass INCLUDING a live DeepSeek integration test (real API call). gate4 evidence all 5 AC pass.

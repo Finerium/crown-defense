@@ -1,0 +1,12 @@
+{
+  "id": "AC-SEC-02",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.675Z",
+  "pass": true,
+  "detail": {
+    "intact": true,
+    "tamper_detected_and_healed": true,
+    "unauthorized_stop_blocked": true,
+    "authorized_stop_allowed": true
+  }
+}

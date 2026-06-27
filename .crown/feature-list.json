@@ -80,7 +80,8 @@
       "title": "Containment p95 < 10s from verdict (FULL_AUTO)",
       "test_id": "cont_latency_p95",
       "artifact": "reports/containment/latency.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-CONT-02",
@@ -88,7 +89,8 @@
       "title": "Isolation persists on control-plane partition",
       "test_id": "cont_persist_on_partition",
       "artifact": "reports/containment/persist.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-CONT-03",
@@ -96,7 +98,8 @@
       "title": "Files lost before containment <= 10",
       "test_id": "cont_files_lost",
       "artifact": "reports/containment/files_lost.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-CONT-04",
@@ -104,7 +107,8 @@
       "title": "Process termination + share lockdown executed and recorded",
       "test_id": "cont_actions",
       "artifact": "reports/containment/actions.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-DIAL-01",
@@ -152,7 +156,8 @@
       "title": "LLM down: detection+containment continue, report queues",
       "test_id": "fail_llm_down",
       "artifact": "reports/resilience/llm_down.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/llm/* + reports/resilience/llm_down.json + gate4-evidence + live DeepSeek test"
     },
     {
       "id": "AC-FAIL-02",
@@ -200,7 +205,8 @@
       "title": "Recovery plan recs traceable to playbook; untraceable blocked",
       "test_id": "llm_faithfulness_gate",
       "artifact": "reports/llm/faithfulness.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/llm/* + reports/resilience/llm_down.json + gate4-evidence + live DeepSeek test"
     },
     {
       "id": "AC-LLM-02",
@@ -208,7 +214,8 @@
       "title": "Report conforms to structured JSON schema",
       "test_id": "llm_schema_conformance",
       "artifact": "reports/llm/schema.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/llm/* + reports/resilience/llm_down.json + gate4-evidence + live DeepSeek test"
     },
     {
       "id": "AC-LLM-03",
@@ -216,7 +223,8 @@
       "title": "Low-faithfulness generation rejected/routed",
       "test_id": "llm_negative_faithfulness",
       "artifact": "reports/llm/negative.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/llm/* + reports/resilience/llm_down.json + gate4-evidence + live DeepSeek test"
     },
     {
       "id": "AC-AUDIT-01",
@@ -264,7 +272,8 @@
       "title": "mTLS mutual auth + encryption; bad cert rejected",
       "test_id": "sec_mtls",
       "artifact": "reports/security/mtls.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-SEC-02",
@@ -272,7 +281,8 @@
       "title": "Agent anti-tamper prevents/detects unauthorized stop/tamper",
       "test_id": "sec_anti_tamper",
       "artifact": "reports/security/anti_tamper.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-SEC-03",
@@ -280,7 +290,8 @@
       "title": "Control plane deny-by-default; protected routes reject unauth",
       "test_id": "sec_authz_deny_default",
       "artifact": "reports/security/authz.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-SEC-04",
@@ -504,7 +515,8 @@
       "title": "AgentCommand executes only if authorized; else REJECT+audit",
       "test_id": "act_command_authz",
       "artifact": "reports/actuation/authz.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-ACT-02",
@@ -512,7 +524,8 @@
       "title": "Destructive command bound to ActionRecord before sent",
       "test_id": "act_audit_precedes",
       "artifact": "reports/actuation/audit_order.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/{containment,security,actuation}/* + gate3-evidence"
     },
     {
       "id": "AC-LLMART-01",
@@ -520,7 +533,8 @@
       "title": "Report/map/plan conform to C7; every plan step has playbook_ref",
       "test_id": "llmart_schema",
       "artifact": "reports/llm/artifacts.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/llm/* + reports/resilience/llm_down.json + gate4-evidence + live DeepSeek test"
     },
     {
       "id": "AC-INTEG-SIEM",

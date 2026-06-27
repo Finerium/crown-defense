@@ -1,0 +1,16 @@
+{
+  "id": "AC-LLM-01",
+  "gate": 4,
+  "generated_at": "2026-06-27T19:29:09.172Z",
+  "pass": true,
+  "detail": {
+    "status": "OK",
+    "score": 1,
+    "unsupported": 0,
+    "traceable_steps": [
+      "PB-CONTAIN-ISOLATE",
+      "PB-CONTAIN-LATERAL",
+      "PB-RECOVER-BACKUP"
+    ]
+  }
+}

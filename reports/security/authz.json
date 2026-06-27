@@ -1,0 +1,11 @@
+{
+  "id": "AC-SEC-03",
+  "gate": 3,
+  "generated_at": "2026-06-27T19:41:26.675Z",
+  "pass": true,
+  "detail": {
+    "unauthenticated_denied": true,
+    "ungranted_denied": true,
+    "granted_allowed": true
+  }
+}
