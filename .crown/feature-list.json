@@ -8,7 +8,8 @@
       "title": "Full-encryption MASS_ENCRYPTION verdict",
       "test_id": "det_full_encryption",
       "artifact": "reports/detection/full.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-DET-02",
@@ -16,7 +17,8 @@
       "title": "Intermittent modes detected via format-validation/fusion",
       "test_id": "det_intermittent_matrix",
       "artifact": "reports/detection/intermittent.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-DET-03",
@@ -24,7 +26,8 @@
       "title": "Low-and-slow detected within file-loss budget",
       "test_id": "det_low_slow",
       "artifact": "reports/detection/low_slow.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-DET-04",
@@ -32,7 +35,8 @@
       "title": "Canary fast-path high-confidence verdict",
       "test_id": "det_canary_fastpath",
       "artifact": "reports/detection/canary.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-DET-05",
@@ -40,7 +44,8 @@
       "title": "Every ISOLATE_HOST has >=2 corroboration or fast_path",
       "test_id": "det_corroboration_invariant",
       "artifact": "reports/detection/corroboration.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-DET-06",
@@ -48,7 +53,8 @@
       "title": ">=20 behaviors/families and >=4 evasion modes covered",
       "test_id": "det_battery_coverage",
       "artifact": "reports/detection/coverage.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-FP-01",
@@ -56,7 +62,8 @@
       "title": "Benign suite false-positive rate <= 0.5%",
       "test_id": "fp_benign_suite",
       "artifact": "reports/fp/benign.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-FP-02",
@@ -64,7 +71,8 @@
       "title": "Allow-list suppression for known high-entropy apps, auditable",
       "test_id": "fp_allowlist",
       "artifact": "reports/fp/allowlist.json",
-      "passes": false
+      "passes": true,
+      "gate_evidence": "reports/detection/* + reports/fp/* (gate2-evidence)"
     },
     {
       "id": "AC-CONT-01",

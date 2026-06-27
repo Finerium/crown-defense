@@ -134,9 +134,13 @@ export function decide(window: TelemetryEvent[], cfg: DetectionConfig, ctx: Deci
     evidence_ref: ctx.evidence_ref,
   };
 
-  // FAIL-CLOSED: if the verdict does not satisfy the frozen C2 invariants, never emit a destructive action.
+  // FAIL-CLOSED backstop. The C2 schema refine encodes the >=2-or-fast-path rule, but NOT the stronger
+  // discriminating-signal requirement; so we re-check BOTH here independently of the construction above, so
+  // any future code change that emits ISOLATE_HOST without a decoy fast-path or a discriminating signal is
+  // caught and downgraded rather than wrongly isolating a host.
+  const violatesPolicy = v.recommended_action === 'ISOLATE_HOST' && !(v.fast_path || discriminatingFired);
   const parsed = DetectionVerdictSchema.safeParse(v);
-  if (!parsed.success) {
+  if (!parsed.success || violatesPolicy) {
     v = {
       ...v,
       recommended_action: 'ALERT',

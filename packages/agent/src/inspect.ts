@@ -103,12 +103,33 @@ const MAGICS: Array<{ off: number; sig: number[]; type: string }> = [
   { off: 0, sig: [0x4f, 0x67, 0x67, 0x53], type: 'ogg' },
   { off: 0, sig: [0x66, 0x4c, 0x61, 0x43], type: 'flac' },
   { off: 0, sig: [0x7f, 0x45, 0x4c, 0x46], type: 'elf' },
+  // Common COMPRESSION/ARCHIVE containers — recognizing these prevents false positives on benign
+  // compression, which otherwise looks "opaque" (high entropy, no magic) exactly like ciphertext.
+  { off: 0, sig: [0x28, 0xb5, 0x2f, 0xfd], type: 'zstd' },
+  { off: 0, sig: [0x04, 0x22, 0x4d, 0x18], type: 'lz4' },
+  { off: 0, sig: [0x5d, 0x00, 0x00], type: 'lzma' },
+  { off: 0, sig: [0x4c, 0x5a, 0x49, 0x50], type: 'lzip' },
+  { off: 0, sig: [0x4d, 0x53, 0x43, 0x46], type: 'cab' },
+  { off: 257, sig: [0x75, 0x73, 0x74, 0x61, 0x72], type: 'tar' }, // ustar
+  { off: 0, sig: [0x53, 0x51, 0x4c, 0x69, 0x74, 0x65], type: 'sqlite' },
 ];
 
+/** zlib stream: CMF=0x78 and (CMF*256+FLG) % 31 == 0 (no fixed magic, so checked separately). */
+function isZlib(b: Uint8Array): boolean {
+  return b.length >= 2 && b[0] === 0x78 && (((b[0] as number) << 8) | (b[1] as number)) % 31 === 0;
+}
+
 /** Coarse type tag from magic bytes (NOT the extension). 'opaque' = no magic + maximal entropy; 'unknown'
- *  = no magic + neither text nor opaque; 'text' = printable ASCII. */
+ *  = no magic + neither text nor opaque; 'text' = printable ASCII.
+ *
+ * IRREDUCIBLE LIMIT (documented): some legitimate high-entropy formats have NO magic bytes (brotli, raw
+ * DEFLATE, raw encrypted volumes). Their output is byte-indistinguishable from ciphertext, so a benign
+ * mass-transformation to such a format is an unavoidable false-positive risk — mitigated by the process
+ * allow-list and the fail-safe stance (the system corroborates with canary/recognized-corruption before
+ * isolating). Perfect ciphertext-vs-unknown-compression discrimination from bytes alone is impossible. */
 export function inferType(b: Uint8Array): string {
   for (const m of MAGICS) if (at(b, m.off, m.sig)) return m.type;
+  if (isZlib(b)) return 'zlib';
   // text?
   let printable = 0;
   const n = Math.min(b.length, 512);

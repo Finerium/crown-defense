@@ -37,6 +37,21 @@
         "review": "6-lens adversarial review returned FAIL (3 HIGH honesty defects); all fixed; focused re-verify holistic decision PASS (safe_to_gate_phase2=true); FIX-1 confirmed by an OBJECTIVE falsifiable separability test (reports/sim/separability.json) since the subjective label-leak lens was blocked by the Opus cyber-classifier (ADR-009)",
         "honest_gap": "intermittent-on-marker-only-formats (jpg) is NOT reliably caught at single-file level (documented in modes.json; defended at host level by op-frequency + mixed file types)"
       }
+    },
+    {
+      "gate": 2,
+      "name": "Detection core (deterministic, no LLM)",
+      "status": "passed_with_documented_residuals",
+      "evidence": {
+        "manifest": "reports/manifests/gate-2.manifest.json",
+        "detection_engine": "@crown/detection - 5 signal evaluators (discriminating vs context), fusion (>=2-incl-discriminating + canary fast-path, fail-closed, auditable allow-list), bounded LRU engine, 12-factor config with safety floors. Decides from C1 ONLY.",
+        "agent": "@crown/agent - userspace fs-observer with independent validators + opaque/ciphertext detection + broad benign-container recognition; canary manager.",
+        "reports": "reports/detection/{full,intermittent,low_slow,canary,corroboration,coverage}.json + reports/fp/{benign,allowlist}.json all pass",
+        "numbers": "detection_rate 1.0 on the SAFE-SIMULATOR battery (24 families, 5 modes); files_lost max 2; AC-FP-01 0 destructive FP over 320 benign scenarios, coverage sufficient; AC-FP-02 allow-list load-bearing.",
+        "tests": "101 tests pass; tsc -b + biome clean",
+        "review": "THREE review cycles: build review FAIL (live wrongful-isolation FPs) -> full fusion redesign; re-verify -> compression-recognition + fail-closed + corpus fixes; re-verify -> remaining residuals are documented DOMAIN LIMITS not bugs.",
+        "residuals_for_report": "(1) ciphertext vs UNKNOWN-magic-less-compression (brotli/raw-deflate) is byte-indistinguishable - irreducible, mitigated by allow-list + fail-safe; (2) intermittent encryption of shallow-validated recognized types (gif/bmp/mp4) - same class as jpg gap, host-level corroboration; (3) FP corpus is representative workload TYPES + variants, not 320 independent statistical trials (Phase-11 fleet-scale)."
+      }
     }
   ],
   "spend_note": "Phase 0 done in prior session. This session resumes from Gate 0 with the depth-spend stance: build Phases 1-6 with extra verification/adversarial-review depth, stop at Gate 6.",

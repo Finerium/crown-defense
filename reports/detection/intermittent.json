@@ -1,7 +1,7 @@
 {
   "id": "AC-DET-02",
   "gate": 2,
-  "generated_at": "2026-06-27T18:39:47.334Z",
+  "generated_at": "2026-06-27T18:53:25.118Z",
   "pass": true,
   "detail": {
     "note": "In-place intermittent: entropy flat, magic preserved, no type-change. Ablating format_valid removes detection => format-validation is the load-bearing signal (entropy alone is blind).",

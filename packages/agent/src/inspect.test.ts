@@ -100,6 +100,26 @@ describe('agent inspect module (independent validators)', () => {
     expect(formatValid(gzip)).toBe(true);
   });
 
+  it('recognizes modern compression magics (zstd/lz4/zlib) so benign compression is not a false positive', () => {
+    // High-entropy bodies, but valid recognized magics — must NOT be flagged opaque (the Lens-A fix).
+    const body = (seed: number) => {
+      const b = new Uint8Array(2000);
+      let s = seed >>> 0;
+      for (let i = 0; i < b.length; i++) {
+        s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+        b[i] = (s >>> 24) & 0xff;
+      }
+      return b;
+    };
+    const zstd = new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, ...body(1)]);
+    const lz4 = new Uint8Array([0x04, 0x22, 0x4d, 0x18, ...body(2)]);
+    const zlib = new Uint8Array([0x78, 0x9c, ...body(3)]); // 0x789c % 31 == 0
+    expect(inferType(zstd)).toBe('zstd');
+    expect(inferType(lz4)).toBe('lz4');
+    expect(inferType(zlib)).toBe('zlib');
+    for (const c of [zstd, lz4, zlib]) expect(formatValid(c)).toBe(true);
+  });
+
   it('entropy: low for text, high for random', () => {
     const txt = new TextEncoder().encode('a'.repeat(2000));
     const rnd = Uint8Array.from({ length: 2000 }, (_, i) => (i * 2654435761) & 255);

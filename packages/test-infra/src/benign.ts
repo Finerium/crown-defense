@@ -157,11 +157,18 @@ function webpBytes(seed: number, bodyLen = 8000): Uint8Array {
   out.set(noise(seed, bodyLen), 12);
   return out;
 }
-/** A gzip file (recognized benign container — high entropy compressed body, valid magic). */
-function gzipBytes(seed: number, bodyLen = 6000): Uint8Array {
-  const out = new Uint8Array(2 + bodyLen);
-  out.set([0x1f, 0x8b], 0); // gzip magic
-  out.set(noise(seed, bodyLen), 2);
+/** A compressed file with a recognized magic. Rotates gzip/zstd/lz4 so the corpus exercises multiple
+ *  benign compression formats (incl. the ones a too-narrow magic table would mis-flag as ciphertext). */
+function compressedBytes(seed: number, fmt: number, bodyLen = 6000): Uint8Array {
+  const magics = [
+    [0x1f, 0x8b], // gzip
+    [0x28, 0xb5, 0x2f, 0xfd], // zstd
+    [0x04, 0x22, 0x4d, 0x18], // lz4
+  ];
+  const magic = magics[fmt % magics.length] as number[];
+  const out = new Uint8Array(magic.length + bodyLen);
+  out.set(magic, 0);
+  out.set(noise(seed, bodyLen), magic.length);
   return out;
 }
 
@@ -367,9 +374,9 @@ async function logCompaction(dir: string, n: number, variant = 0): Promise<Benig
   const events: TelemetryEvent[] = [];
   for (let i = 0; i < n; i++) {
     const log = generateFile('txt', 6000, 7000 + i + variant * 1000); // low-entropy text log
-    const gz = gzipBytes(7000 + i + variant * 1000);
+    const cz = compressedBytes(7000 + i + variant * 1000, variant); // gzip / zstd / lz4 by variant
     const path = join(out, `app_${i}.log`);
-    await writeFile(path, gz); // compacted in place
+    await writeFile(path, cz); // compacted in place
     events.push(
       ev({
         i,
@@ -377,13 +384,13 @@ async function logCompaction(dir: string, n: number, variant = 0): Promise<Benig
         type: 'FILE_WRITE',
         filePath: path,
         prevType: inferType(log), // 'text'
-        newType: inferType(gz), // 'gzip'
-        size: gz.length,
+        newType: inferType(cz), // 'gzip' / 'zstd' / 'lz4' — all recognized => valid
+        size: cz.length,
         entropyRead: agentEntropy(log), // low
-        entropyWrite: agentEntropy(gz), // high => low->high rise (entropy signal fires)
-        formatValid: agentFormatValid(gz), // valid gzip => no structural-loss signal
+        entropyWrite: agentEntropy(cz), // high => low->high rise (entropy signal fires)
+        formatValid: agentFormatValid(cz), // valid recognized container => no structural-loss signal
         headerChanged: true,
-        writesPerSec: 70,
+        writesPerSec: 60 + (variant % 5) * 8, // perturb op-frequency across variants (genuine diversity)
         renamesPerSec: 0,
         distinctTypes: 2,
       })
