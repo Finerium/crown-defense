@@ -276,3 +276,42 @@ RAG over a scaffolded IR playbook (NIST 800-61 + MITRE), faithfulness gate (ever
 retrieved passage; fabricated/unsupported => BLOCKED + routed-to-human), C7-conformant output, blast-radius
 DERIVED from context (not the model), graceful degradation when the model is down. ADVISORY ONLY. 8 LLM tests
 pass INCLUDING a live DeepSeek integration test (real API call). gate4 evidence all 5 AC pass.
+
+---
+## Gate 5 — Command Dashboard (Next.js, Vercel-targeted)
+apps/dashboard: Next 15 App Router, 5 surfaces. Live DeepSeek report via /api/analyze serverless route —
+DeepSeek called SERVER-SIDE in a Node runtime function; the API key is a server env var, never in client code.
+Webpack extensionAlias (.js -> .ts/.tsx) lets the route import the workspace TS packages (NodeNext '.js'
+specifiers) without a pre-build. PRODUCT_NAME from @crown/contracts (OQ-5 single-constant rule).
+
+LESSON (fresh-context review caught real defects, again): AC-A11Y + AC-I18N both FAILED first review.
+- A11Y: the Fleet host row was a click-only <tr> (not keyboard-operable, WCAG 2.1.1) and the drawer close
+  button was an icon-only <Btn> with no accessible name (WCAG 4.1.2). Fixed: role=button + tabIndex +
+  onKeyDown(Enter/Space) on the row; Btn gained an ariaLabel prop; html lang now syncs to the locale toggle.
+  "Severity/status never color-only" was already satisfied (icon+label everywhere).
+- I18N: the dictionary + t() existed but ~30 chrome strings were hardcoded English — EVERY aria-label/title,
+  all table headers, Prev/Next, drawer kv labels, the model line. Fixed: added ~45 EN+ID keys + a tf()
+  interpolator for {model}/{total}/{mode}/{name}; replaced every literal. Re-verified PASS.
+  Takeaway: "no hardcoded strings" must include a11y labels + tooltips, not just visible body text.
+- biome useSemanticElements doesn't fit a clickable table row (no semantic element exists); suppressed the
+  single new finding with an inline biome-ignore (role on the <tr> opening line so it anchors). Pre-existing
+  key={i}/role=radio/role=dialog lint debt left unchanged (present in the Gate-5 commit, non-blocking).
+
+## Gate 6 — Closed loop + LIVE Vercel demo (HACKATHON CHECKPOINT — deliberate stop)
+closed-loop.test.ts wires the FIVE real packages end-to-end against the safe simulator: simulator -> detection
+MASS_ENCRYPTION -> dial-gated containment (audit appended BEFORE the command; order.slice(0,2)) -> agent
+isolates -> LLM C7 advisory. Second test: control-plane unreachable => DENY_FAILSAFE, no command issued.
+Fresh-context reviewer confirmed it is a GENUINE proof (real package entrypoints, invariants asserted
+non-trivially), not a hollow/mocked test.
+
+VERCEL DEPLOY (per the addendum): project 'crown-defense' created via API with rootDirectory=apps/dashboard
+(pnpm monorepo — Vercel installs from the repo root automatically). Env vars DEEPSEEK_API_KEY (encrypted) +
+LLM_API_BASE_URL + LLM_MODEL set server-side via the project env API (key never printed). Git connected to
+Finerium/crown-defense (auto-redeploy on push to main). Deployed via `vercel deploy --prod`; aliased to
+crown-defense.vercel.app. Browser-verified (playwright): homepage 200 (public, no SSO wall), Overview +
+Incident render, Generate -> live DeepSeek report (model deepseek-v4-pro, faithfulness 1, 7 playbook-cited
+steps incl. OJK/UU PDP). Only console error is a cosmetic /favicon.ico 404.
+
+STOP HERE. Bank-grade Phases 7-15 (fleet-scale + statistical FP validation, prod agent backends + kernel
+anti-tamper, on-prem LLM serving + signed updates, SIEM/AD/EDR adapters, DR/compliance) are a later relaunch
+and intentionally NOT built — claiming them would violate the provability rule.

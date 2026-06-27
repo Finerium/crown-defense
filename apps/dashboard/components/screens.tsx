@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import type { DemoScenario } from '../lib/data';
-import { type Lang, t } from '../lib/i18n';
+import { type Lang, t, tf } from '../lib/i18n';
 import { Btn, Chip, Glyph, Kpi, Panel, RiskCell, SearchBox, Sev, StatusPill } from './ui';
 
 /* ---------------- shared charts ---------------- */
@@ -9,7 +9,8 @@ function AreaChart({
   data,
   detectIndex,
   labels,
-}: { data: number[]; detectIndex: number; labels: { i: number; t: string }[] }) {
+  lang,
+}: { data: number[]; detectIndex: number; labels: { i: number; t: string }[]; lang: Lang }) {
   const W = 760;
   const H = 230;
   const padL = 34;
@@ -28,7 +29,7 @@ function AreaChart({
       viewBox={`0 0 ${W} ${H}`}
       style={{ display: 'block', height: 210 }}
       role="img"
-      aria-label="Threat activity, events per minute"
+      aria-label={t('a11y_threat_chart', lang)}
     >
       {[0, 25, 50, 75, 100].map((g) => (
         <g key={g}>
@@ -80,14 +81,14 @@ function AreaChart({
           fontFamily="var(--f-mono)"
           letterSpacing="0.08em"
         >
-          DETECTED 03:14:07
+          {t('chart_detected', lang)} 03:14:07
         </text>
       </g>
     </svg>
   );
 }
 
-function BlastGraph({ blast }: { blast: DemoScenario['incident']['blast'] }) {
+function BlastGraph({ blast, lang }: { blast: DemoScenario['incident']['blast']; lang: Lang }) {
   const W = 520;
   const H = 300;
   // simple deterministic layout: compromised center-left, others fanned out
@@ -115,7 +116,7 @@ function BlastGraph({ blast }: { blast: DemoScenario['incident']['blast'] }) {
       viewBox={`0 0 ${W} ${H}`}
       style={{ display: 'block', height: 290 }}
       role="img"
-      aria-label="Blast-radius map: compromised, contained and safe hosts with lateral-movement edges"
+      aria-label={t('a11y_blast_map', lang)}
     >
       {blast.edges.map((e, i) => {
         const a = pos[e.from_host];
@@ -217,9 +218,7 @@ export function DialControl({
         ))}
       </div>
       <div className="k-sub" style={{ marginTop: 8 }}>
-        {value === 'MONITOR_ONLY'
-          ? '✓ shipped + pilot default'
-          : '⚠ destructive actions gated by the action matrix'}
+        {value === 'MONITOR_ONLY' ? t('dial_shipped_default', lang) : t('dial_gated_note', lang)}
       </div>
     </div>
   );
@@ -249,8 +248,13 @@ export function Overview({
           sub={`${t('files_lost', lang)}: ${s.incident.files_lost}`}
         />
       </div>
-      <Panel title={t('threat_activity', lang)} sub="events/min" className="ov-chart">
-        <AreaChart data={s.threat.series} detectIndex={s.threat.detectIndex} labels={s.threat.labels} />
+      <Panel title={t('threat_activity', lang)} sub={t('sub_events_min', lang)} className="ov-chart">
+        <AreaChart
+          data={s.threat.series}
+          detectIndex={s.threat.detectIndex}
+          labels={s.threat.labels}
+          lang={lang}
+        />
       </Panel>
       <Panel title={t('action_feed', lang)} className="ov-feed" bodyClass="scroll">
         <ul className="feed">
@@ -295,7 +299,7 @@ export function Incident({
         right={<Sev level={s.incident.severity} />}
         className="a-graph"
       >
-        <BlastGraph blast={s.incident.blast} />
+        <BlastGraph blast={s.incident.blast} lang={lang} />
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', padding: '4px 10px 10px', fontSize: 11 }}>
           {s.incident.signals.map((sig) => (
             <span key={sig.signal_type} style={{ color: sig.fired ? 'var(--t1)' : 'var(--t3)' }}>
@@ -320,7 +324,7 @@ export function Incident({
 
       <Panel
         title={t('recovery_plan', lang)}
-        sub="LLM · advisory"
+        sub={t('llm_advisory', lang)}
         className="a-plan"
         right={
           report?.faithfulness ? (
@@ -335,10 +339,7 @@ export function Incident({
       >
         {!report ? (
           <div style={{ display: 'grid', gap: 10 }}>
-            <p style={{ color: 'var(--t2)', fontSize: 12 }}>
-              On-contained-incident, the on-prem LLM generates a faithfulness-gated, playbook-cited recovery
-              plan.
-            </p>
+            <p style={{ color: 'var(--t2)', fontSize: 12 }}>{t('recovery_plan_intro', lang)}</p>
             <Btn kind="primary" onClick={onGenerate} disabled={generating}>
               {generating ? t('generating', lang) : t('generate_report', lang)}
             </Btn>
@@ -359,7 +360,9 @@ export function Incident({
                   </span>
                   <div>
                     <div className="plan-action">{st.action}</div>
-                    <div className="plan-cite mono">cite: {st.playbook_ref}</div>
+                    <div className="plan-cite mono">
+                      {t('plan_cite', lang)}: {st.playbook_ref}
+                    </div>
                   </div>
                   <Btn sm kind="primary">
                     {t('approve', lang)}
@@ -368,8 +371,10 @@ export function Incident({
               ))}
             </ol>
             <div className="mono" style={{ fontSize: 9, color: 'var(--t3)', marginTop: 8 }}>
-              model {report.model_id} · {report.live ? 'LIVE' : 'fallback'} · advisory only (never emits an
-              action)
+              {tf('model_line', lang, {
+                model: report.model_id,
+                live: report.live ? t('live_live', lang) : t('live_fallback', lang),
+              })}
             </div>
           </div>
         )}
@@ -379,9 +384,9 @@ export function Incident({
         <table className="tbl">
           <thead>
             <tr>
-              <th>Host</th>
-              <th>Status</th>
-              <th>Role</th>
+              <th>{t('col_host', lang)}</th>
+              <th>{t('col_status', lang)}</th>
+              <th>{t('col_role', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -449,25 +454,44 @@ export function Fleet({ s, lang }: { s: DemoScenario; lang: Lang }) {
           </Chip>
         ))}
         <span className="mono" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--t3)' }}>
-          FleetState: {s.fleet.total_hosts.toLocaleString()} hosts · {s.fleet.online_agents.toLocaleString()}{' '}
-          online (aggregate, bounded)
+          {tf('fleet_state', lang, {
+            total: s.fleet.total_hosts.toLocaleString(),
+            online: s.fleet.online_agents.toLocaleString(),
+          })}
         </span>
       </div>
-      <Panel title={`${t('nav_fleet', lang)}`} sub={`${filtered.length} match · page ${cur + 1}/${pages}`}>
+      <Panel
+        title={`${t('nav_fleet', lang)}`}
+        sub={tf('fleet_match_page', lang, { n: filtered.length, cur: cur + 1, pages })}
+      >
         <table className="tbl">
           <thead>
             <tr>
-              <th>Host</th>
-              <th>IP</th>
-              <th>Segment</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Risk</th>
+              <th>{t('col_host', lang)}</th>
+              <th>{t('col_ip', lang)}</th>
+              <th>{t('col_segment', lang)}</th>
+              <th>{t('col_role', lang)}</th>
+              <th>{t('col_status', lang)}</th>
+              <th>{t('col_risk', lang)}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((h) => (
-              <tr key={h.host_id} onClick={() => setDrawer(h.host_id)} style={{ cursor: 'pointer' }}>
+              // biome-ignore lint/a11y/useSemanticElements: a clickable table row has no semantic HTML equivalent; role=button + tabIndex + onKeyDown make it keyboard-operable (WCAG 2.1.1)
+              <tr
+                role="button"
+                key={h.host_id}
+                onClick={() => setDrawer(h.host_id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setDrawer(h.host_id);
+                  }
+                }}
+                tabIndex={0}
+                aria-label={tf('drawer_host', lang, { name: h.hostname })}
+                style={{ cursor: 'pointer' }}
+              >
                 <td className="mono">{h.hostname}</td>
                 <td className="mono">{h.ip}</td>
                 <td>{h.segment}</td>
@@ -484,42 +508,46 @@ export function Fleet({ s, lang }: { s: DemoScenario; lang: Lang }) {
         </table>
         <div className="pager">
           <Btn sm onClick={() => setPage(Math.max(0, cur - 1))} disabled={cur === 0}>
-            Prev
+            {t('btn_prev', lang)}
           </Btn>
           <span className="mono" style={{ fontSize: 11 }}>
             {cur + 1} / {pages}
           </span>
           <Btn sm onClick={() => setPage(Math.min(pages - 1, cur + 1))} disabled={cur >= pages - 1}>
-            Next
+            {t('btn_next', lang)}
           </Btn>
         </div>
       </Panel>
       {drawerHost ? (
-        <div className="drawer" role="dialog" aria-label={`Host ${drawerHost.hostname}`}>
+        <div
+          className="drawer"
+          role="dialog"
+          aria-label={tf('drawer_host', lang, { name: drawerHost.hostname })}
+        >
           <div className="drawer-h">
             <b className="disp">{drawerHost.hostname}</b>
-            <Btn sm onClick={() => setDrawer(null)}>
+            <Btn sm onClick={() => setDrawer(null)} ariaLabel={t('close', lang)}>
               <Glyph k="x" size={9} />
             </Btn>
           </div>
           <dl className="kv">
-            <dt>Host ID</dt>
+            <dt>{t('kv_host_id', lang)}</dt>
             <dd className="mono">{drawerHost.host_id}</dd>
-            <dt>OS</dt>
+            <dt>{t('kv_os', lang)}</dt>
             <dd>{drawerHost.os}</dd>
-            <dt>IP</dt>
+            <dt>{t('kv_ip', lang)}</dt>
             <dd className="mono">{drawerHost.ip}</dd>
-            <dt>Status</dt>
+            <dt>{t('kv_status', lang)}</dt>
             <dd>
               <StatusPill status={drawerHost.status} />
             </dd>
-            <dt>Criticality</dt>
+            <dt>{t('kv_criticality', lang)}</dt>
             <dd>{drawerHost.criticality}</dd>
-            <dt>Risk</dt>
+            <dt>{t('kv_risk', lang)}</dt>
             <dd>
               <RiskCell v={drawerHost.risk} />
             </dd>
-            <dt>Last seen</dt>
+            <dt>{t('kv_last_seen', lang)}</dt>
             <dd className="mono">{drawerHost.last_seen}</dd>
           </dl>
         </div>
@@ -535,9 +563,9 @@ export function System({ s, lang }: { s: DemoScenario; lang: Lang }) {
         <table className="tbl">
           <thead>
             <tr>
-              <th>Component</th>
-              <th>Status</th>
-              <th>Detail</th>
+              <th>{t('col_component', lang)}</th>
+              <th>{t('col_status', lang)}</th>
+              <th>{t('col_detail', lang)}</th>
             </tr>
           </thead>
           <tbody>
@@ -553,16 +581,15 @@ export function System({ s, lang }: { s: DemoScenario; lang: Lang }) {
           </tbody>
         </table>
         <div className="k-sub" style={{ marginTop: 10 }}>
-          effective_autonomy: <b>{s.health.effective_autonomy}</b> — reflects the fail-safe override (drops
-          toward MONITOR if a dependency is impaired).
+          {tf('effective_autonomy_note', lang, { mode: s.health.effective_autonomy })}
         </div>
       </Panel>
       <Panel title={t('agent_coverage', lang)}>
         <div className="kpi-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-          <Kpi label="Enrolled" value={s.health.agent_coverage.enrolled.toLocaleString()} />
-          <Kpi label="Online" value={s.health.agent_coverage.online.toLocaleString()} />
+          <Kpi label={t('kpi_enrolled', lang)} value={s.health.agent_coverage.enrolled.toLocaleString()} />
+          <Kpi label={t('kpi_online', lang)} value={s.health.agent_coverage.online.toLocaleString()} />
           <Kpi
-            label="Offline"
+            label={t('kpi_offline', lang)}
             value={s.health.agent_coverage.offline}
             alert={s.health.agent_coverage.offline > 0}
           />
@@ -589,8 +616,10 @@ export function Approvals({ s, lang }: { s: DemoScenario; lang: Lang }) {
   const [state, setState] = useState<Record<string, 'pending' | 'approved' | 'overridden'>>({});
   return (
     <div style={{ display: 'grid', gap: 14 }}>
-      <Panel title={t('approval_queue', lang)} sub="HUMAN_GATED — dual control">
-        {s.approvals.length === 0 ? <p style={{ color: 'var(--t2)' }}>No pending approvals.</p> : null}
+      <Panel title={t('approval_queue', lang)} sub={t('dual_control_sub', lang)}>
+        {s.approvals.length === 0 ? (
+          <p style={{ color: 'var(--t2)' }}>{t('no_pending_approvals', lang)}</p>
+        ) : null}
         {s.approvals.map((a) => {
           const st = state[a.action_id] ?? 'pending';
           return (
@@ -603,12 +632,13 @@ export function Approvals({ s, lang }: { s: DemoScenario; lang: Lang }) {
                 <span className="mono">{a.host_id}</span>
                 <Sev level="HIGH" />
                 <span className="mono" style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--t3)' }}>
-                  time-box → {a.rollback_deadline.slice(11, 19)} UTC
+                  {t('time_box', lang)} {a.rollback_deadline.slice(11, 19)} UTC
                 </span>
               </div>
               <p className="approval-just">{a.justification}</p>
               <div className="approval-meta mono">
-                signals: {a.signals} · confidence: {a.confidence} · mode: {a.autonomy_mode}
+                {t('label_signals', lang)}: {a.signals} · {t('label_confidence', lang)}: {a.confidence} ·{' '}
+                {t('label_mode', lang)}: {a.autonomy_mode}
               </div>
               <div className="approval-note">{t('second_approver', lang)}</div>
               <div className="approval-actions">
@@ -619,7 +649,7 @@ export function Approvals({ s, lang }: { s: DemoScenario; lang: Lang }) {
                       sm
                       onClick={() => setState((p) => ({ ...p, [a.action_id]: 'approved' }))}
                     >
-                      <Glyph k="check" size={8} /> {t('approve', lang)} (approver #2)
+                      <Glyph k="check" size={8} /> {t('approve', lang)} {t('approver_two', lang)}
                     </Btn>
                     <Btn sm onClick={() => setState((p) => ({ ...p, [a.action_id]: 'overridden' }))}>
                       <Glyph k="x" size={8} /> {t('override', lang)}

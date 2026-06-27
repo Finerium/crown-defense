@@ -1,0 +1,16 @@
+{
+  "_comment": "Phase 5 / Gate 5 evidence manifest — Command Dashboard (Next.js, App Router, Vercel-targeted). 5 surfaces, live DeepSeek report via serverless route (key server-side), DEMO MODE on safe-simulator synthetic data. Design tokens from talos.css; behavior from the blueprint. PRODUCT_NAME read from @crown/contracts (never hardcoded).",
+  "gate": 5,
+  "phase": "Command Dashboard (Next.js)",
+  "depends_on": ["gate-4"],
+  "criteria": [
+    { "id": "AC-A11Y", "title": "WCAG 2.x AA on key flows; severity/status never color-only", "test_id": "dashboard_a11y_review", "expected": "icon+label for every severity/status; keyboard-operable controls; accessible names; html lang sync", "artifact": "reports/dashboard/a11y.json" },
+    { "id": "AC-I18N", "title": "No hardcoded user-facing strings; locale-ready ID+EN", "test_id": "dashboard_i18n_review", "expected": "EN+ID dictionary + t()/tf(); zero hardcoded chrome strings (data tokens excepted)", "artifact": "reports/dashboard/i18n.json" }
+  ],
+  "gate_checks": [
+    { "id": "build", "check": "next build (apps/dashboard) types valid + compiles", "expected": "compiled successfully; / and /api/analyze routes emitted" },
+    { "id": "review", "check": "fresh-context evaluation of AC-A11Y + AC-I18N", "expected": "both PASS after fix cycle (initial FAIL -> fixed -> re-verified)" },
+    { "id": "live_llm", "check": "/api/analyze calls DeepSeek server-side; key never in client", "expected": "live:true, model deepseek-v4-pro, faithfulness gated" }
+  ],
+  "notes": "Pre-existing biome lint debt (key={i}, role=radio button, role=dialog div) is unchanged from this commit and non-blocking; next build skips linting."
+}

@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Glyph } from '../components/ui';
 import { Approvals, Fleet, Incident, Overview, type ReportState, System } from '../components/screens';
+import { Glyph } from '../components/ui';
 import { PRODUCT_NAME, demoScenario } from '../lib/data';
 import { type Lang, t } from '../lib/i18n';
 import './dashboard.css';
@@ -46,6 +46,10 @@ export default function Page() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  useEffect(() => {
+    document.documentElement.lang = lang; // keep <html lang> in sync for screen readers (WCAG 3.1.2)
+  }, [lang]);
+
   async function generate() {
     setGenerating(true);
     try {
@@ -78,7 +82,7 @@ export default function Page() {
             <div className="brand-sub">{t('brand_sub', lang)}</div>
           </div>
         </div>
-        <nav className="nav" aria-label="Screens">
+        <nav className="nav" aria-label={t('a11y_screens', lang)}>
           {SCREENS.map((sc) => (
             <button
               key={sc.id}
@@ -97,7 +101,7 @@ export default function Page() {
             type="button"
             className="inc-chip"
             onClick={() => setScreen('incident')}
-            title="Open active incident"
+            title={t('tip_open_incident', lang)}
           >
             <Glyph k="tri" size={8} />
             {s.incident.incident_id} · {Math.round(s.incident.confidence * 100)}%
@@ -109,8 +113,8 @@ export default function Page() {
             type="button"
             className="icon-btn"
             onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
-            title="Language"
-            aria-label="Toggle language"
+            title={t('tip_language', lang)}
+            aria-label={t('aria_toggle_language', lang)}
           >
             <span className="mono" style={{ fontSize: 11 }}>
               {lang.toUpperCase()}
@@ -120,8 +124,8 @@ export default function Page() {
             type="button"
             className="icon-btn"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title="Toggle theme"
-            aria-label="Toggle theme"
+            title={t('aria_toggle_theme', lang)}
+            aria-label={t('aria_toggle_theme', lang)}
           >
             <Glyph k={theme === 'dark' ? 'circle' : 'ring'} size={11} />
           </button>

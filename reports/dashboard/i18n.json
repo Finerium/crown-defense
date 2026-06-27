@@ -1,0 +1,22 @@
+{
+  "_comment": "Gate 5 — AC-I18N evidence. No hardcoded user-facing strings; locale-ready Indonesian + English. Graded by a fresh-context reviewer: initial FAIL (~30 hardcoded chrome strings) -> fixed -> re-verified PASS.",
+  "gate": 5,
+  "criterion": "AC-I18N",
+  "result": "pass",
+  "dictionary": "apps/dashboard/lib/i18n.ts — EN+ID for every user-facing string; t(key,lang) + tf(key,lang,vars) interpolation",
+  "scope_localized": [
+    "nav aria-label, incident-chip title, language/theme toggle title+aria-label",
+    "chart aria-labels + DETECTED label, blast-map aria-label",
+    "dial state notes, recovery-plan intro, plan cite, model line (interpolated)",
+    "ALL table headers (Incident/Fleet/System), FleetState line, match/page, Prev/Next",
+    "drawer aria-label + every kv label + close button, effective-autonomy note",
+    "Enrolled/Online/Offline KPIs, dual-control sub, no-pending-approvals, time-box",
+    "signals/confidence/mode labels, approver-#2 suffix, LLM-advisory sub"
+  ],
+  "interpolation_verified": ["{model}/{live}", "{total}/{online}", "{n}/{cur}/{pages}", "{mode}", "{name}"],
+  "intentionally_verbatim_data_tokens": [
+    "ISOLATE · LOCK · KILL (action-type enum tokens)",
+    "host ids, IPs, timestamps, OPR-03 · SOC-A, UTC"
+  ],
+  "reviewer_verdict": "PASS — all flagged chrome/labels/tooltips/headers/buttons now t()/tf() with real EN+ID; no remaining hardcoded aria-label/title/placeholder/header/button strings"
+}

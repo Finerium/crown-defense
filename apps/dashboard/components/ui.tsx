@@ -183,6 +183,7 @@ export function Btn({
   onClick,
   disabled,
   title,
+  ariaLabel,
 }: {
   kind?: string;
   sm?: boolean;
@@ -190,11 +191,13 @@ export function Btn({
   onClick?: () => void;
   disabled?: boolean;
   title?: string;
+  ariaLabel?: string;
 }) {
   return (
     <button
       type="button"
       title={title}
+      aria-label={ariaLabel}
       className={`btn ${kind} ${sm ? 'sm' : ''}`}
       onClick={onClick}
       disabled={disabled}
@@ -217,7 +220,7 @@ export function SearchBox({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder ?? 'Search'}
+        placeholder={placeholder}
         spellCheck={false}
         aria-label={label}
       />

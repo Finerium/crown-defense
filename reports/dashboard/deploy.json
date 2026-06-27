@@ -1,0 +1,33 @@
+{
+  "_comment": "Gate 6 — live Vercel deploy evidence. DEMO MODE: static frontend + serverless only. The DeepSeek call runs server-side in a Vercel serverless function; the API key is set as an encrypted Vercel env var, never in client code. Browser-verified live.",
+  "gate": 6,
+  "live_url": "https://crown-defense.vercel.app",
+  "repo_url": "https://github.com/Finerium/crown-defense",
+  "vercel": {
+    "project": "crown-defense",
+    "root_directory": "apps/dashboard",
+    "framework": "nextjs",
+    "production_deployment_id": "dpl_CRLaXh4swGuCsxnifRQ6s9dxb95d",
+    "auto_redeploy_on_push": "main (git connected to Finerium/crown-defense)",
+    "env_vars_server_side": ["DEEPSEEK_API_KEY (encrypted, hidden)", "LLM_API_BASE_URL", "LLM_MODEL"]
+  },
+  "homepage_check": { "http_status": 200, "public": true, "sso_wall": false },
+  "live_llm_route": {
+    "endpoint": "POST /api/analyze",
+    "live": true,
+    "status": "OK",
+    "model_id": "deepseek-v4-pro",
+    "faithfulness": { "score": 1, "passed": true },
+    "cited_claims": 16,
+    "recovery_steps": 7,
+    "report_rendered": true
+  },
+  "browser_verified": {
+    "tool": "playwright",
+    "date": "2026-06-28",
+    "overview": "KPIs + threat chart + autonomous action feed (incl. 'held below >=2 rule' recommendation) + autonomy dial render",
+    "incident": "blast-radius map (status by icon+label), fused signals, timeline (audit-bound-before-command), recovery panel",
+    "generate": "clicked 'Generate incident report' -> live DeepSeek -> Faithfulness 1 + 7 playbook-cited steps + 'model deepseek-v4-pro · LIVE · advisory only (never emits an action)'",
+    "console_errors": "1 — /favicon.ico 404 (cosmetic, non-functional)"
+  }
+}

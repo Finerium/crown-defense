@@ -466,16 +466,16 @@
       "gate": 5,
       "title": "No hardcoded user-facing strings; locale-ready ID+EN",
       "test_id": "i18n_scan",
-      "artifact": "reports/i18n.json",
-      "passes": false
+      "artifact": "reports/dashboard/i18n.json",
+      "passes": true
     },
     {
       "id": "AC-A11Y",
       "gate": 5,
       "title": "WCAG 2.x AA on key flows; severity never color-only",
       "test_id": "a11y_check",
-      "artifact": "reports/a11y.json",
-      "passes": false
+      "artifact": "reports/dashboard/a11y.json",
+      "passes": true
     },
     {
       "id": "AC-INTEG",

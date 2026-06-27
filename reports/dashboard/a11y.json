@@ -1,0 +1,24 @@
+{
+  "_comment": "Gate 5 — AC-A11Y evidence. WCAG 2.x AA on key dashboard flows; severity/status NEVER conveyed by color alone. Graded by a fresh-context reviewer: initial FAIL (2 violations) -> fixed -> re-verified PASS.",
+  "gate": 5,
+  "criterion": "AC-A11Y",
+  "result": "pass",
+  "severity_status_never_color_only": {
+    "Sev": "components/ui.tsx — Glyph (tri/diamond/square/circle) + text label per severity",
+    "StatusPill": "components/ui.tsx — distinct Glyph + text label per status",
+    "BlastGraph": "components/screens.tsx — node glyph (▲■◔✓) + status text; edges add ⊘/→ + dash style",
+    "signals": "components/screens.tsx — check/x glyph + text",
+    "RiskCell": "components/ui.tsx — bar length + numeric value"
+  },
+  "keyboard_operability": {
+    "nav_dial_chip_btn_search": "real <button>/<input>/role elements, focusable, accessible names",
+    "fleet_row": "FIXED — role=button + tabIndex={0} + onKeyDown (Enter/Space, preventDefault) + aria-label (was click-only <tr>)"
+  },
+  "accessible_names": {
+    "drawer_close_button": "FIXED — Btn now forwards ariaLabel; close uses aria-label={t('close',lang)} (was icon-only, unnamed)",
+    "icon_toggles": "language/theme toggles carry title + aria-label"
+  },
+  "html_lang": "FIXED — document.documentElement.lang set to active locale on toggle (WCAG 3.1.2)",
+  "reviewer_verdict": "PASS — keyboard-operable Fleet row + labeled drawer close button + html lang sync; no color-alone severity/status; remaining violations: none",
+  "known_lint_debt_pre_existing": "biome useSemanticElements on the dial role=radio button and the role=dialog drawer, plus key={i} array keys — present in the Gate-5 commit, non-blocking, out of scope"
+}

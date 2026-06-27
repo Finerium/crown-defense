@@ -1,0 +1,21 @@
+{
+  "_comment": "Phase 6 / Gate 6 evidence manifest — CLOSED LOOP end-to-end + LIVE Vercel demo. This is the deliberate hackathon STOP point. Bank-grade Phases 7-15 are intentionally NOT built. The closed-loop test wires the five real packages against the safe simulator; the live demo is browser-verified.",
+  "gate": 6,
+  "phase": "Closed loop + live Vercel demo (hackathon checkpoint)",
+  "depends_on": ["gate-1", "gate-2", "gate-3", "gate-4", "gate-5"],
+  "deliberate_stop": "Gate 6 — bank-grade Phases 7-15 (fleet-scale, prod agent backends, on-prem LLM serving, SIEM/AD/EDR adapters, DR/compliance) are a later relaunch and intentionally absent.",
+  "criteria": [
+    { "id": "AC-CLOSED-LOOP", "title": "Full closed loop runs end-to-end against the safe simulator", "test_id": "closed_loop_e2e", "expected": "simulator -> detection MASS_ENCRYPTION -> dial-gated containment (audit precedes action) -> agent isolates -> LLM C7 advisory; fail-safe path issues no command", "artifact": "reports/closed-loop/end-to-end.json" },
+    { "id": "AC-DEMO-LIVE", "title": "Live demo-mode dashboard on Vercel with a genuinely live DeepSeek report", "test_id": "vercel_live_verify", "expected": "crown-defense.vercel.app loads publicly; scenario runs; /api/analyze returns live DeepSeek (faithfulness-gated); key server-side only", "artifact": "reports/dashboard/deploy.json" }
+  ],
+  "gate_checks": [
+    { "id": "tests", "check": "vitest run (full suite incl. closed-loop + live DeepSeek)", "expected": "16 files / 134 tests pass; tsc -b clean" },
+    { "id": "review", "check": "fresh-context adversarial review that the closed-loop test is a genuine proof (not hollow/mocked)", "expected": "PASS — real package entrypoints; invariants asserted non-trivially" },
+    { "id": "live", "check": "browser automation verifies the deployed URL end-to-end", "expected": "Overview/Incident render; Generate -> live DeepSeek report renders" }
+  ],
+  "artifacts": {
+    "live_url": "https://crown-defense.vercel.app",
+    "repo_url": "https://github.com/Finerium/crown-defense",
+    "report": "Report-hackathon.md"
+  }
+}

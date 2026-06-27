@@ -1,0 +1,23 @@
+{
+  "_comment": "Gate 6 — closed-loop end-to-end evidence. The five real packages wired together against the safe simulator. Test: packages/test-infra/src/closed-loop.test.ts. Confirmed by a fresh-context adversarial reviewer to be a genuine proof (real package entrypoints, not stubbed; invariants asserted non-trivially).",
+  "gate": 6,
+  "test_file": "packages/test-infra/src/closed-loop.test.ts",
+  "tests": 2,
+  "result": "pass",
+  "stages_wired": [
+    "@crown/simulator (familyByName -> SafeSimulator) -> C1 telemetry",
+    "@crown/detection (DetectionEngine.ingest) -> C2 MASS_ENCRYPTION verdict",
+    "@crown/containment (ContainmentModule.handleVerdict, dial-gated) + @crown/agent (AgentContainment.execute)",
+    "audit sink -> C4 ActionRecord appended BEFORE the command",
+    "@crown/llm (LLMOrchestrator.analyze) -> C7 IncidentReport + BlastRadiusMap + RecoveryPlan (advisory)"
+  ],
+  "invariants_asserted": {
+    "verdict_from_engine_not_handbuilt": true,
+    "c2_corroboration_or_fastpath": "EXECUTE disposition only reachable when corroborating_count>=2 OR fast_path (containment.ts)",
+    "audit_precedes_action": "order.slice(0,2) === ['audit','command'] — append awaited before issue()",
+    "fail_safe_no_command_on_partition": "controlPlaneReachable=false => DENY_FAILSAFE, command===null, issuer.issue never called",
+    "llm_advisory_only": "IncidentAnalysis is C7-only by construction; never an ActionRecord/AgentCommand"
+  },
+  "reviewer_verdict": "PASS — genuinely wires 5 real packages and proves each invariant through production code, not hand-built objects",
+  "full_suite": { "files": 16, "tests": 134, "result": "pass", "tsc_b": "clean" }
+}
