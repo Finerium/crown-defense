@@ -15,7 +15,14 @@ containment → self-hosted-LLM incident analysis → immutable, hash-chained au
 | **Live dashboard** | **https://crown-defense.vercel.app** |
 | **Repository** | **https://github.com/Finerium/crown-defense** (private) |
 | **Live LLM** | DeepSeek (`deepseek-v4-pro`) called **server-side** from a Vercel serverless function; API key never reaches the client |
-| **Auto-deploy** | enabled — every push to `main` redeploys |
+| **Auto-deploy** | git-connected to `main` (production branch).¹ |
+
+> ¹ The repo is git-linked to the Vercel project, but this **Hobby** Vercel team enforces
+> `COMMIT_AUTHOR_REQUIRED` — it only auto-deploys commits whose Git author is a Vercel team member. The
+> build commits are authored by the **"Crown Defense Build"** identity, so unattended push-deploys are
+> blocked until either (a) commits are authored with an email tied to the Vercel account, or (b) that
+> protection is relaxed. The live site above is deployed via the Vercel CLI (authenticated as the team owner),
+> which is how every deployment in this submission was published.
 
 The dashboard is **DEMO MODE**: a static frontend + serverless functions only. It runs on **synthetic data
 from the safe simulator — never real malware**, and is clearly labelled as a simulation in-product. The

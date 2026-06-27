@@ -7,8 +7,10 @@
     "project": "crown-defense",
     "root_directory": "apps/dashboard",
     "framework": "nextjs",
-    "production_deployment_id": "dpl_CRLaXh4swGuCsxnifRQ6s9dxb95d",
-    "auto_redeploy_on_push": "main (git connected to Finerium/crown-defense)",
+    "production_deployment_id": "dpl_A8gbbpFJRY181MUKqM5nXAzGqEHb",
+    "published_via": "Vercel CLI (vercel deploy --prod), authenticated as the team owner",
+    "git_connected": "Finerium/crown-defense, production branch main",
+    "auto_redeploy_caveat": "Hobby team enforces COMMIT_AUTHOR_REQUIRED — unattended push-deploys are blocked because build commits are authored by the non-member 'Crown Defense Build' identity. Fix: author commits with a Vercel-account email, or relax the protection.",
     "env_vars_server_side": ["DEEPSEEK_API_KEY (encrypted, hidden)", "LLM_API_BASE_URL", "LLM_MODEL"]
   },
   "homepage_check": { "http_status": 200, "public": true, "sso_wall": false },
