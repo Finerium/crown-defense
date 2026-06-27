@@ -13,7 +13,7 @@ containment → self-hosted-LLM incident analysis → immutable, hash-chained au
 | | |
 |---|---|
 | **Live dashboard** | **https://crown-defense.vercel.app** |
-| **Repository** | **https://github.com/Finerium/crown-defense** (private) |
+| **Repository** | **https://github.com/Finerium/crown-defense** (public, Apache-2.0) |
 | **Live LLM** | DeepSeek (`deepseek-v4-pro`) called **server-side** from a Vercel serverless function; API key never reaches the client |
 | **Auto-deploy** | git-connected to `main` (production branch).¹ |
 
