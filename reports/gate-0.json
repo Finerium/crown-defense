@@ -1,0 +1,18 @@
+{
+  "gate": 0,
+  "name": "Foundation + architecture validated",
+  "verified_evidence": {
+    "typecheck": { "command": "tsc -b", "result": "exit 0 (strict, clean)" },
+    "tests": { "command": "vitest run", "result": "28 passed (3 files)" },
+    "lint": { "command": "biome check .", "result": "clean" },
+    "contracts_executable": "packages/contracts C1-C10 with invariants (corroboration bound-to-fired-signals, dual-control, command authz, playbook_ref, bounded pagination)",
+    "audit_substrate_live": "append + full-chain verify pass; DB-level WORM trigger rejects UPDATE/DELETE/TRUNCATE (store.test.ts)",
+    "audit_tamper_detection": "hash-chain detects content-mutation, forgery-without-key, deletion, reorder (hash-chain.test.ts)",
+    "db": { "operational_dial_default": "MONITOR_ONLY", "audit_worm_trigger_present": true, "separation": "ADR-013 two databases" },
+    "feature_list": ".crown/feature-list.json initialized, all 69 criteria passes:false",
+    "architecture_review": "two fresh-context reviewers (contract-fidelity + invariant-realization) returned CONCERNS; 3 issues fixed before fan-out (C2 self-reported count, effectiveAutonomy half-of-ADR-005, hook Bash/subdir gaps), 4 prod-hardening items flagged for Phase 7/12",
+    "enforcement_floor": "hooks written + unit-verified (safety blocks CROWN_HOOK_PROBE; verification-integrity blocks worktree/worker oracle writes incl. Bash, allows main thread). NOT ACTIVE mid-session — requires relaunch."
+  },
+  "blocker_to_clear_before_phase_1": "Relaunch the session so settings.json hooks activate; probe `echo CROWN_HOOK_PROBE` must be BLOCKED before fan-out.",
+  "passes": true
+}

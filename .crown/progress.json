@@ -1,0 +1,26 @@
+{
+  "_comment": "Run state for durability + resume-via-recon. On relaunch: recon the committed state, re-verify the last claimed gate against the real repo, then continue from the first unmet gate. Worker subagents are hook-denied from writing this file.",
+  "product": "Crown Defense",
+  "codename": "talos",
+  "run_target_this_session": "Gate 0 (foundation), then hand back for one relaunch to ACTIVATE hooks before Phase 1 fan-out",
+  "deliberate_stop_point": "Gate 6 (hackathon checkpoint) — bank-grade Phases 7-15 are a later relaunch",
+  "gates": [
+    {
+      "gate": 0,
+      "name": "Foundation + architecture validated",
+      "status": "passed_pending_hook_activation",
+      "evidence": {
+        "contracts": "packages/contracts (18 tests pass), docs/contracts.md",
+        "audit_substrate": "packages/audit hash-chain + WORM store (8 tests pass incl. live DB WORM reject)",
+        "harness": "vitest + biome + tsc configured; 26 tests passing",
+        "db": "docker postgres up; operational + audit DBs migrated (ADR-013 separation, WORM trigger)",
+        "feature_list": ".crown/feature-list.json initialized (all passes:false)",
+        "architecture": "docs/architecture.md (ADR-016) — pending fresh-context review",
+        "hooks": "written + unit-verified correct; NOT active mid-session (require relaunch)"
+      },
+      "blocker": "Enforcement hooks are not active until a session relaunch. Foundation committed; operator relaunches to activate, then resume from this gate via recon before Phase 1 fan-out."
+    }
+  ],
+  "spend_note": "Phase 0 foundation only this session. Depth-spend stance applies from Phase 1 onward.",
+  "next_action_on_relaunch": "Recon committed state; probe hooks active (echo CROWN_HOOK_PROBE must be BLOCKED); re-verify Gate 0; then fan out Phase 1 (safe simulator + benign suite + metrics, main-thread oracle)."
+}

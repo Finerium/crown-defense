@@ -1,0 +1,566 @@
+{
+  "_comment": "Definition of Done. Every blueprint §8 acceptance criterion, passes:false until proven with manifest-conformant evidence by a fresh-context reviewer. JSON (not Markdown) so it is not accidentally overwritten. Worker subagents are hook-denied from writing this file.",
+  "schema_version": "1.0",
+  "criteria": [
+    {
+      "id": "AC-DET-01",
+      "gate": 2,
+      "title": "Full-encryption MASS_ENCRYPTION verdict",
+      "test_id": "det_full_encryption",
+      "artifact": "reports/detection/full.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DET-02",
+      "gate": 2,
+      "title": "Intermittent modes detected via format-validation/fusion",
+      "test_id": "det_intermittent_matrix",
+      "artifact": "reports/detection/intermittent.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DET-03",
+      "gate": 2,
+      "title": "Low-and-slow detected within file-loss budget",
+      "test_id": "det_low_slow",
+      "artifact": "reports/detection/low_slow.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DET-04",
+      "gate": 2,
+      "title": "Canary fast-path high-confidence verdict",
+      "test_id": "det_canary_fastpath",
+      "artifact": "reports/detection/canary.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DET-05",
+      "gate": 2,
+      "title": "Every ISOLATE_HOST has >=2 corroboration or fast_path",
+      "test_id": "det_corroboration_invariant",
+      "artifact": "reports/detection/corroboration.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DET-06",
+      "gate": 2,
+      "title": ">=20 behaviors/families and >=4 evasion modes covered",
+      "test_id": "det_battery_coverage",
+      "artifact": "reports/detection/coverage.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FP-01",
+      "gate": 2,
+      "title": "Benign suite false-positive rate <= 0.5%",
+      "test_id": "fp_benign_suite",
+      "artifact": "reports/fp/benign.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FP-02",
+      "gate": 2,
+      "title": "Allow-list suppression for known high-entropy apps, auditable",
+      "test_id": "fp_allowlist",
+      "artifact": "reports/fp/allowlist.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CONT-01",
+      "gate": 3,
+      "title": "Containment p95 < 10s from verdict (FULL_AUTO)",
+      "test_id": "cont_latency_p95",
+      "artifact": "reports/containment/latency.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CONT-02",
+      "gate": 3,
+      "title": "Isolation persists on control-plane partition",
+      "test_id": "cont_persist_on_partition",
+      "artifact": "reports/containment/persist.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CONT-03",
+      "gate": 3,
+      "title": "Files lost before containment <= 10",
+      "test_id": "cont_files_lost",
+      "artifact": "reports/containment/files_lost.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CONT-04",
+      "gate": 3,
+      "title": "Process termination + share lockdown executed and recorded",
+      "test_id": "cont_actions",
+      "artifact": "reports/containment/actions.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DIAL-01",
+      "gate": 7,
+      "title": "Dial behaves per C5 semantics at every position",
+      "test_id": "dial_behavior_matrix",
+      "artifact": "reports/dial/matrix.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DIAL-02",
+      "gate": 7,
+      "title": "HUMAN_GATED destructive needs a second distinct approver",
+      "test_id": "dial_dual_control",
+      "artifact": "reports/dial/dual_control.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DIAL-03",
+      "gate": 7,
+      "title": "Time-boxed auto-rollback + one-click revert",
+      "test_id": "dial_rollback",
+      "artifact": "reports/dial/rollback.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DIAL-04",
+      "gate": 7,
+      "title": "Fresh-deployment default is MONITOR_ONLY",
+      "test_id": "dial_default",
+      "artifact": "reports/dial/default.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DIAL-05",
+      "gate": 7,
+      "title": "NEVER_AUTO never auto-executes even in FULL_AUTO",
+      "test_id": "dial_never_auto",
+      "artifact": "reports/dial/never_auto.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-01",
+      "gate": 4,
+      "title": "LLM down: detection+containment continue, report queues",
+      "test_id": "fail_llm_down",
+      "artifact": "reports/resilience/llm_down.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-02",
+      "gate": 10,
+      "title": "Control-plane unreachable: no new destructive action",
+      "test_id": "fail_cp_partition",
+      "artifact": "reports/resilience/cp_partition.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-03",
+      "gate": 10,
+      "title": "Agent crash: watchdog auto-recovers, no destructive during recovery",
+      "test_id": "fail_agent_crash",
+      "artifact": "reports/resilience/agent_crash.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-04",
+      "gate": 10,
+      "title": "Event-queue overflow handled safely (durable sink, no silent loss)",
+      "test_id": "fail_queue_overflow",
+      "artifact": "reports/resilience/queue.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-05",
+      "gate": 10,
+      "title": "Memory bounded under soak",
+      "test_id": "fail_soak_memory",
+      "artifact": "reports/resilience/soak.json",
+      "passes": false
+    },
+    {
+      "id": "AC-FAIL-06",
+      "gate": 10,
+      "title": "External calls have timeouts + bounded retry/backoff",
+      "test_id": "fail_timeout_retry",
+      "artifact": "reports/resilience/timeout.json",
+      "passes": false
+    },
+    {
+      "id": "AC-LLM-01",
+      "gate": 4,
+      "title": "Recovery plan recs traceable to playbook; untraceable blocked",
+      "test_id": "llm_faithfulness_gate",
+      "artifact": "reports/llm/faithfulness.json",
+      "passes": false
+    },
+    {
+      "id": "AC-LLM-02",
+      "gate": 4,
+      "title": "Report conforms to structured JSON schema",
+      "test_id": "llm_schema_conformance",
+      "artifact": "reports/llm/schema.json",
+      "passes": false
+    },
+    {
+      "id": "AC-LLM-03",
+      "gate": 4,
+      "title": "Low-faithfulness generation rejected/routed",
+      "test_id": "llm_negative_faithfulness",
+      "artifact": "reports/llm/negative.json",
+      "passes": false
+    },
+    {
+      "id": "AC-AUDIT-01",
+      "gate": 7,
+      "title": "Every action/approval produces an immutable attributed record",
+      "test_id": "audit_completeness",
+      "artifact": "reports/audit/completeness.json",
+      "passes": false
+    },
+    {
+      "id": "AC-AUDIT-02",
+      "gate": 7,
+      "title": "Hash chain detects any mutation (tamper-evidence)",
+      "test_id": "audit_tamper_detection",
+      "artifact": "reports/audit/tamper.json",
+      "passes": false
+    },
+    {
+      "id": "AC-AUDIT-03",
+      "gate": 7,
+      "title": "24h reconstruction from durable storage",
+      "test_id": "audit_24h_reconstruction",
+      "artifact": "reports/audit/reconstruct.json",
+      "passes": false
+    },
+    {
+      "id": "AC-AUDIT-04",
+      "gate": 7,
+      "title": "Verifiable chain-checked export slice",
+      "test_id": "audit_export",
+      "artifact": "reports/audit/export.json",
+      "passes": false
+    },
+    {
+      "id": "AC-AUDIT-05",
+      "gate": 7,
+      "title": "HUMAN_GATED destructive record carries distinct approver",
+      "test_id": "audit_dual_control_record",
+      "artifact": "reports/audit/dual_control.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-01",
+      "gate": 3,
+      "title": "mTLS mutual auth + encryption; bad cert rejected",
+      "test_id": "sec_mtls",
+      "artifact": "reports/security/mtls.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-02",
+      "gate": 3,
+      "title": "Agent anti-tamper prevents/detects unauthorized stop/tamper",
+      "test_id": "sec_anti_tamper",
+      "artifact": "reports/security/anti_tamper.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-03",
+      "gate": 3,
+      "title": "Control plane deny-by-default; protected routes reject unauth",
+      "test_id": "sec_authz_deny_default",
+      "artifact": "reports/security/authz.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-04",
+      "gate": 12,
+      "title": "All external inputs schema-validated; injection/XSS pass",
+      "test_id": "sec_input_validation",
+      "artifact": "reports/security/input.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-05",
+      "gate": 12,
+      "title": "No secrets in code/logs/repo; .env gitignored",
+      "test_id": "sec_secrets_scan",
+      "artifact": "reports/security/secrets.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-06",
+      "gate": 12,
+      "title": "Zero high/critical dependency CVEs; lockfile committed",
+      "test_id": "sec_dep_cve",
+      "artifact": "reports/security/cve.json",
+      "passes": false
+    },
+    {
+      "id": "AC-SEC-07",
+      "gate": 13,
+      "title": "Red-team suite all DEFENDED",
+      "test_id": "sec_redteam_suite",
+      "artifact": "reports/security/redteam.json",
+      "passes": false
+    },
+    {
+      "id": "AC-PERF-01",
+      "gate": 11,
+      "title": "Agent steady-state CPU overhead <= ~3%",
+      "test_id": "perf_agent_overhead",
+      "artifact": "reports/perf/overhead.json",
+      "passes": false
+    },
+    {
+      "id": "AC-PERF-02",
+      "gate": 11,
+      "title": "Fleet >=1000 endpoints: bounded memory + latency",
+      "test_id": "perf_fleet_scale",
+      "artifact": "reports/perf/fleet.json",
+      "passes": false
+    },
+    {
+      "id": "AC-PERF-03",
+      "gate": 11,
+      "title": "All data views paginated/bounded",
+      "test_id": "perf_bounded_results",
+      "artifact": "reports/perf/bounded.json",
+      "passes": false
+    },
+    {
+      "id": "AC-PERF-04",
+      "gate": 11,
+      "title": "Detection-to-alert latency < 2s",
+      "test_id": "perf_detect_latency",
+      "artifact": "reports/perf/detect_latency.json",
+      "passes": false
+    },
+    {
+      "id": "AC-TEST-COV",
+      "gate": 8,
+      "title": "Coverage >=80% lines, 100% contract/critical paths",
+      "test_id": "coverage_report",
+      "artifact": "reports/coverage/summary.json",
+      "passes": false
+    },
+    {
+      "id": "AC-TYPE",
+      "gate": 8,
+      "title": "Zero type errors; strict mode",
+      "test_id": "typecheck",
+      "artifact": "reports/typecheck.txt",
+      "passes": false
+    },
+    {
+      "id": "AC-LINT",
+      "gate": 8,
+      "title": "Linter/formatter clean",
+      "test_id": "lint",
+      "artifact": "reports/lint.txt",
+      "passes": false
+    },
+    {
+      "id": "AC-OBS-LOG",
+      "gate": 8,
+      "title": "Structured JSON logs, no PII, correlation ids",
+      "test_id": "obs_logging",
+      "artifact": "reports/obs/logging.json",
+      "passes": false
+    },
+    {
+      "id": "AC-OBS-ERR",
+      "gate": 8,
+      "title": "Errors captured; no swallowed exceptions",
+      "test_id": "obs_error_tracking",
+      "artifact": "reports/obs/errors.json",
+      "passes": false
+    },
+    {
+      "id": "AC-OBS-HEALTH",
+      "gate": 10,
+      "title": "Health/readiness returns real dependency status",
+      "test_id": "obs_health",
+      "artifact": "reports/obs/health.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DATA-MIG",
+      "gate": 8,
+      "title": "Migrations reversible/transactional; no data loss",
+      "test_id": "data_migration",
+      "artifact": "reports/data/migration.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CONFIG",
+      "gate": 8,
+      "title": "12-factor config; complete .env.example; dial/thresholds are config",
+      "test_id": "config_audit",
+      "artifact": "reports/config.json",
+      "passes": false
+    },
+    {
+      "id": "AC-BUILD-REPRO",
+      "gate": 8,
+      "title": "Lockfile committed; clean checkout builds deterministically",
+      "test_id": "ci_clean_build",
+      "artifact": "reports/ci_build.txt",
+      "passes": false
+    },
+    {
+      "id": "AC-DOCS",
+      "gate": 14,
+      "title": "README, arch, API, runbooks, CONTRIBUTING complete",
+      "test_id": "docs_completeness",
+      "artifact": "reports/docs.json",
+      "passes": false
+    },
+    {
+      "id": "AC-REPO",
+      "gate": 14,
+      "title": "License, changelog, gitignore, clean history, no leaks",
+      "test_id": "repo_hygiene",
+      "artifact": "reports/repo.json",
+      "passes": false
+    },
+    {
+      "id": "AC-CICD",
+      "gate": 8,
+      "title": "Pipeline runs build/lint/typecheck/tests/security",
+      "test_id": "ci_pipeline",
+      "artifact": "reports/ci.txt",
+      "passes": false
+    },
+    {
+      "id": "AC-SEMVER",
+      "gate": 14,
+      "title": "Versioned per semver; changelog matches",
+      "test_id": "semver_check",
+      "artifact": "reports/semver.txt",
+      "passes": false
+    },
+    {
+      "id": "AC-I18N",
+      "gate": 5,
+      "title": "No hardcoded user-facing strings; locale-ready ID+EN",
+      "test_id": "i18n_scan",
+      "artifact": "reports/i18n.json",
+      "passes": false
+    },
+    {
+      "id": "AC-A11Y",
+      "gate": 5,
+      "title": "WCAG 2.x AA on key flows; severity never color-only",
+      "test_id": "a11y_check",
+      "artifact": "reports/a11y.json",
+      "passes": false
+    },
+    {
+      "id": "AC-INTEG",
+      "gate": 15,
+      "title": "SIEM/AD/EDR adapters pass contract tests vs mocks",
+      "test_id": "integration_contract_tests",
+      "artifact": "reports/integration.json",
+      "passes": false
+    },
+    {
+      "id": "AC-COMP-01",
+      "gate": 12,
+      "title": "On-prem operation; zero third-party egress in prod profile",
+      "test_id": "comp_no_egress",
+      "artifact": "reports/compliance/egress.json",
+      "passes": false
+    },
+    {
+      "id": "AC-COMP-02",
+      "gate": 12,
+      "title": "Audit export satisfies OJK-style evidentiary requirement",
+      "test_id": "comp_audit_rollup",
+      "artifact": "reports/compliance/audit.json",
+      "passes": false
+    },
+    {
+      "id": "AC-COMP-03",
+      "gate": 12,
+      "title": "OJK/PDP control-mapping doc present and reviewed",
+      "test_id": "comp_mapping_doc",
+      "artifact": "docs/compliance/ojk-pdp-mapping.md",
+      "passes": false
+    },
+    {
+      "id": "AC-ACT-01",
+      "gate": 3,
+      "title": "AgentCommand executes only if authorized; else REJECT+audit",
+      "test_id": "act_command_authz",
+      "artifact": "reports/actuation/authz.json",
+      "passes": false
+    },
+    {
+      "id": "AC-ACT-02",
+      "gate": 3,
+      "title": "Destructive command bound to ActionRecord before sent",
+      "test_id": "act_audit_precedes",
+      "artifact": "reports/actuation/audit_order.json",
+      "passes": false
+    },
+    {
+      "id": "AC-LLMART-01",
+      "gate": 4,
+      "title": "Report/map/plan conform to C7; every plan step has playbook_ref",
+      "test_id": "llmart_schema",
+      "artifact": "reports/llm/artifacts.json",
+      "passes": false
+    },
+    {
+      "id": "AC-INTEG-SIEM",
+      "gate": 15,
+      "title": "SIEM adapter emits SiemEvent in syslog/CEF + REST/webhook",
+      "test_id": "integ_siem",
+      "artifact": "reports/integration/siem.json",
+      "passes": false
+    },
+    {
+      "id": "AC-INTEG-AD",
+      "gate": 15,
+      "title": "AD adapter consumes AdIdentityContext",
+      "test_id": "integ_ad",
+      "artifact": "reports/integration/ad.json",
+      "passes": false
+    },
+    {
+      "id": "AC-INTEG-EDR",
+      "gate": 15,
+      "title": "EDR adapter conforms to EdrIsolateRequest, audit-bound",
+      "test_id": "integ_edr",
+      "artifact": "reports/integration/edr.json",
+      "passes": false
+    },
+    {
+      "id": "AC-HEALTH-01",
+      "gate": 10,
+      "title": "Impaired dependency: overall DEGRADED, effective_autonomy reflects override",
+      "test_id": "health_degraded_reflects",
+      "artifact": "reports/obs/health_degraded.json",
+      "passes": false
+    },
+    {
+      "id": "AC-ERR-01",
+      "gate": 8,
+      "title": "Errors use ErrorEnvelope; stable code; no secrets/PII",
+      "test_id": "err_envelope",
+      "artifact": "reports/obs/errors_envelope.json",
+      "passes": false
+    },
+    {
+      "id": "AC-DATA-01",
+      "gate": 8,
+      "title": "Lists paginated/bounded; FleetState aggregate only",
+      "test_id": "data_bounded_lists",
+      "artifact": "reports/data/bounded.json",
+      "passes": false
+    }
+  ]
+}

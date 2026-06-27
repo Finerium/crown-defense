@@ -1,0 +1,35 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+!**/testdata/**/*.key
+
+# Claude local overrides
+.claude/settings.local.json
+.crown/snapshots/
+.crown/last-stop.txt
+
+# Worktrees (worker isolation)
+worktrees/
+.crown/worktrees/
+
+# Node / build
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+*.log
+npm-debug.log*
+
+# Local data volumes
+.pgdata/
+tmp/

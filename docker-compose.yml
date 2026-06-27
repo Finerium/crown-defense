@@ -1,0 +1,23 @@
+# Crown Defense local data substrate. ADR-013: operational + audit stores kept separate.
+# One Postgres instance, two databases (matches .env URLs). The audit DB's write surface is
+# restricted to the audit subsystem at the app layer; a dedicated DB keeps immutability un-entangled
+# from high-churn operational writes.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: crown-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crowndefense
+      POSTGRES_PASSWORD: crowndefense
+      POSTGRES_DB: crowndefense_operational
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.pgdata:/var/lib/postgresql/data
+      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crowndefense -d crowndefense_operational"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
