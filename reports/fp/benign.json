@@ -1,0 +1,14 @@
+{
+  "id": "AC-FP-01",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:49.147Z",
+  "pass": true,
+  "detail": {
+    "benign_scenarios": 320,
+    "destructive_false_positives": 0,
+    "destructive_fp_rate": 0,
+    "benign_misclassifications": 40,
+    "allowlist_suppressions": 40,
+    "coverage_insufficient": false
+  }
+}

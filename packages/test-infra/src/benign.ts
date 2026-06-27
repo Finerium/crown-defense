@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { entropy as agentEntropy, formatValid as agentFormatValid, inferType } from '@crown/agent';
 import type { TelemetryEvent } from '@crown/contracts';
 import { SCHEMA_VERSION } from '@crown/contracts';
 import { type FileType, SafeSimulator, generateFile, validateFormat, windowEntropy } from '@crown/simulator';
@@ -19,7 +20,11 @@ export type BenignWorkload =
   | 'compression-7zip'
   | 'video-encode'
   | 'db-maintenance'
-  | 'legitimate-fde';
+  | 'legitimate-fde'
+  // FP-prone classes the adversarial review flagged — these reach 2-3 CONTEXT signals and must NOT isolate:
+  | 'format-converter' // png->webp batch: TYPE_HEADER_CHANGE + OP_FREQUENCY, but output stays VALID
+  | 'log-compaction' // in-place gzip: ENTROPY_DELTA(low->high) + TYPE_HEADER + OP_FREQUENCY, output VALID
+  | 'security-scanner'; // backup/AV READS decoys (CANARY_TOUCHED op=READ must not fire the fast-path)
 
 export interface BenignRun {
   workload: BenignWorkload;
@@ -40,6 +45,9 @@ export const BENIGN_PROCESS_PATHS: Record<BenignWorkload, string> = {
   // abuses. Deliberate exact-path overlap so process.path is a weak signal, never a free class separator.
   'db-maintenance': '/usr/bin/python3',
   'legitimate-fde': '/usr/sbin/cryptsetup',
+  'format-converter': '/usr/bin/convert', // ImageMagick
+  'log-compaction': '/usr/bin/gzip',
+  'security-scanner': '/usr/bin/clamscan',
 };
 
 /** FNV-1a hash of a string. */
@@ -65,6 +73,9 @@ export const BENIGN_PROCESS_SIGNED: Record<BenignWorkload, boolean> = {
   'video-encode': false, // static ffmpeg build is frequently unsigned
   'db-maintenance': true,
   'legitimate-fde': true,
+  'format-converter': true,
+  'log-compaction': true,
+  'security-scanner': true,
 };
 
 // SAME base instant as the attack clock (simulator default) — emitted_at must NOT separate the two classes
@@ -86,6 +97,8 @@ function ev(p: {
   writesPerSec: number;
   renamesPerSec: number;
   distinctTypes: number;
+  // A benign scanner READS decoys — a READ must never fire the destructive fast-path (review HIGH).
+  canaryOp?: 'READ' | 'WRITE' | 'RENAME' | 'DELETE';
 }): TelemetryEvent {
   return {
     schema_version: SCHEMA_VERSION,
@@ -113,7 +126,7 @@ function ev(p: {
       header_changed: p.headerChanged,
       format_valid: p.formatValid,
     },
-    canary: null, // benign workloads never touch canaries
+    canary: p.canaryOp ? { canary_id: `decoy-${p.i}`, directory: '/protected', operation: p.canaryOp } : null,
     op_window: {
       writes_per_sec: p.writesPerSec,
       renames_per_sec: p.renamesPerSec,
@@ -126,13 +139,39 @@ function round(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
 
+// Deterministic high-entropy noise (no Math.random) for benign container bodies.
+function noise(seed: number, n: number): Uint8Array {
+  const b = new Uint8Array(n);
+  let s = seed >>> 0;
+  for (let i = 0; i < n; i++) {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    b[i] = (s >>> 24) & 0xff;
+  }
+  return b;
+}
+/** A structurally-valid RIFF/WEBP file (recognized benign container — high entropy, but NOT ciphertext). */
+function webpBytes(seed: number, bodyLen = 8000): Uint8Array {
+  const out = new Uint8Array(12 + bodyLen);
+  out.set([0x52, 0x49, 0x46, 0x46], 0); // 'RIFF'
+  out.set([0x57, 0x45, 0x42, 0x50], 8); // 'WEBP'
+  out.set(noise(seed, bodyLen), 12);
+  return out;
+}
+/** A gzip file (recognized benign container — high entropy compressed body, valid magic). */
+function gzipBytes(seed: number, bodyLen = 6000): Uint8Array {
+  const out = new Uint8Array(2 + bodyLen);
+  out.set([0x1f, 0x8b], 0); // gzip magic
+  out.set(noise(seed, bodyLen), 2);
+  return out;
+}
+
 /** Backup agent: creates NEW high-entropy archive files (no in-place overwrite => no entropy delta). */
-async function backupAgent(dir: string, n: number): Promise<BenignRun> {
+async function backupAgent(dir: string, n: number, variant = 0): Promise<BenignRun> {
   const out = resolve(dir, 'backup');
   await mkdir(out, { recursive: true });
   const events: TelemetryEvent[] = [];
   for (let i = 0; i < n; i++) {
-    const archive = generateFile('docx', 8000, 500 + i); // valid compressed archive (high entropy)
+    const archive = generateFile('docx', 8000, 500 + i + variant * 1000); // valid compressed archive
     const path = join(out, `snapshot_${i}.docx`);
     await writeFile(path, archive);
     events.push(
@@ -158,9 +197,9 @@ async function backupAgent(dir: string, n: number): Promise<BenignRun> {
 }
 
 /** 7-Zip: reads many, writes ONE valid archive. High entropy, low op-frequency. */
-async function compression(dir: string): Promise<BenignRun> {
+async function compression(dir: string, variant = 0): Promise<BenignRun> {
   const out = resolve(dir, 'archive.docx');
-  const archive = generateFile('docx', 60000, 9);
+  const archive = generateFile('docx', 60000, 9 + variant * 1000);
   await mkdir(dir, { recursive: true });
   await writeFile(out, archive);
   const e = ev({
@@ -184,9 +223,9 @@ async function compression(dir: string): Promise<BenignRun> {
 
 /** Video encode: writes ONE growing high-entropy file. Entropy is MEASURED from the real bytes; mp4 has
  *  no structural validator so format_valid is null (honest "not validated"), never stamped true. */
-async function videoEncode(dir: string): Promise<BenignRun> {
+async function videoEncode(dir: string, variant = 0): Promise<BenignRun> {
   const out = resolve(dir, 'render.mp4');
-  const body = generateFile('png', 120000, 3); // real high-entropy payload; measured, not asserted
+  const body = generateFile('png', 120000, 3 + variant * 1000); // real high-entropy payload; measured
   await mkdir(dir, { recursive: true });
   await writeFile(out, body);
   const entropy = windowEntropy(body); // measured
@@ -215,13 +254,13 @@ async function videoEncode(dir: string): Promise<BenignRun> {
 }
 
 /** DB maintenance (VACUUM): many in-place writes + renames, but data stays structured & valid. */
-async function dbMaintenance(dir: string, n: number): Promise<BenignRun> {
+async function dbMaintenance(dir: string, n: number, variant = 0): Promise<BenignRun> {
   const out = resolve(dir, 'db');
   await mkdir(out, { recursive: true });
   const events: TelemetryEvent[] = [];
   for (let i = 0; i < n; i++) {
-    const before = generateFile('csv', 6000, 1000 + i);
-    const after = generateFile('csv', 6000, 2000 + i); // rewritten, still valid structured csv
+    const before = generateFile('csv', 6000, 1000 + i + variant * 1000);
+    const after = generateFile('csv', 6000, 2000 + i + variant * 1000); // rewritten, still valid csv
     const path = join(out, `table_${i}.csv`);
     await writeFile(path, after);
     events.push(
@@ -248,7 +287,7 @@ async function dbMaintenance(dir: string, n: number): Promise<BenignRun> {
 
 /** Legitimate full-disk encryption: in-place, high entropy, INVALID format — looks malicious. Defended
  *  ONLY by the allow-list (AC-FP-02). Uses the safe simulator's reversible transform on real files. */
-async function legitimateFde(dir: string, n: number): Promise<BenignRun> {
+async function legitimateFde(dir: string, n: number, variant = 0): Promise<BenignRun> {
   const out = resolve(dir, 'fde');
   const sim = new SafeSimulator({
     targetDir: out,
@@ -257,7 +296,7 @@ async function legitimateFde(dir: string, n: number): Promise<BenignRun> {
     fileTypes: ['txt', 'csv'] as FileType[],
     encryptedExtension: '.luks',
     keepKey: true,
-    seed: 'fde',
+    seed: `fde-${variant}`,
     rename: false,
   });
   await sim.seed(n);
@@ -285,6 +324,102 @@ async function legitimateFde(dir: string, n: number): Promise<BenignRun> {
   return run('legitimate-fde', events, true);
 }
 
+/** Image batch conversion (png -> webp, in place): TYPE_HEADER_CHANGE + OP_FREQUENCY fire, BUT the output
+ *  is a valid recognized container (no structural loss) — must NOT reach a destructive verdict. Fields are
+ *  MEASURED via the agent's own validators (the product code), never stamped. */
+async function formatConverter(dir: string, n: number, variant = 0): Promise<BenignRun> {
+  const out = resolve(dir, 'convert');
+  await mkdir(out, { recursive: true });
+  const events: TelemetryEvent[] = [];
+  for (let i = 0; i < n; i++) {
+    const src = generateFile('png', 8000, 6000 + i + variant * 1000); // real high-entropy png
+    const webp = webpBytes(6000 + i + variant * 1000);
+    const path = join(out, `image_${i}.png`);
+    await writeFile(path, webp); // converter overwrote the file in place with webp content
+    events.push(
+      ev({
+        i,
+        workload: 'format-converter',
+        type: 'FILE_WRITE',
+        filePath: path,
+        prevType: inferType(src), // 'png'
+        newType: inferType(webp), // 'riff' (webp)
+        size: webp.length,
+        entropyRead: agentEntropy(src),
+        entropyWrite: agentEntropy(webp),
+        formatValid: agentFormatValid(webp), // recognized container => valid
+        headerChanged: true, // png magic -> riff magic
+        writesPerSec: 28,
+        renamesPerSec: 0,
+        distinctTypes: 2,
+      })
+    );
+  }
+  return run('format-converter', events, false);
+}
+
+/** In-place log compaction (gzip): the HARDEST benign FP — entropy rises low->high, type + header change,
+ *  high op-frequency (looks exactly like encryption). Saved ONLY by the output staying a VALID gzip (no
+ *  structural-loss signal), which is precisely the encryption discriminator. */
+async function logCompaction(dir: string, n: number, variant = 0): Promise<BenignRun> {
+  const out = resolve(dir, 'logs');
+  await mkdir(out, { recursive: true });
+  const events: TelemetryEvent[] = [];
+  for (let i = 0; i < n; i++) {
+    const log = generateFile('txt', 6000, 7000 + i + variant * 1000); // low-entropy text log
+    const gz = gzipBytes(7000 + i + variant * 1000);
+    const path = join(out, `app_${i}.log`);
+    await writeFile(path, gz); // compacted in place
+    events.push(
+      ev({
+        i,
+        workload: 'log-compaction',
+        type: 'FILE_WRITE',
+        filePath: path,
+        prevType: inferType(log), // 'text'
+        newType: inferType(gz), // 'gzip'
+        size: gz.length,
+        entropyRead: agentEntropy(log), // low
+        entropyWrite: agentEntropy(gz), // high => low->high rise (entropy signal fires)
+        formatValid: agentFormatValid(gz), // valid gzip => no structural-loss signal
+        headerChanged: true,
+        writesPerSec: 70,
+        renamesPerSec: 0,
+        distinctTypes: 2,
+      })
+    );
+  }
+  return run('log-compaction', events, false);
+}
+
+/** Security scanner / backup READING decoy files. A READ of a canary must NOT fire the destructive
+ *  fast-path (a benign AV/backup/indexer routinely reads decoys). */
+async function securityScanner(_dir: string, n: number, _variant = 0): Promise<BenignRun> {
+  const events: TelemetryEvent[] = [];
+  for (let i = 0; i < n; i++) {
+    events.push(
+      ev({
+        i,
+        workload: 'security-scanner',
+        type: 'CANARY_TOUCHED',
+        filePath: `/protected/decoy-${i}.xlsx`,
+        prevType: 'xlsx',
+        newType: 'xlsx',
+        size: 4096,
+        entropyRead: null, // a read does not rewrite content
+        entropyWrite: null,
+        formatValid: true, // unchanged, still valid
+        headerChanged: false,
+        writesPerSec: 0,
+        renamesPerSec: 0,
+        distinctTypes: 1,
+        canaryOp: 'READ',
+      })
+    );
+  }
+  return run('security-scanner', events, false);
+}
+
 function run(workload: BenignWorkload, events: TelemetryEvent[], requiresAllowlist: boolean): BenignRun {
   return {
     workload,
@@ -296,14 +431,20 @@ function run(workload: BenignWorkload, events: TelemetryEvent[], requiresAllowli
   };
 }
 
-/** Run the full benign-but-suspicious suite into `dir`. Returns one BenignRun per workload. */
-export async function runBenignSuite(dir: string): Promise<BenignRun[]> {
+/** Run the full benign-but-suspicious suite into `dir`. `variant` shifts content so repeated runs are
+ *  distinct instances (used to build a large benign corpus for a meaningful AC-FP-01 rate). */
+export async function runBenignSuite(dir: string, variant = 0): Promise<BenignRun[]> {
+  // Vary counts per variant so the corpus spans the op-frequency axis (genuine decision diversity).
+  const j = variant % 5;
   return [
-    await backupAgent(dir, 12),
-    await compression(dir),
-    await videoEncode(dir),
-    await dbMaintenance(dir, 20),
-    await legitimateFde(dir, 8),
+    await backupAgent(dir, 10 + j, variant),
+    await compression(dir, variant),
+    await videoEncode(dir, variant),
+    await dbMaintenance(dir, 16 + j * 2, variant),
+    await legitimateFde(dir, 6 + j, variant),
+    await formatConverter(dir, 8 + j, variant),
+    await logCompaction(dir, 8 + j, variant),
+    await securityScanner(dir, 4 + j, variant),
   ];
 }
 
@@ -313,4 +454,7 @@ export const BENIGN_WORKLOADS: BenignWorkload[] = [
   'video-encode',
   'db-maintenance',
   'legitimate-fde',
+  'format-converter',
+  'log-compaction',
+  'security-scanner',
 ];

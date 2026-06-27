@@ -4,6 +4,8 @@
     { "path": "packages/contracts" },
     { "path": "packages/audit" },
     { "path": "packages/simulator" },
+    { "path": "packages/detection" },
+    { "path": "packages/agent" },
     { "path": "packages/test-infra" }
   ]
 }

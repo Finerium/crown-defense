@@ -22,4 +22,12 @@ export {
   type VerdictLabel,
 } from './metrics.js';
 export { type BlindScenario, GroundTruthRegistry } from './scenario.js';
+export {
+  attackTelemetry,
+  type BatteryResult,
+  type DetectionRunResult,
+  runAttackBattery,
+  runBenignBattery,
+  runDetection,
+} from './detection-harness.js';
 export { type EvidenceReport, evidence, writeReport } from './report.js';

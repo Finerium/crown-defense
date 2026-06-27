@@ -18,9 +18,15 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
+      '@crown/agent':
+        specifier: workspace:*
+        version: link:packages/agent
       '@crown/contracts':
         specifier: workspace:*
         version: link:packages/contracts
+      '@crown/detection':
+        specifier: workspace:*
+        version: link:packages/detection
       '@crown/simulator':
         specifier: workspace:*
         version: link:packages/simulator
@@ -43,6 +49,12 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.0)
 
+  packages/agent:
+    dependencies:
+      '@crown/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/audit:
     dependencies:
       '@crown/contracts':
@@ -61,6 +73,12 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
+  packages/detection:
+    dependencies:
+      '@crown/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/simulator:
     dependencies:
       '@crown/contracts':
@@ -69,9 +87,15 @@ importers:
 
   packages/test-infra:
     dependencies:
+      '@crown/agent':
+        specifier: workspace:*
+        version: link:../agent
       '@crown/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@crown/detection':
+        specifier: workspace:*
+        version: link:../detection
       '@crown/simulator':
         specifier: workspace:*
         version: link:../simulator

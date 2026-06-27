@@ -1,0 +1,73 @@
+{
+  "id": "AC-DET-01",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:47.239Z",
+  "pass": true,
+  "detail": {
+    "families": [
+      "LockBit-3.0",
+      "BrainCipher",
+      "Conti",
+      "Ryuk",
+      "REvil-Sodinokibi",
+      "WannaCry",
+      "Maze",
+      "DarkSide",
+      "Cuba",
+      "Babuk"
+    ],
+    "all_detected": true,
+    "results": [
+      {
+        "family": "LockBit-3.0",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "BrainCipher",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "Conti",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "Ryuk",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "REvil-Sodinokibi",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "WannaCry",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "Maze",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "DarkSide",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "Cuba",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      },
+      {
+        "family": "Babuk",
+        "verdict": "MASS_ENCRYPTION",
+        "filesLost": 2
+      }
+    ]
+  }
+}

@@ -194,7 +194,7 @@ async function benignReport() {
     }
     return { workload: r.workload, events: r.events.length, requiresAllowlist: r.requiresAllowlist };
   });
-  const pass = allValid && allBenign && runs.length === 5;
+  const pass = allValid && allBenign && runs.length >= 5;
   await writeReport(REP('benign.json'), evidence('BENIGN-SUITE', 1, pass, { workloads: rows, allValid, allBenign }));
   await rm(dir, { recursive: true, force: true });
   return pass;

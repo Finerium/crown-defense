@@ -164,3 +164,23 @@ header/type-change/op_window/canary) ARE allowed to separate (that's detection).
   always fires, so format-validation is never strictly required. Phase 2 must run intermittent scenarios
   IN-PLACE (rename=false) so entropy is flat, type/header unchanged, and FORMAT_VALIDATION_FAIL is the
   load-bearing signal — the honest proof of AC-DET-02.
+
+## Phase 2 (detection core) — built, all AC pass, review pending
+
+- **@crown/detection**: config (12-factor, env-driven thresholds), 5 signal evaluators (canary fast-path,
+  entropy-delta on in-place only, op-frequency incl. a CUMULATIVE low-and-slow counter, type/header,
+  format-validation), fusion (>=2-corroboration or fast-path for ISOLATE_HOST; auditable allow-list
+  suppression), stateful bounded-window engine. Decides from C1 ONLY (no oracle import).
+- **@crown/agent**: userspace fs-observer producing C1 with its OWN independent validators (CRC32/Shannon),
+  canary manager. Honest LIMITATION: userspace polling has NO process attribution (process fields null);
+  eBPF/minifilter supply pid/path/signed in production, which the allow-list + dual-control rely on. So
+  allow-list suppression is exercised via the simulator's C1 (which has process context), not the userspace
+  observer. Documented deviation — the userspace backend is the light build option per ADR-006.
+- **Grading harness** (test-infra): runDetection + attack/benign batteries via blind scenarios. AC-DET-02
+  proven by FORMAT-ABLATION (remove the signal => detection lost). AC-FP over 200 benign scenarios.
+- **Gate-2 evidence (scripts/gate2-evidence.ts, reports/detection/*.json + reports/fp/*.json):** all 8 pass.
+  detection_rate 1.0 on the SAFE-SIMULATOR battery (reported, not a field guarantee — real families = lab,
+  OQ-6); files_lost max 1; 200 benign scenarios, 0 destructive FP (the 40 benign_misclassifications ==
+  40 allowlist_suppressions == the FDE variants = authorized encryption, not harmful FP).
+- 90 tests, tsc + biome clean. Detection-engine adversarial review (5-lens, sanitized framing) running.
+  Will mark AC-DET-01..06 + AC-FP-01..02 passes:true and commit Gate 2 AFTER the review confirms.

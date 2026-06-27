@@ -16,7 +16,8 @@ describe('benign-but-suspicious suite (FP oracle)', () => {
       expect(r.events.length).toBeGreaterThan(0);
       for (const e of r.events) {
         expect(() => TelemetryEvent.parse(e)).not.toThrow();
-        expect(e.canary).toBeNull(); // benign workloads never touch canaries
+        // Benign workloads never MODIFY a canary; a scanner may READ one (which must not trigger isolation).
+        if (e.canary) expect(e.canary.operation).toBe('READ');
         expect(typeof e.process.signed).toBe('boolean');
       }
     }

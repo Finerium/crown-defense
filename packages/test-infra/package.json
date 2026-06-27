@@ -7,7 +7,9 @@
   "types": "./src/index.ts",
   "exports": { ".": "./src/index.ts" },
   "dependencies": {
+    "@crown/agent": "workspace:*",
     "@crown/contracts": "workspace:*",
+    "@crown/detection": "workspace:*",
     "@crown/simulator": "workspace:*"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "id": "AC-DET-04",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:47.436Z",
+  "pass": true,
+  "detail": {
+    "fast_path": true,
+    "verdict": "MASS_ENCRYPTION"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "AC-DET-05",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:47.884Z",
+  "pass": true,
+  "detail": {
+    "isolate_verdicts": 264,
+    "violations": 0,
+    "schema_parse_failures": 0
+  }
+}

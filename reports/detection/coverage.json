@@ -1,0 +1,29 @@
+{
+  "id": "AC-DET-06",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:47.885Z",
+  "pass": true,
+  "detail": {
+    "families": 24,
+    "modes": 5,
+    "evasion_modes": [
+      "FULL",
+      "INTERMITTENT_EVERY_N_BYTES",
+      "HEADER_ONLY",
+      "FIRST_4KB",
+      "LOW_AND_SLOW"
+    ],
+    "detection_rate_reported": 1,
+    "detected": 24,
+    "attacks": 24,
+    "files_lost": {
+      "max": 2,
+      "p95": 2
+    },
+    "detect_latency_ms": {
+      "p50": 6,
+      "p95": 333,
+      "n": 24
+    }
+  }
+}

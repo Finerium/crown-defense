@@ -1,0 +1,28 @@
+{
+  "id": "AC-DET-03",
+  "gate": 2,
+  "generated_at": "2026-06-27T18:39:47.413Z",
+  "pass": true,
+  "detail": {
+    "results": [
+      {
+        "family": "Medusa",
+        "detected": true,
+        "filesLost": 2,
+        "fps": 3
+      },
+      {
+        "family": "Rhysida",
+        "detected": true,
+        "filesLost": 2,
+        "fps": 4
+      },
+      {
+        "family": "ViceSociety",
+        "detected": true,
+        "filesLost": 2,
+        "fps": 2
+      }
+    ]
+  }
+}
