@@ -30,4 +30,5 @@ export {
   runBenignBattery,
   runDetection,
 } from './detection-harness.js';
+export { type TestPki, genTestPki } from './pki.js';
 export { type EvidenceReport, evidence, writeReport } from './report.js';

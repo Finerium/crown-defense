@@ -36,6 +36,9 @@ importers:
       '@crown/detection':
         specifier: workspace:*
         version: link:packages/detection
+      '@crown/llm':
+        specifier: workspace:*
+        version: link:packages/llm
       '@crown/simulator':
         specifier: workspace:*
         version: link:packages/simulator
@@ -100,6 +103,12 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/llm:
+    dependencies:
+      '@crown/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/simulator:
     dependencies:
       '@crown/contracts':
@@ -126,6 +135,9 @@ importers:
       '@crown/detection':
         specifier: workspace:*
         version: link:../detection
+      '@crown/llm':
+        specifier: workspace:*
+        version: link:../llm
       '@crown/simulator':
         specifier: workspace:*
         version: link:../simulator

@@ -13,6 +13,7 @@
     "@crown/contracts": "workspace:*",
     "@crown/control-plane": "workspace:*",
     "@crown/detection": "workspace:*",
+    "@crown/llm": "workspace:*",
     "@crown/simulator": "workspace:*"
   }
 }

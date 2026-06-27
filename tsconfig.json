@@ -8,6 +8,7 @@
     { "path": "packages/agent" },
     { "path": "packages/containment" },
     { "path": "packages/control-plane" },
+    { "path": "packages/llm" },
     { "path": "packages/test-infra" }
   ]
 }

@@ -18,7 +18,8 @@
     "db:down": "docker compose down",
     "db:migrate": "node scripts/migrate.mjs",
     "gate1:evidence": "tsx scripts/gate1-evidence.ts",
-    "gate2:evidence": "tsx scripts/gate2-evidence.ts"
+    "gate2:evidence": "tsx scripts/gate2-evidence.ts",
+    "gate3:evidence": "tsx scripts/gate3-evidence.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -28,6 +29,7 @@
     "@crown/contracts": "workspace:*",
     "@crown/control-plane": "workspace:*",
     "@crown/detection": "workspace:*",
+    "@crown/llm": "workspace:*",
     "@crown/simulator": "workspace:*",
     "@crown/test-infra": "workspace:*",
     "@types/node": "^22.10.0",

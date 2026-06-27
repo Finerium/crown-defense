@@ -1,0 +1,23 @@
+{
+  "_comment": "Phase 3 / Gate 3 evidence manifest — containment + self-protection. Parsed fail-closed. The dial is built INTO containment; audit precedes action; control-plane loss denies new destructive action; mTLS + anti-tamper + deny-by-default.",
+  "gate": 3,
+  "phase": "Containment + self-protection",
+  "depends_on": ["gate-2"],
+  "criteria": [
+    { "id": "AC-CONT-01", "title": "Containment pipeline p95 < 10s from verdict (FULL_AUTO)", "test_id": "cont_latency_p95", "expected": "p95 < 10000ms over 200 runs", "artifact": "reports/containment/latency.json" },
+    { "id": "AC-CONT-02", "title": "Isolation persists on control-plane partition; no new destructive action", "test_id": "cont_persist_on_partition", "expected": "existing isolation maintained; new verdict => DENY_FAILSAFE", "artifact": "reports/containment/persist.json" },
+    { "id": "AC-CONT-03", "title": "Files lost before containment <= 10", "test_id": "cont_files_lost", "expected": "max files-lost <= 10 (detection: max 2)", "artifact": "reports/containment/files_lost.json" },
+    { "id": "AC-CONT-04", "title": "Process termination + share lockdown executed and recorded", "test_id": "cont_actions", "expected": "KILL_PROCESS + LOCK_SHARES execute; counts recorded", "artifact": "reports/containment/actions.json" },
+    { "id": "AC-SEC-01", "title": "mTLS mutual auth + encryption; bad/unauthenticated cert rejected", "test_id": "sec_mtls", "expected": "CA-trusted accepted; rogue + no-cert rejected; identity bound to CN", "artifact": "reports/security/mtls.json" },
+    { "id": "AC-SEC-02", "title": "Agent anti-tamper detects/heals tamper; unauthorized stop blocked", "test_id": "sec_anti_tamper", "expected": "tamper detected + self-healed; unauthorized stop blocked; authorized stop allowed", "artifact": "reports/security/anti_tamper.json" },
+    { "id": "AC-SEC-03", "title": "Control plane deny-by-default; protected actions reject unauth/ungranted", "test_id": "sec_authz_deny_default", "expected": "unauthenticated + ungranted denied; only explicit grant allowed", "artifact": "reports/security/authz.json" },
+    { "id": "AC-ACT-01", "title": "AgentCommand executes only if authorized; else REJECT + audit", "test_id": "act_command_authz", "expected": "destructive in MONITOR_ONLY rejected; HUMAN_GATED without distinct approver rejected", "artifact": "reports/actuation/authz.json" },
+    { "id": "AC-ACT-02", "title": "Destructive command bound to ActionRecord before sent (live hash-chained store)", "test_id": "act_audit_precedes", "expected": "audit append precedes command; record chain-valid + attributable in the live DB", "artifact": "reports/actuation/audit_order.json" }
+  ],
+  "gate_checks": [
+    { "id": "tests", "check": "vitest run (containment, security, live-audit)", "expected": "all pass" },
+    { "id": "typecheck", "check": "tsc -b", "expected": "exit 0" },
+    { "id": "lint", "check": "biome check .", "expected": "exit 0" },
+    { "id": "review", "check": "fresh-context adversarial review of the control plane", "expected": "no open CRITICAL/HIGH" }
+  ]
+}
