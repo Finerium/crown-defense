@@ -5,6 +5,7 @@
  */
 export {
   BENIGN_PROCESS_PATHS,
+  BENIGN_PROCESS_SIGNED,
   BENIGN_WORKLOADS,
   type BenignRun,
   type BenignWorkload,
@@ -13,10 +14,12 @@ export {
 } from './benign.js';
 export {
   type ActionLabel,
+  MIN_BENIGN_FOR_RATE,
   MetricsCollector,
   type MetricsSummary,
   percentile,
   type ScenarioResult,
   type VerdictLabel,
 } from './metrics.js';
+export { type BlindScenario, GroundTruthRegistry } from './scenario.js';
 export { type EvidenceReport, evidence, writeReport } from './report.js';

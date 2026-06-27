@@ -17,9 +17,17 @@ describe('benign-but-suspicious suite (FP oracle)', () => {
       for (const e of r.events) {
         expect(() => TelemetryEvent.parse(e)).not.toThrow();
         expect(e.canary).toBeNull(); // benign workloads never touch canaries
-        expect(e.process.signed).toBe(true);
+        expect(typeof e.process.signed).toBe('boolean');
       }
     }
+  });
+
+  it('signing is NOT a free attack/benign discriminator (some benign workloads run unsigned)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'crown-benign-'));
+    const runs = await runBenignSuite(dir);
+    const signedFlags = new Set(runs.map((r) => r.signed));
+    // At least one benign workload is unsigned, so a detector cannot use signed=true to whitelist benign.
+    expect(signedFlags.has(false)).toBe(true);
   });
 
   it('most workloads keep files format-valid (only legitimate-FDE corrupts, defended by allow-list)', async () => {
@@ -73,7 +81,19 @@ describe('metrics collector', () => {
     expect(s.detectionRate).toBeCloseTo(2 / 3, 5);
     expect(s.benign).toBe(200);
     expect(s.falsePositives).toBe(1);
-    expect(s.falsePositiveRate).toBeCloseTo(1 / 200, 5); // 0.5%
+    expect(s.destructiveFalsePositiveRate).toBeCloseTo(1 / 200, 5); // 0.5%
+    expect(s.coverageInsufficient).toBe(false); // 200 benign >= floor
+  });
+
+  it('flags coverage-insufficient FP rate and counts verdict-level benign misclassification', () => {
+    const m = new MetricsCollector();
+    // BENIGN, verdicted MASS_ENCRYPTION but action-gated to ALERT (not destructive): a misclassification
+    // that is NOT a destructive FP — must be counted separately, not hidden.
+    m.record({ id: 'b1', groundTruth: 'BENIGN', verdict: 'MASS_ENCRYPTION', recommendedAction: 'ALERT' });
+    const s = m.summary();
+    expect(s.coverageInsufficient).toBe(true); // 1 benign < floor
+    expect(s.falsePositives).toBe(0); // not destructive
+    expect(s.benignMisclassifications).toBe(1); // but still a misclassification
   });
 
   it('percentile is correct', () => {

@@ -1,0 +1,21 @@
+{
+  "_comment": "Phase 2 / Gate 2 evidence manifest — detection core (deterministic, no LLM). Parsed fail-closed against the Phase-1 oracle. Each criterion maps to a vitest test id + a JSON artifact. The detection engine decides ONLY from C1 telemetry; it MUST NOT import oracle ground-truth.",
+  "gate": 2,
+  "phase": "Detection core, deterministic, no LLM",
+  "depends_on": ["gate-1"],
+  "criteria": [
+    { "id": "AC-DET-01", "title": "Full-encryption => MASS_ENCRYPTION verdict", "test_id": "det_full_encryption", "expected": "verdict=MASS_ENCRYPTION for every full-encryption scenario", "artifact": "reports/detection/full.json" },
+    { "id": "AC-DET-02", "title": "Intermittent (every-N / header-only / first-4KB) detected via format-validation/fusion, NOT entropy alone", "test_id": "det_intermittent_matrix", "expected": "MASS_ENCRYPTION for each intermittent mode; format-validation signal load-bearing", "artifact": "reports/detection/intermittent.json" },
+    { "id": "AC-DET-03", "title": "Low-and-slow detected within file-loss budget (<=10)", "test_id": "det_low_slow", "expected": "MASS_ENCRYPTION; files lost <= 10", "artifact": "reports/detection/low_slow.json" },
+    { "id": "AC-DET-04", "title": "Canary touch => high-confidence fast-path (fast_path=true)", "test_id": "det_canary_fastpath", "expected": "fast_path=true, high confidence", "artifact": "reports/detection/canary.json" },
+    { "id": "AC-DET-05", "title": "Every ISOLATE_HOST verdict has corroborating_count>=2 OR fast_path=true", "test_id": "det_corroboration_invariant", "expected": "zero violations across the battery", "artifact": "reports/detection/corroboration.json" },
+    { "id": "AC-DET-06", "title": ">=20 behaviors/families and >=4 evasion modes covered, detection rate reported", "test_id": "det_battery_coverage", "expected": "families>=20 AND modes>=4; rate reported (not asserted as fixed %)", "artifact": "reports/detection/coverage.json" },
+    { "id": "AC-FP-01", "title": "Benign-but-suspicious suite false-positive rate <= 0.5%", "test_id": "fp_benign_suite", "expected": "FP_rate <= 0.005 (no destructive verdict on benign)", "artifact": "reports/fp/benign.json" },
+    { "id": "AC-FP-02", "title": "Allow-list suppression for known high-entropy apps; auditable; load-bearing", "test_id": "fp_allowlist", "expected": "allow-listed FDE not flagged; WITHOUT allow-list it WOULD be flagged (proves load-bearing); suppression auditable", "artifact": "reports/fp/allowlist.json" }
+  ],
+  "gate_checks": [
+    { "id": "AC-TYPE-partial", "check": "tsc -b", "expected": "exit 0" },
+    { "id": "AC-LINT-partial", "check": "biome check .", "expected": "exit 0" },
+    { "id": "unit-tests", "check": "vitest run packages/detection packages/agent", "expected": "all pass" }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "id": "SIM-COVERAGE",
   "gate": 1,
-  "generated_at": "2026-06-27T17:18:57.907Z",
+  "generated_at": "2026-06-27T17:39:46.075Z",
   "pass": true,
   "detail": {
     "families": 24,

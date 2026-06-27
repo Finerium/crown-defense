@@ -40,8 +40,19 @@ export const BENIGN_PROCESS_PATHS: Record<BenignWorkload, string> = {
   'legitimate-fde': '/usr/sbin/cryptsetup',
 };
 
-/** Binaries an operator allow-lists so legitimate in-place encryption is not flagged (AC-FP-02). */
-export const DEFAULT_ALLOWLIST: string[] = ['/usr/sbin/cryptsetup', '/usr/bin/veracrypt', '/usr/bin/restic'];
+/** Binaries an operator allow-lists so legitimate IN-PLACE encryption is not flagged (AC-FP-02). Scoped
+ *  to true in-place encryptors only — backup tools create new files and need no allow-list defense. */
+export const DEFAULT_ALLOWLIST: string[] = ['/usr/sbin/cryptsetup', '/usr/bin/veracrypt'];
+
+/** Realistic signing status — NOT a free attack/benign discriminator: legitimate tooling is often an
+ *  unsigned portable/static build (7-Zip, static ffmpeg), and attackers run signed LOLBins. */
+export const BENIGN_PROCESS_SIGNED: Record<BenignWorkload, boolean> = {
+  'backup-agent': true,
+  'compression-7zip': false, // portable/unsigned build is common
+  'video-encode': false, // static ffmpeg build is frequently unsigned
+  'db-maintenance': true,
+  'legitimate-fde': true,
+};
 
 const BASE = Date.parse('2026-06-28T01:00:00.000Z');
 
@@ -55,8 +66,8 @@ function ev(p: {
   size: number;
   entropyRead: number | null;
   entropyWrite: number | null;
-  formatValid: boolean;
-  headerChanged: boolean;
+  formatValid: boolean | null;
+  headerChanged: boolean | null;
   writesPerSec: number;
   renamesPerSec: number;
   distinctTypes: number;
@@ -68,7 +79,13 @@ function ev(p: {
     host_id: 'host-sim-001',
     emitted_at: new Date(BASE + p.i * 40).toISOString(),
     event_type: p.type,
-    process: { pid: 4200 + p.i, path: BENIGN_PROCESS_PATHS[p.workload], user: 'svc', signed: true },
+    // One stable pid per workload run; signing varies realistically (see BENIGN_PROCESS_SIGNED).
+    process: {
+      pid: 4200 + BENIGN_WORKLOADS.indexOf(p.workload),
+      path: BENIGN_PROCESS_PATHS[p.workload],
+      user: 'svc',
+      signed: BENIGN_PROCESS_SIGNED[p.workload],
+    },
     file: {
       path: p.filePath,
       prev_type: p.prevType,
@@ -148,12 +165,14 @@ async function compression(dir: string): Promise<BenignRun> {
   return run('compression-7zip', [e], false);
 }
 
-/** Video encode: writes ONE growing high-entropy file; format known-good. */
+/** Video encode: writes ONE growing high-entropy file. Entropy is MEASURED from the real bytes; mp4 has
+ *  no structural validator so format_valid is null (honest "not validated"), never stamped true. */
 async function videoEncode(dir: string): Promise<BenignRun> {
   const out = resolve(dir, 'render.mp4');
-  const body = generateFile('png', 120000, 3); // stand-in high-entropy media payload
+  const body = generateFile('png', 120000, 3); // real high-entropy payload; measured, not asserted
   await mkdir(dir, { recursive: true });
   await writeFile(out, body);
+  const entropy = windowEntropy(body); // measured
   const events: TelemetryEvent[] = [];
   for (let i = 0; i < 4; i++) {
     events.push(
@@ -165,9 +184,9 @@ async function videoEncode(dir: string): Promise<BenignRun> {
         prevType: 'mp4',
         newType: 'mp4',
         size: body.length,
-        entropyRead: i === 0 ? null : 7.9,
-        entropyWrite: 7.95, // high entropy, but ~flat delta and a known-good growing media file
-        formatValid: true,
+        entropyRead: i === 0 ? null : entropy, // overwriting already-high-entropy media => ~flat delta
+        entropyWrite: entropy,
+        formatValid: null, // mp4 not validated by the oracle => unknown, NOT a stamped pass
         headerChanged: false,
         writesPerSec: 6,
         renamesPerSec: 0,
@@ -253,7 +272,7 @@ function run(workload: BenignWorkload, events: TelemetryEvent[], requiresAllowli
   return {
     workload,
     processPath: BENIGN_PROCESS_PATHS[workload],
-    signed: true,
+    signed: BENIGN_PROCESS_SIGNED[workload],
     requiresAllowlist,
     events,
     groundTruth: { kind: 'BENIGN', workload },

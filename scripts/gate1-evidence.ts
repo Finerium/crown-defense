@@ -39,40 +39,86 @@ function cfg(dir: string, mode: EvasionMode, types: FileType[]) {
   };
 }
 
+// Honest per-(mode,type) matrix: every mode is run over the SAME fixed corpus (low-entropy txt,
+// CRC-protected docx/png, marker-only jpg). The "which signal catches it" columns are DERIVED from the
+// real emitted telemetry, so the report cannot manufacture a favorable contrast by picking inputs.
 async function modesReport() {
+  const CORPUS: FileType[] = ['txt', 'docx', 'png', 'jpg'];
+  const ENTROPY_FIRES = 1.0; // |entropy_write - entropy_read| >= this => entropy signal would fire
   const rows: Record<string, unknown>[] = [];
   let pass = true;
   for (const mode of ALL_EVASION_MODES) {
-    const types: FileType[] = mode === 'FULL' ? ['txt'] : ['docx', 'png'];
-    const dir = await tmp(mode);
-    const sim = createSimulator(cfg(dir, mode, types));
-    await sim.seed(10);
-    const sum = await sim.run();
-    const e = sum.events.find((x) => x.event_type === 'FILE_WRITE') ?? sum.events[0];
-    const er = (e?.file.entropy_read ?? 0) as number;
-    const ew = (e?.file.entropy_write ?? 0) as number;
-    const delta = Math.abs(ew - er);
-    const intermittentOk =
-      mode !== 'INTERMITTENT_EVERY_N_BYTES' || (e?.file.header_changed === false && delta < 1.0);
-    const brokeFormat = sum.formatBrokenCount === sum.filesTouched;
-    const ok = brokeFormat && intermittentOk;
-    if (!ok) pass = false;
-    rows.push({
-      mode,
-      filesTouched: sum.filesTouched,
-      formatBrokenCount: sum.formatBrokenCount,
-      sample_event: {
-        format_valid: e?.file.format_valid,
-        header_changed: e?.file.header_changed,
-        entropy_read: er,
-        entropy_write: ew,
+    for (const type of CORPUS) {
+      const dir = await tmp(`${mode}-${type}`);
+      const sim = createSimulator(cfg(dir, mode, [type]));
+      await sim.seed(10);
+      const sum = await sim.run();
+      const evs = sum.events.filter((x) => x.event_type === 'FILE_WRITE');
+      const avg = (f: (e: (typeof evs)[number]) => number) =>
+        evs.length ? evs.reduce((a, e) => a + f(e), 0) / evs.length : 0;
+      const er = avg((e) => (e.file.entropy_read ?? 0) as number);
+      const ew = avg((e) => (e.file.entropy_write ?? 0) as number);
+      const delta = Math.abs(ew - er);
+      const formatBrokenFrac = sum.filesTouched ? sum.formatBrokenCount / sum.filesTouched : 0;
+      const headerChanged = (evs[0]?.file.header_changed ?? null) as boolean | null;
+      const entropyCatches = delta >= ENTROPY_FIRES;
+      const formatCatchesReliably = formatBrokenFrac === 1; // every file of this type flagged
+      const caughtSingleFile = entropyCatches || formatCatchesReliably;
+      rows.push({
+        mode,
+        type,
+        entropy_read: Math.round(er * 1000) / 1000,
+        entropy_write: Math.round(ew * 1000) / 1000,
         entropy_delta: Math.round(delta * 1000) / 1000,
-      },
-      ok,
-    });
-    await rm(dir, { recursive: true, force: true });
+        format_broken_fraction: Math.round(formatBrokenFrac * 100) / 100,
+        header_changed: headerChanged,
+        writes_per_sec: (evs[0]?.op_window?.writes_per_sec ?? null) as number | null,
+        entropy_signal_fires: entropyCatches,
+        format_signal_fires_reliably: formatCatchesReliably,
+        caught_at_single_file: caughtSingleFile,
+      });
+      await rm(dir, { recursive: true, force: true });
+    }
   }
-  await writeReport(REP('modes.json'), evidence('SIM-MODES', 1, pass, { modes: rows }));
+
+  // HONEST gate expectations (the report can now genuinely FAIL):
+  //  - FULL/HEADER_ONLY/FIRST_4KB break format on EVERY type (magic smash) — reliable format catch.
+  //  - INTERMITTENT preserves magic and breaks format RELIABLY on CRC-protected types (docx,png); on txt
+  //    it is entropy-detectable; on marker-only jpg it is NOT reliably caught at the single-file level
+  //    (the documented gap — caught at host level via op-frequency + the presence of CRC types).
+  const get = (mode: string, type: string) => rows.find((r) => r.mode === mode && r.type === type)!;
+  const checks = {
+    full_breaks_format_all_types: ['txt', 'docx', 'png', 'jpg'].every(
+      (t) => get('FULL', t).format_signal_fires_reliably === true
+    ),
+    intermittent_reliable_on_crc_types: ['docx', 'png'].every(
+      (t) =>
+        get('INTERMITTENT_EVERY_N_BYTES', t).format_signal_fires_reliably === true &&
+        get('INTERMITTENT_EVERY_N_BYTES', t).header_changed === false
+    ),
+    intermittent_entropy_flat_on_crc_types: ['docx', 'png'].every(
+      (t) => (get('INTERMITTENT_EVERY_N_BYTES', t).entropy_delta as number) < ENTROPY_FIRES
+    ),
+    intermittent_entropy_detectable_on_txt:
+      get('INTERMITTENT_EVERY_N_BYTES', 'txt').entropy_signal_fires === true,
+    intermittent_jpg_is_the_known_gap:
+      get('INTERMITTENT_EVERY_N_BYTES', 'jpg').caught_at_single_file === false,
+  };
+  pass = Object.values(checks).every(Boolean);
+
+  await writeReport(
+    REP('modes.json'),
+    evidence('SIM-MODES', 1, pass, {
+      narrative:
+        'Every mode run over the SAME fixed corpus (txt/docx/png/jpg). FULL & header/first-4KB break the ' +
+        'magic on all types. INTERMITTENT keeps entropy ~flat on already-high-entropy CRC types and is ' +
+        'caught ONLY by the CRC format-validation signal (entropy alone is blind); on low-entropy txt it ' +
+        'IS entropy-detectable; on marker-only jpg interior corruption is NOT reliably caught at the ' +
+        'single-file level — the honest gap, defended at host level by op-frequency + mixed file types.',
+      checks,
+      matrix: rows,
+    })
+  );
   return pass;
 }
 
@@ -83,7 +129,8 @@ async function safetyReport() {
   const before = new Map<string, Buffer>();
   for (const p of await sim.list()) before.set(p, await readFile(p));
   const sum = await sim.run();
-  const root = resolve(dir);
+  const { realpath } = await import('node:fs/promises');
+  const root = await realpath(dir); // match the simulator's canonical (symlink-safe) root
   let contained = true;
   for (const e of sum.events) {
     const rel = relative(root, resolve(e.file.path as string));
@@ -161,10 +208,17 @@ async function metricsReport() {
   });
   for (let i = 0; i < 20; i++) m.record(mk(i));
   const summary = m.summary();
-  const pass = summary.attacks === 10 && summary.benign === 10 && typeof summary.falsePositiveRate === 'number';
+  const pass =
+    summary.attacks === 10 &&
+    summary.benign === 10 &&
+    typeof summary.destructiveFalsePositiveRate === 'number' &&
+    summary.coverageInsufficient === true; // 10 benign < floor => correctly flagged, not a fake 0%
   await writeReport(
     REP('metrics.json'),
-    evidence('METRICS-VALID', 1, pass, { note: 'synthetic placeholder verdicts; detection scoring is Phase 2', summary })
+    evidence('METRICS-VALID', 1, pass, {
+      note: 'synthetic placeholder verdicts; real detection/FP scoring is Phase 2. coverageInsufficient=true here is CORRECT: 10 benign scenarios is below the rate floor.',
+      summary,
+    })
   );
   return pass;
 }

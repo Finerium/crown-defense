@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -71,7 +71,7 @@ describe('SIM-SAFE: benign / reversible / single-directory / no-network', () => 
     const dir = await tmp();
     const sim = createSimulator(cfg(dir, 'FULL'));
     await sim.seed(8);
-    const root = resolve(dir);
+    const root = await realpath(dir); // simulator canonicalizes its root (symlink-safe containment)
     const sum = await sim.run();
     for (const e of sum.events) {
       const p = e.file.path as string;

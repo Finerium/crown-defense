@@ -89,3 +89,27 @@ Execute at Phase 5/6 (do NOT derail earlier gates). Requirements:
   report renders) before claiming it works. Put the live URL + repo URL in Report-hackathon.md at Gate 6.
 - Demo mode shares the SAME contracts/components as the real dashboard; it is a data-source switch
   (fixture+serverless vs live backend), not a separate UI — keep one dashboard, one set of C-contracts.
+
+## Phase 1 adversarial review (6-lens workflow) — returned FAIL, fixed, all green
+
+Fresh-context multi-lens review (2 FAIL, 3 CONCERNS; 1 lens — format-validator — errored on the Opus
+cyber-classifier, ADR-009 known issue). Synthesis: NOT safe to gate Phase 2 until 3 HIGH must-fixes done.
+All HIGH + the worthwhile MEDIUM/LOW fixed (depth-spend):
+1. **Label leaks (HIGH)** — attack/benign were perfectly separable on `process.signed` + `process.path`
+   (attack: signed=false, `/tmp/<family>.bin`; benign: signed=true, `/usr/*`), and the family leaked into a
+   consumed C1 field. FIX: attacker process pool overlaps benign tooling, includes SIGNED LOLBins; family
+   removed from process.path; benign signing varies (7zip/video unsigned). Now neither field separates;
+   only entropy/format/canary/op-frequency fusion can. (simulator.ts ATTACKER_PROFILES; benign.ts BENIGN_PROCESS_SIGNED)
+2. **Cherry-picked modes evidence (HIGH)** — FULL was fed low-entropy txt, others high-entropy binary, manufacturing
+   a fake entropy contrast. FIX: every mode now runs over the SAME fixed corpus (txt/docx/png/jpg); modes.json
+   reports a per-(mode,type) matrix with derived "which signal fires" columns. Honest result: FULL-on-compressed
+   has ~0 entropy delta too (format catches it); intermittent-on-txt IS entropy-detectable.
+3. **Over-broad intermittent claim (HIGH)** — "format catches intermittent 10/10" only holds for CRC types;
+   marker-only jpg evades (format_broken_fraction 0.4). FIX: matrix flags jpg as the known gap explicitly
+   (caught_at_single_file=false), defended at host level by op-frequency + mixed types.
+MEDIUMs/LOWs fixed: symlink-safe seeding (realpath root + `wx` exclusive-create); video-encode entropy/format
+now MEASURED (format_valid=null for unvalidated mp4, not stamped); metrics renamed destructiveFalsePositiveRate
++ added benignMisclassificationRate + coverageInsufficient (MIN_BENIGN_FOR_RATE=200) + allowlistSuppressions;
+dropped restic from allow-list; distinct ORIGINAL types; self-correcting header_changed (byte-compare);
+single stable pid; detection latency over detected-only. Added GroundTruthRegistry (blindness boundary:
+Phase-2 detector receives ONLY {scenario_id, events}; truth held separately). 68 tests, tsc+biome clean.

@@ -1,5 +1,5 @@
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { mkdir, readFile, readdir, realpath, rename, writeFile } from 'node:fs/promises';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import type { TelemetryEvent } from '@crown/contracts';
 import { SCHEMA_VERSION } from '@crown/contracts';
 import { deriveKey, xorRange } from './crypto.js';
@@ -10,12 +10,38 @@ import { type EvasionMode, type ModeResult, applyMode } from './modes.js';
 /**
  * The SAFE ransomware simulator — the primary detection oracle.
  *
- * SAFETY BOUNDARY (non-negotiable, enforced by construction):
- *   benign  · reversible (retained XOR key) · single-directory (every path is asserted under targetDir)
- *   key-retaining · non-propagating (only files it seeded) · no network, no child process.
- * It performs REAL file I/O so the Phase-2 agent can observe the same directory, and it emits the
- * ground-truth C1 telemetry stream the detection engine consumes. It NEVER touches real malware.
+ * SAFETY BOUNDARY (non-negotiable):
+ *   benign · reversible (retained XOR key) · single-directory (lexical containment + exclusive-create
+ *   `wx` seeding under a realpath-canonical root, so a pre-planted symlink cannot redirect a write
+ *   outside the target dir) · key-retaining · non-propagating (only files it seeded) · no network,
+ *   no child process. It performs REAL file I/O so the Phase-2 agent can observe the same directory,
+ *   and it emits the ground-truth C1 telemetry stream the detection engine consumes. NEVER real malware.
+ *
+ * ORACLE-HONESTY (Phase-1 review): process attribution does NOT encode the family and is NOT a free
+ * attack/benign discriminator — attackers draw from a pool that overlaps benign tooling (LOLBins) and
+ * includes SIGNED entries, so a detector must reach a verdict via entropy/format/canary/op-frequency
+ * fusion, not a stamped boolean. The ground-truth family lives only in the run summary, never in C1.
  */
+
+/**
+ * Attacker process pool. Real ransomware frequently runs SIGNED (living-off-the-land: openssl, gpg,
+ * signed interpreters) and from /usr/bin paths that legitimate tools also use — so neither `signed`
+ * nor `path` separates attack from benign. The family is deliberately absent from every path.
+ */
+const ATTACKER_PROFILES: Array<{ path: string; signed: boolean; user: string }> = [
+  { path: '/tmp/.cache/upd', signed: false, user: 'victim' }, // unsigned dropper
+  { path: '/usr/bin/openssl', signed: true, user: 'victim' }, // signed LOLBin abuse
+  { path: '/usr/bin/python3', signed: true, user: 'svc' }, // signed interpreter, malicious script
+  { path: 'C:/Users/Public/svc.exe', signed: false, user: 'victim' }, // unsigned
+  { path: '/usr/bin/gpg', signed: true, user: 'victim' }, // signed LOLBin abuse
+  { path: '/home/victim/.local/bin/runner', signed: false, user: 'victim' }, // unsigned
+];
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
 
 export interface SimulatorConfig {
   targetDir: string; // single directory; the simulator never escapes it
@@ -72,6 +98,8 @@ export class SafeSimulator {
   private events: TelemetryEvent[] = [];
   private stopped = false;
   private eventSeq = 0;
+  private profile: { path: string; signed: boolean; user: string };
+  private pid: number;
 
   constructor(cfg: SimulatorConfig) {
     if (cfg.keepKey !== true)
@@ -79,6 +107,9 @@ export class SafeSimulator {
     this.cfg = cfg;
     this.root = resolve(cfg.targetDir);
     this.key = deriveKey(cfg.seed);
+    const h = this.hashSeed();
+    this.profile = ATTACKER_PROFILES[h % ATTACKER_PROFILES.length] as (typeof ATTACKER_PROFILES)[number];
+    this.pid = 4096 + (h % 4096); // one stable pid per run (single-process attacker)
   }
 
   /** Assert a path stays inside targetDir (single-directory invariant). Throws on any escape. */
@@ -89,15 +120,17 @@ export class SafeSimulator {
     return abs;
   }
 
-  /** Plant `count` structurally-valid benign files (idempotent per seed). Optionally a canary that sorts first. */
+  /** Plant `count` structurally-valid benign files. Optionally a canary that sorts first. Uses exclusive
+   *  create (`wx`) under a realpath-canonical root so a pre-planted symlink cannot redirect a write out. */
   async seed(count: number): Promise<void> {
     await mkdir(this.root, { recursive: true });
+    this.root = await realpath(this.root); // canonicalize: containment is asserted against the real path
     const types = this.cfg.fileTypes.length ? this.cfg.fileTypes : (['docx'] as FileType[]);
     this.seededFiles = [];
     if (this.cfg.plantCanary) {
       // Canary name sorts first (encryptors enumerate in order); realistic type/size (ADR-010).
       const cpath = this.contain('~$canary-aaaa.docx');
-      await writeFile(cpath, generateFile('docx', 6000, 99));
+      await writeFile(cpath, generateFile('docx', 6000, 99), { flag: 'wx' });
       this.seededFiles.push({ path: cpath, type: 'docx', isCanary: true });
     }
     for (let i = 0; i < count; i++) {
@@ -105,7 +138,7 @@ export class SafeSimulator {
       const name = `data_${String(i).padStart(5, '0')}.${type}`;
       const path = this.contain(name);
       const size = 2048 + ((i * 1637) % 30000); // 2KB..32KB, deterministic
-      await writeFile(path, generateFile(type, size, (this.hashSeed() + i) >>> 0));
+      await writeFile(path, generateFile(type, size, (this.hashSeed() + i) >>> 0), { flag: 'wx' });
       this.seededFiles.push({ path, type, isCanary: false });
     }
   }
@@ -138,7 +171,7 @@ export class SafeSimulator {
     const ext = this.cfg.encryptedExtension.startsWith('.')
       ? this.cfg.encryptedExtension
       : `.${this.cfg.encryptedExtension}`;
-    const typesTouched = new Set<string>();
+    const origTypesTouched = new Set<string>(); // distinct ORIGINAL types (type-breadth is the real tell)
 
     for (let i = 0; i < this.seededFiles.length; i++) {
       if (this.stopped) break;
@@ -157,6 +190,9 @@ export class SafeSimulator {
       const entropyWrite = windowEntropy(buf);
       const formatValid = validateFormat(f.type, buf);
       if (!formatValid) formatBroken++;
+      // Self-correcting: header_changed reflects whether the magic bytes ACTUALLY changed, not a literal.
+      const headerChanged =
+        magicLen > 0 ? !bytesEqual(orig.subarray(0, magicLen), buf.subarray(0, magicLen)) : res.headerChanged;
 
       await writeFile(f.path, buf);
       let finalPath = f.path;
@@ -166,7 +202,7 @@ export class SafeSimulator {
       }
       this.touched.push({ finalPath, origPath: f.path, type: f.type, ranges: res.ranges, renamed: renameOn });
       bytesRewritten += res.ranges.reduce((a, [s, e]) => a + (e - s), 0);
-      typesTouched.add(renameOn ? ext.replace('.', '') : f.type);
+      origTypesTouched.add(f.type);
 
       const at = this.clockAt(i);
       if (f.isCanary) canaryTouched = true;
@@ -180,12 +216,11 @@ export class SafeSimulator {
           sizeBytes: buf.length,
           entropyRead,
           entropyWrite,
-          headerChanged: res.headerChanged,
+          headerChanged,
           formatValid,
           isCanary: f.isCanary,
-          index: i,
           renameOn,
-          typesTouched: typesTouched.size,
+          typesTouched: origTypesTouched.size,
         })
       );
     }
@@ -242,7 +277,6 @@ export class SafeSimulator {
     headerChanged: boolean;
     formatValid: boolean;
     isCanary: boolean;
-    index: number;
     renameOn: boolean;
     typesTouched: number;
   }): TelemetryEvent {
@@ -254,11 +288,12 @@ export class SafeSimulator {
       host_id: this.cfg.hostId ?? 'host-sim-001',
       emitted_at: p.at,
       event_type: p.type,
+      // Process attribution: family-free, drawn from a pool that overlaps benign tooling and may be SIGNED.
       process: {
-        pid: 6660 + (p.index % 7),
-        path: `/tmp/${this.cfg.family ?? 'sim'}.bin`,
-        user: 'victim',
-        signed: false,
+        pid: this.pid,
+        path: this.profile.path,
+        user: this.profile.user,
+        signed: this.profile.signed,
       },
       file: {
         path: p.filePath,

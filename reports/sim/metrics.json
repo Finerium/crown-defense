@@ -1,17 +1,21 @@
 {
   "id": "METRICS-VALID",
   "gate": 1,
-  "generated_at": "2026-06-27T17:18:57.932Z",
+  "generated_at": "2026-06-27T17:39:46.101Z",
   "pass": true,
   "detail": {
-    "note": "synthetic placeholder verdicts; detection scoring is Phase 2",
+    "note": "synthetic placeholder verdicts; real detection/FP scoring is Phase 2. coverageInsufficient=true here is CORRECT: 10 benign scenarios is below the rate floor.",
     "summary": {
       "attacks": 10,
       "detected": 10,
       "detectionRate": 1,
       "benign": 10,
       "falsePositives": 0,
-      "falsePositiveRate": 0,
+      "destructiveFalsePositiveRate": 0,
+      "benignMisclassifications": 0,
+      "benignMisclassificationRate": 0,
+      "allowlistSuppressions": 0,
+      "coverageInsufficient": true,
       "modesCovered": [
         "FULL"
       ],
@@ -24,7 +28,8 @@
       },
       "detectLatencyMs": {
         "p50": 809,
-        "p95": 819
+        "p95": 819,
+        "n": 10
       }
     }
   }
