@@ -7,6 +7,7 @@
     { "path": "packages/detection" },
     { "path": "packages/agent" },
     { "path": "packages/containment" },
+    { "path": "packages/control-plane" },
     { "path": "packages/test-infra" }
   ]
 }

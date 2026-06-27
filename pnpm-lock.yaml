@@ -21,12 +21,18 @@ importers:
       '@crown/agent':
         specifier: workspace:*
         version: link:packages/agent
+      '@crown/audit':
+        specifier: workspace:*
+        version: link:packages/audit
       '@crown/containment':
         specifier: workspace:*
         version: link:packages/containment
       '@crown/contracts':
         specifier: workspace:*
         version: link:packages/contracts
+      '@crown/control-plane':
+        specifier: workspace:*
+        version: link:packages/control-plane
       '@crown/detection':
         specifier: workspace:*
         version: link:packages/detection
@@ -82,6 +88,12 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
+  packages/control-plane:
+    dependencies:
+      '@crown/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/detection:
     dependencies:
       '@crown/contracts':
@@ -99,12 +111,18 @@ importers:
       '@crown/agent':
         specifier: workspace:*
         version: link:../agent
+      '@crown/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@crown/containment':
         specifier: workspace:*
         version: link:../containment
       '@crown/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@crown/control-plane':
+        specifier: workspace:*
+        version: link:../control-plane
       '@crown/detection':
         specifier: workspace:*
         version: link:../detection

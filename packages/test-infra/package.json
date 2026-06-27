@@ -8,8 +8,10 @@
   "exports": { ".": "./src/index.ts" },
   "dependencies": {
     "@crown/agent": "workspace:*",
+    "@crown/audit": "workspace:*",
     "@crown/containment": "workspace:*",
     "@crown/contracts": "workspace:*",
+    "@crown/control-plane": "workspace:*",
     "@crown/detection": "workspace:*",
     "@crown/simulator": "workspace:*"
   }

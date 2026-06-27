@@ -23,8 +23,10 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@crown/agent": "workspace:*",
+    "@crown/audit": "workspace:*",
     "@crown/containment": "workspace:*",
     "@crown/contracts": "workspace:*",
+    "@crown/control-plane": "workspace:*",
     "@crown/detection": "workspace:*",
     "@crown/simulator": "workspace:*",
     "@crown/test-infra": "workspace:*",
