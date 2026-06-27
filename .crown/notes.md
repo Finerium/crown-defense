@@ -315,3 +315,19 @@ steps incl. OJK/UU PDP). Only console error is a cosmetic /favicon.ico 404.
 STOP HERE. Bank-grade Phases 7-15 (fleet-scale + statistical FP validation, prod agent backends + kernel
 anti-tamper, on-prem LLM serving + signed updates, SIEM/AD/EDR adapters, DR/compliance) are a later relaunch
 and intentionally NOT built — claiming them would violate the provability rule.
+
+## Design fidelity — faithful re-port (post-Gate-6 correction)
+SYMPTOM: the dashboard looked nothing like crown-defense-design/. ROOT CAUSE (two bugs): (1) talos.css + ui
+primitives + the topbar shell were faithful, but the 4 SCREENS were rebuilt from scratch with simplified
+markup + inline styles + a separate dashboard.css, leaving the design's rich component classes
+(.screen-title/.seg-strip/.feed-item/.inc-grid 3-col/.a-tl|.a-graph|.a-plan/.kv/.progress) UNUSED; (2)
+dashboard.css redefined design classes (.ov-grid/.feed/.kv/.drawer) and, loaded AFTER talos.css, silently
+OVERRODE the design. Lesson: "the design bundle owns visual truth — PORT it" means porting the screen JSX
+1:1, not just copying tokens; and never redefine a design class in a supplementary stylesheet.
+FIX: parallel design-port agents (1 data + 4 screens) ported talos-data.js + screen-*.jsx faithfully using
+the exact talos.css classes; each screen visually reviewed against its reference screenshot at 1600px (the
+design's capture width — note talos.css collapses .inc-grid to a stacked responsive layout <1320px, which is
+correct, not a bug). Genuinely-mine features re-grafted INTO their designed homes: live DeepSeek recovery
+plan + dual-control approval queue on the Incident response-plan area; interactive autonomy dial on System's
+Autonomy Policy panel; nav back to the design's 4 tabs. ENGINE_ID='CROWN-DE' replaces the design's "TALOS-DE"
+codename (OQ-5); PRODUCT_NAME stays "Crown Defense". Deployed (CLI, COMMIT_AUTHOR workaround) + browser-verified.
