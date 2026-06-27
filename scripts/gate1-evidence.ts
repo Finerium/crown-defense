@@ -230,16 +230,24 @@ async function metricsReport() {
   return pass;
 }
 
-// FIX-1 evidence: prove the two fixture classes are not separable on a stamped C1 field and no label leaks.
+// FIX-1 evidence: non-signal METADATA must not separate the two classes; the label must not leak.
 async function separabilityReport() {
-  const attack: { signed: boolean | null; path: string | null }[] = [];
-  const consumed: string[] = [];
   const labels = [...FAMILY_PROFILES.map((f) => f.name), ...ALL_EVASION_MODES, ...BENIGN_WORKLOADS];
-  const collect = (events: { event_id: string; file: { path: string | null; new_type: string | null }; process: { path: string | null; signed: boolean | null } }[]) => {
-    for (const e of events) consumed.push(`${e.event_id} ${e.file.path ?? ''} ${e.process.path ?? ''} ${e.file.new_type ?? ''}`);
+  type Ev = {
+    event_id: string;
+    agent_id: string;
+    host_id: string;
+    emitted_at: string;
+    file: { path: string | null; new_type: string | null };
+    process: { path: string | null; signed: boolean | null; pid: number | null; user: string | null };
   };
-  // NOTE: the temp dir name must NOT contain the family (it would leak the label into file.path). Use an
-  // index, not fam.name — the same property a real deployment must hold (dirs don't encode the label).
+  const consumed: string[] = [];
+  const collect = (events: Ev[]) => {
+    for (const e of events)
+      consumed.push(`${e.event_id} ${e.file.path ?? ''} ${e.process.path ?? ''} ${e.file.new_type ?? ''}`);
+  };
+  const attack: Ev[] = [];
+  // NOTE: the temp dir name must NOT contain the family (it would leak the label into file.path). Use an index.
   for (const [fi, fam] of FAMILY_PROFILES.entries()) {
     const dir = await tmp(`sep-${fi}`);
     const sim = createSimulator({
@@ -254,34 +262,47 @@ async function separabilityReport() {
       ...(fam.blockBytes ? { intermittentBlockBytes: fam.blockBytes } : {}),
     });
     await sim.seed(4);
-    const evs = (await sim.run()).events;
-    for (const e of evs) attack.push({ signed: e.process.signed, path: e.process.path });
+    const evs = (await sim.run()).events as unknown as Ev[];
+    attack.push(...evs);
     collect(evs);
     await rm(dir, { recursive: true, force: true });
   }
   const bdir = await tmp('sep-benign');
-  const benign = (await runBenignSuite(bdir)).flatMap((r) => r.events);
+  const benign = (await runBenignSuite(bdir)).flatMap((r) => r.events) as unknown as Ev[];
   collect(benign);
   await rm(bdir, { recursive: true, force: true });
 
-  const aSigned = new Set(attack.map((a) => a.signed));
-  const bSigned = new Set(benign.map((e) => e.process.signed));
-  const aPaths = new Set(attack.map((a) => a.path));
-  const bPaths = new Set(benign.map((e) => e.process.path));
-  const pathOverlap = [...aPaths].filter((p) => bPaths.has(p));
-  const leaks = labels.filter((l) => consumed.some((c) => c.includes(l)));
+  const setOf = <T>(xs: Ev[], f: (e: Ev) => T) => new Set(xs.map(f));
+  const overlaps = <T>(x: Set<T>, y: Set<T>) => [...x].some((v) => y.has(v));
+  const aSigned = setOf(attack, (e) => e.process.signed);
+  const bSigned = setOf(benign, (e) => e.process.signed);
+  const hour = (e: Ev) => e.emitted_at.slice(0, 13);
+  const pidsInRange = [...attack, ...benign].every(
+    (e) => (e.process.pid ?? -1) >= 4096 && (e.process.pid ?? -1) < 8192
+  );
 
-  const signedNotSeparating = aSigned.has(true) && bSigned.has(false);
-  const pass = signedNotSeparating && pathOverlap.length > 0 && leaks.length === 0;
+  const checks = {
+    signed_both_values_both_classes:
+      aSigned.has(true) && aSigned.has(false) && bSigned.has(true) && bSigned.has(false),
+    process_path_overlaps: overlaps(setOf(attack, (e) => e.process.path), setOf(benign, (e) => e.process.path)),
+    emitted_at_hour_overlaps: overlaps(setOf(attack, hour), setOf(benign, hour)),
+    pid_same_range: pidsInRange,
+    user_overlaps: overlaps(setOf(attack, (e) => e.process.user), setOf(benign, (e) => e.process.user)),
+    ids_shared:
+      setOf(attack, (e) => e.agent_id).size === 1 && overlaps(setOf(attack, (e) => e.agent_id), setOf(benign, (e) => e.agent_id)),
+    no_label_leak: labels.filter((l) => consumed.some((c) => c.includes(l))).length === 0,
+  };
+  const pass = Object.values(checks).every(Boolean);
   await writeReport(
     REP('separability.json'),
     evidence('SIM-SEPARABILITY', 1, pass, {
-      note: 'No single stamped C1 field separates ATTACK vs BENIGN; the ground-truth label never reaches a consumed field. A detector must fuse entropy/format/canary/op-frequency, not memorize a fiat field.',
-      signed_not_separating: signedNotSeparating,
+      note: 'Non-signal METADATA (emitted_at, process.signed/path/pid/user, agent/host id, event_id) does not separate ATTACK vs BENIGN, and no ground-truth label leaks into a consumed field. SIGNAL fields (format_valid/entropy/header/type-change/op_window/canary) ARE allowed to separate — that is detection. A classifier must fuse real signals, not memorize a fiat field.',
+      checks,
       attack_signed_values: [...aSigned],
       benign_signed_values: [...bSigned],
-      process_path_overlap: pathOverlap,
-      label_leaks: leaks,
+      process_path_overlap: [...setOf(attack, (e) => e.process.path)].filter((p) =>
+        setOf(benign, (e) => e.process.path).has(p)
+      ),
     })
   );
   return pass;

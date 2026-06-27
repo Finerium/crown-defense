@@ -1,7 +1,7 @@
 {
   "id": "METRICS-VALID",
   "gate": 1,
-  "generated_at": "2026-06-27T17:52:20.200Z",
+  "generated_at": "2026-06-27T18:01:52.937Z",
   "pass": true,
   "detail": {
     "note": "synthetic placeholder verdicts; real detection/FP scoring is Phase 2. coverageInsufficient=true here is CORRECT: 10 benign scenarios is below the rate floor.",

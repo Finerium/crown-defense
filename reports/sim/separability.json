@@ -1,11 +1,19 @@
 {
   "id": "SIM-SEPARABILITY",
   "gate": 1,
-  "generated_at": "2026-06-27T17:52:20.199Z",
+  "generated_at": "2026-06-27T18:01:52.937Z",
   "pass": true,
   "detail": {
-    "note": "No single stamped C1 field separates ATTACK vs BENIGN; the ground-truth label never reaches a consumed field. A detector must fuse entropy/format/canary/op-frequency, not memorize a fiat field.",
-    "signed_not_separating": true,
+    "note": "Non-signal METADATA (emitted_at, process.signed/path/pid/user, agent/host id, event_id) does not separate ATTACK vs BENIGN, and no ground-truth label leaks into a consumed field. SIGNAL fields (format_valid/entropy/header/type-change/op_window/canary) ARE allowed to separate — that is detection. A classifier must fuse real signals, not memorize a fiat field.",
+    "checks": {
+      "signed_both_values_both_classes": true,
+      "process_path_overlaps": true,
+      "emitted_at_hour_overlaps": true,
+      "pid_same_range": true,
+      "user_overlaps": true,
+      "ids_shared": true,
+      "no_label_leak": true
+    },
     "attack_signed_values": [
       false,
       true
@@ -16,7 +24,6 @@
     ],
     "process_path_overlap": [
       "/usr/bin/python3"
-    ],
-    "label_leaks": []
+    ]
   }
 }

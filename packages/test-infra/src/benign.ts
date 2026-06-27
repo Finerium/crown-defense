@@ -42,11 +42,15 @@ export const BENIGN_PROCESS_PATHS: Record<BenignWorkload, string> = {
   'legitimate-fde': '/usr/sbin/cryptsetup',
 };
 
-/** FNV-1a hash → opaque numeric id (event_id must not encode the workload label). */
-function opaque(s: string): string {
+/** FNV-1a hash of a string. */
+function fnv(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-  return (h >>> 0).toString(36);
+  return h >>> 0;
+}
+/** Opaque numeric id — event_id must not encode the workload label. */
+function opaque(s: string): string {
+  return fnv(s).toString(36);
 }
 
 /** Binaries an operator allow-lists so legitimate IN-PLACE encryption is not flagged (AC-FP-02). Scoped
@@ -63,7 +67,9 @@ export const BENIGN_PROCESS_SIGNED: Record<BenignWorkload, boolean> = {
   'legitimate-fde': true,
 };
 
-const BASE = Date.parse('2026-06-28T01:00:00.000Z');
+// SAME base instant as the attack clock (simulator default) — emitted_at must NOT separate the two classes
+// (it is a fixture timestamp, not a signal; a real detector keys on rates/deltas, never absolute time).
+const BASE = Date.parse('2026-06-28T00:00:00.000Z');
 
 function ev(p: {
   i: number;
@@ -89,9 +95,10 @@ function ev(p: {
     host_id: 'host-sim-001',
     emitted_at: new Date(BASE + p.i * 40).toISOString(),
     event_type: p.type,
-    // One stable pid per workload run; signing varies realistically (see BENIGN_PROCESS_SIGNED).
+    // One stable pid per workload run, drawn from the SAME 4096..8191 hashed range as attack pids
+    // (simulator uses 4096 + h%4096) so pid distributions overlap and pid is not a free class separator.
     process: {
-      pid: 4200 + BENIGN_WORKLOADS.indexOf(p.workload),
+      pid: 4096 + (fnv(p.workload) % 4096),
       path: BENIGN_PROCESS_PATHS[p.workload],
       user: 'svc',
       signed: BENIGN_PROCESS_SIGNED[p.workload],

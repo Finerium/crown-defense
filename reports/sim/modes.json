@@ -1,7 +1,7 @@
 {
   "id": "SIM-MODES",
   "gate": 1,
-  "generated_at": "2026-06-27T17:52:20.069Z",
+  "generated_at": "2026-06-27T18:01:52.796Z",
   "pass": true,
   "detail": {
     "narrative": "Every mode run over the SAME fixed corpus (txt/docx/png/jpg). FULL & header/first-4KB break the magic on all types. INTERMITTENT keeps entropy ~flat on already-high-entropy CRC types and is caught ONLY by the CRC format-validation signal (entropy alone is blind); on low-entropy txt it IS entropy-detectable; on marker-only jpg interior corruption is NOT reliably caught at the single-file level — the honest gap, defended at host level by op-frequency + mixed file types.",
