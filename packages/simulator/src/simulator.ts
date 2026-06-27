@@ -283,7 +283,8 @@ export class SafeSimulator {
     const fps = Math.max(0.0001, this.cfg.filesPerSecond);
     return {
       schema_version: SCHEMA_VERSION,
-      event_id: `evt-${this.cfg.seed ?? 'r'}-${this.eventSeq++}`,
+      // Opaque numeric run id — never the family/mode/seed string (no label leak into a consumed field).
+      event_id: `evt-${this.hashSeed().toString(36)}-${this.eventSeq++}`,
       agent_id: this.cfg.agentId ?? 'agent-sim-001',
       host_id: this.cfg.hostId ?? 'host-sim-001',
       emitted_at: p.at,

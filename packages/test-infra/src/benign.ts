@@ -36,9 +36,18 @@ export const BENIGN_PROCESS_PATHS: Record<BenignWorkload, string> = {
   'backup-agent': '/usr/bin/restic',
   'compression-7zip': '/usr/bin/7z',
   'video-encode': '/usr/bin/ffmpeg',
-  'db-maintenance': '/usr/lib/postgresql/17/bin/postgres',
+  // A DBA maintenance/ETL script — runs via /usr/bin/python3, the SAME interpreter an attacker LOLBin
+  // abuses. Deliberate exact-path overlap so process.path is a weak signal, never a free class separator.
+  'db-maintenance': '/usr/bin/python3',
   'legitimate-fde': '/usr/sbin/cryptsetup',
 };
+
+/** FNV-1a hash → opaque numeric id (event_id must not encode the workload label). */
+function opaque(s: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}
 
 /** Binaries an operator allow-lists so legitimate IN-PLACE encryption is not flagged (AC-FP-02). Scoped
  *  to true in-place encryptors only — backup tools create new files and need no allow-list defense. */
@@ -74,7 +83,8 @@ function ev(p: {
 }): TelemetryEvent {
   return {
     schema_version: SCHEMA_VERSION,
-    event_id: `benign-${p.workload}-${p.i}`,
+    // Opaque id, same `evt-<base36>-<seq>` shape as attack events — never encodes the workload label.
+    event_id: `evt-${opaque(p.workload)}-${p.i}`,
     agent_id: 'agent-sim-001',
     host_id: 'host-sim-001',
     emitted_at: new Date(BASE + p.i * 40).toISOString(),

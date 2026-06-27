@@ -113,3 +113,20 @@ now MEASURED (format_valid=null for unvalidated mp4, not stamped); metrics renam
 dropped restic from allow-list; distinct ORIGINAL types; self-correcting header_changed (byte-compare);
 single stable pid; detection latency over detected-only. Added GroundTruthRegistry (blindness boundary:
 Phase-2 detector receives ONLY {scenario_id, events}; truth held separately). 68 tests, tsc+biome clean.
+
+**Focused re-verify (4-agent workflow):** FIX 2 (cherry-pick) + FIX 3 (jpg-gap scope) independently
+confirmed RESOLVED; holistic decision PASS, safe_to_gate_phase2=true. The FIX-1 (label-leak) subjective
+lens errored on the Opus cyber-classifier (ADR-009) BOTH review rounds. Replaced it with an OBJECTIVE,
+falsifiable separability test (separability.test.ts) + evidence (reports/sim/separability.json): proves no
+single stamped C1 field separates ATTACK vs BENIGN (signed has both values in both classes; process.path
+sets overlap on /usr/bin/python3) and zero ground-truth label leaks into a consumed field. While writing it
+I found + fixed two residual leaks the subjective review missed: event_id encoded the seed/workload (now an
+opaque base36 run id, identical shape across classes) and the evidence harness embedded fam.name in the temp
+dir → file.path (now index-based). The separability check is falsifiable — it caught the harness leak and
+failed until fixed. **Gate 1 PASSED: 72 tests, tsc+biome clean, 6 evidence reports pass.**
+
+Phase-2 plan drafted in scratchpad (phase2-plan.md): @crown/agent (userspace C1 observer + canary) and
+@crown/detection (5 signal evaluators + fusion behind C2); detection consumes C1 ONLY (blind scenarios);
+fusion is main-thread glue; graded against the oracle. Add a path/process-attribution ABLATION test in
+Phase 2 (detection must reach correct verdicts with process attribution blanked) — the real guarantee that
+the engine fuses entropy/format/canary/op-frequency rather than memorizing process fields.

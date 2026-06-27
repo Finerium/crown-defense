@@ -22,6 +22,21 @@
         "feature_list": ".crown/feature-list.json initialized (62 criteria, all passes:false)",
         "architecture": "docs/architecture.md (ADR-016) - two fresh-context reviews returned CONCERNS; fixed + re-verified green (see notes.md)"
       }
+    },
+    {
+      "gate": 1,
+      "name": "Safe test infrastructure / detection oracle",
+      "status": "passed",
+      "evidence": {
+        "manifest": "reports/manifests/gate-1.manifest.json",
+        "simulator": "@crown/simulator - parametric safe simulator, 5 evasion modes, 24-family battery, benign by construction (reversible/single-dir/wx-seed/no-network); emits ground-truth C1 telemetry",
+        "benign_suite": "@crown/test-infra - 5 benign-but-suspicious workloads (FP oracle) + metrics collector + report generator",
+        "runbook": "docs/runbooks/air-gapped-detonation-runbook.md (written, never executed)",
+        "reports": "reports/sim/{modes,safety,coverage,benign,separability,metrics}.json all pass:true",
+        "tests": "72 tests pass; tsc -b clean; biome clean",
+        "review": "6-lens adversarial review returned FAIL (3 HIGH honesty defects); all fixed; focused re-verify holistic decision PASS (safe_to_gate_phase2=true); FIX-1 confirmed by an OBJECTIVE falsifiable separability test (reports/sim/separability.json) since the subjective label-leak lens was blocked by the Opus cyber-classifier (ADR-009)",
+        "honest_gap": "intermittent-on-marker-only-formats (jpg) is NOT reliably caught at single-file level (documented in modes.json; defended at host level by op-frequency + mixed file types)"
+      }
     }
   ],
   "spend_note": "Phase 0 done in prior session. This session resumes from Gate 0 with the depth-spend stance: build Phases 1-6 with extra verification/adversarial-review depth, stop at Gate 6.",

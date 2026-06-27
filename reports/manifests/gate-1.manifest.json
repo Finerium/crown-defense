@@ -32,6 +32,13 @@
       "artifact": "reports/sim/benign.json"
     },
     {
+      "id": "SIM-SEPARABILITY",
+      "title": "Oracle independence: no single stamped C1 field separates ATTACK vs BENIGN; ground-truth label never leaks into a consumed field (a detector must fuse real signals, not memorize a fiat field)",
+      "test_id": "sim_separability",
+      "expected": "process.signed not separating (both classes carry both values); process.path sets overlap; zero label leaks in event_id/file.path/process.path/new_type",
+      "artifact": "reports/sim/separability.json"
+    },
+    {
       "id": "METRICS-VALID",
       "title": "Metrics collector + report generator produce valid, schema-stable output",
       "test_id": "metrics_valid",

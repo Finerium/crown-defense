@@ -1,0 +1,22 @@
+{
+  "id": "SIM-SEPARABILITY",
+  "gate": 1,
+  "generated_at": "2026-06-27T17:52:20.199Z",
+  "pass": true,
+  "detail": {
+    "note": "No single stamped C1 field separates ATTACK vs BENIGN; the ground-truth label never reaches a consumed field. A detector must fuse entropy/format/canary/op-frequency, not memorize a fiat field.",
+    "signed_not_separating": true,
+    "attack_signed_values": [
+      false,
+      true
+    ],
+    "benign_signed_values": [
+      true,
+      false
+    ],
+    "process_path_overlap": [
+      "/usr/bin/python3"
+    ],
+    "label_leaks": []
+  }
+}
