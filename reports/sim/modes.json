@@ -1,0 +1,75 @@
+{
+  "id": "SIM-MODES",
+  "gate": 1,
+  "generated_at": "2026-06-27T17:18:57.871Z",
+  "pass": true,
+  "detail": {
+    "modes": [
+      {
+        "mode": "FULL",
+        "filesTouched": 10,
+        "formatBrokenCount": 10,
+        "sample_event": {
+          "format_valid": false,
+          "header_changed": true,
+          "entropy_read": 4.338,
+          "entropy_write": 7.914,
+          "entropy_delta": 3.576
+        },
+        "ok": true
+      },
+      {
+        "mode": "INTERMITTENT_EVERY_N_BYTES",
+        "filesTouched": 10,
+        "formatBrokenCount": 10,
+        "sample_event": {
+          "format_valid": false,
+          "header_changed": false,
+          "entropy_read": 7.893,
+          "entropy_write": 7.89,
+          "entropy_delta": 0.003
+        },
+        "ok": true
+      },
+      {
+        "mode": "HEADER_ONLY",
+        "filesTouched": 10,
+        "formatBrokenCount": 10,
+        "sample_event": {
+          "format_valid": false,
+          "header_changed": true,
+          "entropy_read": 7.878,
+          "entropy_write": 7.897,
+          "entropy_delta": 0.019
+        },
+        "ok": true
+      },
+      {
+        "mode": "FIRST_4KB",
+        "filesTouched": 10,
+        "formatBrokenCount": 10,
+        "sample_event": {
+          "format_valid": false,
+          "header_changed": true,
+          "entropy_read": 7.895,
+          "entropy_write": 7.906,
+          "entropy_delta": 0.011
+        },
+        "ok": true
+      },
+      {
+        "mode": "LOW_AND_SLOW",
+        "filesTouched": 10,
+        "formatBrokenCount": 10,
+        "sample_event": {
+          "format_valid": false,
+          "header_changed": true,
+          "entropy_read": 7.881,
+          "entropy_write": 7.904,
+          "entropy_delta": 0.023
+        },
+        "ok": true
+      }
+    ]
+  }
+}

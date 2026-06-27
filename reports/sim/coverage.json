@@ -1,0 +1,43 @@
+{
+  "id": "SIM-COVERAGE",
+  "gate": 1,
+  "generated_at": "2026-06-27T17:18:57.907Z",
+  "pass": true,
+  "detail": {
+    "families": 24,
+    "modes": 5,
+    "evasion_modes": [
+      "FULL",
+      "INTERMITTENT_EVERY_N_BYTES",
+      "HEADER_ONLY",
+      "FIRST_4KB",
+      "LOW_AND_SLOW"
+    ],
+    "family_names": [
+      "LockBit-3.0",
+      "BrainCipher",
+      "Conti",
+      "Ryuk",
+      "REvil-Sodinokibi",
+      "WannaCry",
+      "Maze",
+      "DarkSide",
+      "Cuba",
+      "Babuk",
+      "LockFile",
+      "BlackCat-ALPHV",
+      "Play",
+      "Royal",
+      "Agenda-Qilin",
+      "BlackBasta",
+      "Phobos",
+      "Dharma-CrySiS",
+      "Hive",
+      "BlackMatter",
+      "Akira",
+      "Medusa",
+      "Rhysida",
+      "ViceSociety"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "BENIGN-SUITE",
+  "gate": 1,
+  "generated_at": "2026-06-27T17:18:57.930Z",
+  "pass": true,
+  "detail": {
+    "workloads": [
+      {
+        "workload": "backup-agent",
+        "events": 12,
+        "requiresAllowlist": false
+      },
+      {
+        "workload": "compression-7zip",
+        "events": 1,
+        "requiresAllowlist": false
+      },
+      {
+        "workload": "video-encode",
+        "events": 4,
+        "requiresAllowlist": false
+      },
+      {
+        "workload": "db-maintenance",
+        "events": 20,
+        "requiresAllowlist": false
+      },
+      {
+        "workload": "legitimate-fde",
+        "events": 8,
+        "requiresAllowlist": true
+      }
+    ],
+    "allValid": true,
+    "allBenign": true
+  }
+}

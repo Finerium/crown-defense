@@ -4,6 +4,7 @@
   "codename": "talos",
   "run_target_this_session": "Resume from committed Gate 0 (hooks now ACTIVE) -> build toward Gate 6 (hackathon checkpoint) with depth-spend verification",
   "deliberate_stop_point": "Gate 6 (hackathon checkpoint) - bank-grade Phases 7-15 are a later relaunch",
+  "gate6_acceptance_addendum": "LIVE Vercel demo-mode dashboard (frontend + serverless only; DeepSeek-backed report via serverless fn; key server-side). Project 'crown-defense' -> crown-defense.vercel.app, auto-redeploy on push, browser-verified live, URL+repo in Report-hackathon.md. Execute at Phase 5/6. See notes.md.",
   "gates": [
     {
       "gate": 0,

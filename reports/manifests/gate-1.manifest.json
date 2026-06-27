@@ -1,0 +1,49 @@
+{
+  "_comment": "Phase 1 / Gate 1 evidence manifest. The detection oracle (safe simulator + benign suite + metrics + runbook). Parsed fail-closed: a missing/malformed artifact is a FAILURE. The simulator and benign suite are TEST ORACLES (worker-write-denied once frozen).",
+  "gate": 1,
+  "phase": "Safe test infrastructure / detection oracle",
+  "criteria": [
+    {
+      "id": "SIM-MODES",
+      "title": "Simulator produces every evasion mode (full, intermittent every-N-bytes, header-only, first-4KB, low-and-slow) with the expected per-mode signal signature",
+      "test_id": "sim_modes",
+      "expected": "all 5 modes run; each emits C1 telemetry; format/entropy/header fields match the mode's signature",
+      "artifact": "reports/sim/modes.json"
+    },
+    {
+      "id": "SIM-SAFE",
+      "title": "Simulator is benign by construction: reversible (exact restore), single-directory (path-contained), key-retaining, non-propagating, no network",
+      "test_id": "sim_safety",
+      "expected": "restore() restores every byte; writes outside targetDir are rejected; no net/child_process imports in the package",
+      "artifact": "reports/sim/safety.json"
+    },
+    {
+      "id": "SIM-COVERAGE",
+      "title": ">=20 ransomware behaviors/families and >=4 evasion modes available (AC-DET-06 substrate)",
+      "test_id": "sim_coverage",
+      "expected": "families >= 20 AND modes >= 4",
+      "artifact": "reports/sim/coverage.json"
+    },
+    {
+      "id": "BENIGN-SUITE",
+      "title": "Benign-but-suspicious workload suite runs (backup, compression, video encode, DB maintenance, legitimate FDE) and emits valid benign C1 telemetry",
+      "test_id": "benign_suite",
+      "expected": "5 workloads run; each emits C1-valid telemetry; high-entropy/high-op but ground-truth BENIGN",
+      "artifact": "reports/sim/benign.json"
+    },
+    {
+      "id": "METRICS-VALID",
+      "title": "Metrics collector + report generator produce valid, schema-stable output",
+      "test_id": "metrics_valid",
+      "expected": "collector scores scenarios; report generator writes well-formed JSON artifacts",
+      "artifact": "reports/sim/metrics.json"
+    },
+    {
+      "id": "RUNBOOK",
+      "title": "Air-gapped real-malware detonation runbook/SOP exists as documentation (written, never executed)",
+      "test_id": "runbook_present",
+      "expected": "docs/runbooks/air-gapped-detonation-runbook.md present and complete",
+      "artifact": "docs/runbooks/air-gapped-detonation-runbook.md"
+    }
+  ]
+}

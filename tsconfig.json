@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/contracts" },
     { "path": "packages/audit" },
-    { "path": "packages/simulator" }
+    { "path": "packages/simulator" },
+    { "path": "packages/test-infra" }
   ]
 }

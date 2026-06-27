@@ -65,3 +65,27 @@ Recon of committed Gate 0 against the real repo:
 - Re-verified: `tsc -b` exit 0; vitest 28/28 pass; biome clean (fixed one stale line-wrap nit in
   contracts.test.ts left by the Gate-0 C2 fix); docker `crown-db` up+healthy (operational+audit DBs).
 - Conclusion: Gate 0 genuinely passed. Resuming from Phase 1. Depth-spend stance active Phase 1 onward.
+
+## Mission addendum (received this session) — Vercel live demo-mode dashboard = Gate 6 acceptance item
+
+Execute at Phase 5/6 (do NOT derail earlier gates). Requirements:
+- **Live, user-interactive demo of the Command Dashboard on Vercel, live BEFORE the Gate 6 stop.**
+- **Only the dashboard frontend deploys to Vercel.** The kernel agent, control plane, Postgres, and
+  LLM serving are NOT Vercel-deployable — do not attempt. The real detection/containment/agent run on a host.
+- **Self-contained DEMO MODE**: static frontend + Vercel serverless functions, ZERO dependency on any
+  separately-running backend host (works even when nothing else is running). A visitor triggers a simulated
+  ransomware scenario and watches the real closed-loop UI play out: detection signals firing from the safe
+  simulator's FIXTURES (never real malware), dial-gated containment, and a genuinely LIVE LLM-generated
+  IncidentReport + BlastRadiusMap + RecoveryPlan produced by calling the DeepSeek API
+  (DEEPSEEK_API_KEY, LLM_API_BASE_URL, LLM_MODEL from .env) inside a Vercel serverless function.
+  **Key stays server-side only — never in client code.**
+- **Label clearly** in the UI and in Report-hackathon.md as a demo/simulation on synthetic data, not the
+  production agent.
+- gh + Vercel CLI already authorized on this machine → proceed without an auth stop (satisfies the earlier
+  deploy stop-and-ask). Create/link a Vercel project named **crown-defense** to serve at
+  crown-defense.vercel.app; enable auto-redeploy on push to the default branch; deploy. If that exact
+  subdomain is unavailable, deploy anyway and report the actual URL. (Implies pushing this repo to GitHub.)
+- **Verify live with browser automation** (URL loads, simulated scenario runs end-to-end, DeepSeek-backed
+  report renders) before claiming it works. Put the live URL + repo URL in Report-hackathon.md at Gate 6.
+- Demo mode shares the SAME contracts/components as the real dashboard; it is a data-source switch
+  (fixture+serverless vs live backend), not a separate UI — keep one dashboard, one set of C-contracts.

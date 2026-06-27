@@ -1,0 +1,31 @@
+{
+  "id": "METRICS-VALID",
+  "gate": 1,
+  "generated_at": "2026-06-27T17:18:57.932Z",
+  "pass": true,
+  "detail": {
+    "note": "synthetic placeholder verdicts; detection scoring is Phase 2",
+    "summary": {
+      "attacks": 10,
+      "detected": 10,
+      "detectionRate": 1,
+      "benign": 10,
+      "falsePositives": 0,
+      "falsePositiveRate": 0,
+      "modesCovered": [
+        "FULL"
+      ],
+      "familiesCovered": [
+        "LockBit-3.0"
+      ],
+      "filesLost": {
+        "max": 3,
+        "p95": 3
+      },
+      "detectLatencyMs": {
+        "p50": 809,
+        "p95": 819
+      }
+    }
+  }
+}
