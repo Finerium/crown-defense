@@ -2,25 +2,27 @@
   "_comment": "Run state for durability + resume-via-recon. On relaunch: recon the committed state, re-verify the last claimed gate against the real repo, then continue from the first unmet gate. Worker subagents are hook-denied from writing this file.",
   "product": "Crown Defense",
   "codename": "talos",
-  "run_target_this_session": "Gate 0 (foundation), then hand back for one relaunch to ACTIVATE hooks before Phase 1 fan-out",
-  "deliberate_stop_point": "Gate 6 (hackathon checkpoint) — bank-grade Phases 7-15 are a later relaunch",
+  "run_target_this_session": "Resume from committed Gate 0 (hooks now ACTIVE) -> build toward Gate 6 (hackathon checkpoint) with depth-spend verification",
+  "deliberate_stop_point": "Gate 6 (hackathon checkpoint) - bank-grade Phases 7-15 are a later relaunch",
   "gates": [
     {
       "gate": 0,
       "name": "Foundation + architecture validated",
-      "status": "passed_pending_hook_activation",
+      "status": "passed",
+      "re_verified_on_relaunch": true,
       "evidence": {
-        "contracts": "packages/contracts (18 tests pass), docs/contracts.md",
+        "hooks_active": "PROBED LIVE this session: `echo CROWN_HOOK_PROBE` BLOCKED by pretooluse-safety; worktree worker BLOCKED by verification-integrity from writing packages/simulator/*.test.ts. Both PreToolUse hooks fire.",
+        "contracts": "packages/contracts (20 tests pass), docs/contracts.md",
         "audit_substrate": "packages/audit hash-chain + WORM store (8 tests pass incl. live DB WORM reject)",
-        "harness": "vitest + biome + tsc configured; 26 tests passing",
-        "db": "docker postgres up; operational + audit DBs migrated (ADR-013 separation, WORM trigger)",
-        "feature_list": ".crown/feature-list.json initialized (all passes:false)",
-        "architecture": "docs/architecture.md (ADR-016) — pending fresh-context review",
-        "hooks": "written + unit-verified correct; NOT active mid-session (require relaunch)"
-      },
-      "blocker": "Enforcement hooks are not active until a session relaunch. Foundation committed; operator relaunches to activate, then resume from this gate via recon before Phase 1 fan-out."
+        "harness": "vitest + biome + tsc configured; 28 tests passing this session",
+        "typecheck": "tsc -b exit 0 this session",
+        "lint": "biome check . clean this session (fixed 1 stale format nit in contracts.test.ts)",
+        "db": "docker crown-db up+healthy; operational + audit DBs migrated (ADR-013 separation, WORM trigger)",
+        "feature_list": ".crown/feature-list.json initialized (62 criteria, all passes:false)",
+        "architecture": "docs/architecture.md (ADR-016) - two fresh-context reviews returned CONCERNS; fixed + re-verified green (see notes.md)"
+      }
     }
   ],
-  "spend_note": "Phase 0 foundation only this session. Depth-spend stance applies from Phase 1 onward.",
-  "next_action_on_relaunch": "Recon committed state; probe hooks active (echo CROWN_HOOK_PROBE must be BLOCKED); re-verify Gate 0; then fan out Phase 1 (safe simulator + benign suite + metrics, main-thread oracle)."
+  "spend_note": "Phase 0 done in prior session. This session resumes from Gate 0 with the depth-spend stance: build Phases 1-6 with extra verification/adversarial-review depth, stop at Gate 6.",
+  "next_action": "Phase 1 (main-thread oracle): parametric safe simulator (full + intermittent variants + low-and-slow), benign-but-suspicious workload suite, metrics collector + report generator, air-gapped detonation runbook (docs). Then Gate 1, commit."
 }

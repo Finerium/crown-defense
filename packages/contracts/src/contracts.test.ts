@@ -77,8 +77,7 @@ describe('C2 corroboration invariant (AC-DET-05)', () => {
   it('REJECTS an INFLATED corroborating_count (count > fired signals)', () => {
     // self-reported count=2 but only 1 signal actually fired => must be rejected
     expect(
-      DetectionVerdict.safeParse({ ...baseVerdict, signals: firedSignals(1), corroborating_count: 2 })
-        .success
+      DetectionVerdict.safeParse({ ...baseVerdict, signals: firedSignals(1), corroborating_count: 2 }).success
     ).toBe(false);
   });
 });

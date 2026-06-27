@@ -55,3 +55,13 @@ Both returned CONCERNS (not FAIL). **Fixed before fan-out (all re-verified green
 - DB CHECK constraints on enum columns (Phase 7/11). `exportSlice` self-proof (Phase 7). Streamed verify for
   large chains (Phase 11). Major-version rejection is a boundary helper (`majorVersionAccepted`) consumers must
   call at ingest — wire it where messages enter the system.
+
+## Relaunch #1 recon (this session) — Gate 0 confirmed, hooks ACTIVE
+
+Recon of committed Gate 0 against the real repo:
+- **Hooks now ACTIVE** (the prior session's only blocker). Probed live: `echo CROWN_HOOK_PROBE` → BLOCKED by
+  pretooluse-safety; a throwaway worker in `.claude/worktrees/agent-…` → BLOCKED by verification-integrity
+  when it tried to Write `packages/simulator/__hook_probe__.test.ts`. Enforcement floor verified active.
+- Re-verified: `tsc -b` exit 0; vitest 28/28 pass; biome clean (fixed one stale line-wrap nit in
+  contracts.test.ts left by the Gate-0 C2 fix); docker `crown-db` up+healthy (operational+audit DBs).
+- Conclusion: Gate 0 genuinely passed. Resuming from Phase 1. Depth-spend stance active Phase 1 onward.
