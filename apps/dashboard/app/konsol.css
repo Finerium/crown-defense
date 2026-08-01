@@ -1,0 +1,767 @@
+/* ==================================================================================================
+   Crown Defense - attack simulation console (/konsol) and its sign-in page (/konsol/masuk).
+
+   EVERY selector here is prefixed kn- and scoped under .kn-root or .kn-masuk. This file must NEVER
+   redefine a talos.css class: talos.css stays the visual source of truth and this file only reuses its
+   custom properties (--f-disp / --f-body / --f-mono) plus its radius, spacing and type rhythm.
+
+   Visual direction: dark neumorphism (soft extruded surfaces, paired dark/light shadows) with a dark
+   red accent reserved strictly for the attack group. Contrast is carried by real text colours on the
+   raised surfaces, never by the soft shadows, so every label stays at or above WCAG AA.
+   ================================================================================================== */
+
+/* ---------- console shell ---------- */
+.kn-root {
+  --kn-bg: #171c23;
+  --kn-raise: #1b212a;
+  --kn-sunk: #12161d;
+  --kn-lo: #0b0e13;
+  --kn-hi: #242c38;
+  --kn-t1: #eef2f7;
+  --kn-t2: #aeb9c8;
+  --kn-danger: #ff8177;
+  --kn-danger-line: #c2564b;
+  --kn-danger-sunk: #22141a;
+  --kn-safe: #6fd79b;
+  --kn-safe-line: #3f8f63;
+  --kn-safe-sunk: #142019;
+  --kn-focus: #9ecbff;
+  --kn-r: 10px;
+  --kn-r-sm: 6px;
+
+  min-height: 100vh;
+  background: var(--kn-bg);
+  color: var(--kn-t1);
+  font-family: var(--f-body);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.kn-root :focus-visible,
+.kn-masuk :focus-visible {
+  outline: 2px solid var(--kn-focus);
+  outline-offset: 2px;
+  border-radius: var(--kn-r-sm);
+}
+
+/* ---------- persistent simulation banner (never dismissible) ---------- */
+.kn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 20px;
+  background: var(--kn-danger-sunk);
+  border-bottom: 1px solid var(--kn-danger-line);
+  color: var(--kn-danger);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+.kn-banner svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+/* ---------- session bar ---------- */
+.kn-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--kn-lo);
+  background: var(--kn-bg);
+}
+.kn-bar-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kn-bar-name {
+  font-family: var(--f-disp);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  color: var(--kn-t1);
+}
+.kn-bar-sub {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--kn-t2);
+}
+.kn-bar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.kn-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: var(--kn-r-sm);
+  background: var(--kn-sunk);
+  box-shadow: inset 2px 2px 5px var(--kn-lo), inset -2px -2px 5px var(--kn-hi);
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--kn-t2);
+  white-space: nowrap;
+}
+.kn-tag b {
+  color: var(--kn-t1);
+  font-weight: 500;
+}
+
+/* ---------- neumorphic controls ---------- */
+.kn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: var(--kn-r-sm);
+  background: var(--kn-raise);
+  box-shadow: 4px 4px 10px var(--kn-lo), -4px -4px 10px var(--kn-hi);
+  color: var(--kn-t1);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.kn-btn:hover {
+  color: var(--kn-t1);
+  border-color: #5d6c81;
+}
+.kn-btn:active {
+  box-shadow: inset 3px 3px 8px var(--kn-lo), inset -3px -3px 8px var(--kn-hi);
+}
+
+/* ---------- layout ---------- */
+.kn-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 14px;
+  align-items: start;
+  padding: 18px 20px 48px;
+  max-width: 1640px;
+  margin: 0 auto;
+}
+.kn-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ---------- raised panel ---------- */
+.kn-panel {
+  border-radius: var(--kn-r);
+  background: var(--kn-raise);
+  box-shadow: 7px 7px 18px var(--kn-lo), -7px -7px 18px var(--kn-hi);
+  border: 1px solid transparent;
+  min-width: 0;
+}
+.kn-panel-danger {
+  border-color: var(--kn-danger-line);
+}
+.kn-panel-safe {
+  border-color: var(--kn-safe-line);
+}
+.kn-panel-h {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 16px 0;
+}
+.kn-panel-h h2 {
+  margin: 0;
+  font-family: var(--f-disp);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kn-t1);
+}
+.kn-panel-danger .kn-panel-h h2 {
+  color: var(--kn-danger);
+}
+.kn-panel-safe .kn-panel-h h2 {
+  color: var(--kn-safe);
+}
+.kn-panel-sub {
+  margin: 7px 16px 0;
+  font-size: 12px;
+  color: var(--kn-t2);
+  line-height: 1.5;
+}
+.kn-panel-b {
+  padding: 14px 16px 16px;
+}
+
+/* ---------- scenario cards (the buttons) ---------- */
+.kn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.kn-scn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 13px 14px;
+  border-radius: var(--kn-r);
+  background: var(--kn-raise);
+  box-shadow: 5px 5px 12px var(--kn-lo), -5px -5px 12px var(--kn-hi);
+  color: var(--kn-t1);
+  font-family: var(--f-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+.kn-scn:active:not(:disabled) {
+  box-shadow: inset 4px 4px 10px var(--kn-lo), inset -4px -4px 10px var(--kn-hi);
+}
+.kn-scn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.kn-scn-attack {
+  border: 1px solid var(--kn-danger-line);
+}
+.kn-scn-benign {
+  border: 1px solid var(--kn-safe-line);
+}
+.kn-scn-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--f-disp);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--kn-t1);
+}
+.kn-scn-title svg {
+  flex: none;
+  margin-top: 4px;
+}
+.kn-scn-desc {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--kn-t2);
+}
+.kn-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px 12px;
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid var(--kn-lo);
+}
+.kn-meta-k {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--kn-t2);
+}
+.kn-meta-v {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--kn-t1);
+  overflow-wrap: anywhere;
+}
+.kn-scn-go {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.kn-scn-attack .kn-scn-go {
+  color: var(--kn-danger);
+}
+.kn-scn-benign .kn-scn-go {
+  color: var(--kn-safe);
+}
+
+/* ---------- notes attached to a card (kept OUTSIDE the button) ---------- */
+.kn-note {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--kn-r-sm);
+  background: var(--kn-sunk);
+  box-shadow: inset 2px 2px 6px var(--kn-lo), inset -2px -2px 6px var(--kn-hi);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--kn-t2);
+}
+.kn-note svg {
+  flex: none;
+  margin-top: 4px;
+}
+.kn-note b {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 3px;
+  color: var(--kn-t1);
+}
+
+/* ---------- status / invariant panels ---------- */
+.kn-kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 14px;
+}
+.kn-kv dt {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kn-t2);
+  padding-top: 2px;
+}
+.kn-kv dd {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--kn-t1);
+  overflow-wrap: anywhere;
+}
+.kn-phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px;
+  border-radius: var(--kn-r-sm);
+  background: var(--kn-sunk);
+  box-shadow: inset 2px 2px 5px var(--kn-lo), inset -2px -2px 5px var(--kn-hi);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kn-t1);
+}
+.kn-empty {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--kn-t2);
+  line-height: 1.6;
+  margin: 0;
+}
+.kn-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--kn-t2);
+}
+.kn-body + .kn-body {
+  margin-top: 9px;
+}
+.kn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 13px;
+  border-radius: var(--kn-r-sm);
+  border: 1px solid #5d6c81;
+  background: var(--kn-raise);
+  box-shadow: 4px 4px 10px var(--kn-lo), -4px -4px 10px var(--kn-hi);
+  color: var(--kn-t1);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.kn-link:hover {
+  border-color: var(--kn-focus);
+}
+.kn-alert {
+  display: flex;
+  gap: 9px;
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border-radius: var(--kn-r-sm);
+  border: 1px solid var(--kn-danger-line);
+  background: var(--kn-danger-sunk);
+  color: var(--kn-danger);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.kn-alert svg {
+  flex: none;
+  margin-top: 4px;
+}
+
+/* ==================================================================================================
+   Sign-in page: dark copy panel on the left, warm white form card on the right, form first in the DOM
+   so that the narrow stacked layout puts the form first with no CSS reordering of the reading order.
+   ================================================================================================== */
+.kn-masuk {
+  --km-ink: #1d1a16;
+  --km-ink2: #5b5249;
+  --km-paper: #faf7f2;
+  --km-paper2: #fffdfa;
+  --km-line: #ddd4c8;
+  --km-dark: #14181e;
+  --km-dark2: #1c222b;
+  --km-dark-t1: #f2f5f9;
+  --km-dark-t2: #b3bfcd;
+  --km-red: #ff8177;
+  --km-red-line: #c2564b;
+  --kn-focus: #1c4fd8;
+
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100vh;
+  font-family: var(--f-body);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.kn-masuk-copy {
+  grid-column: 1;
+  grid-row: 1;
+  background: var(--km-dark);
+  color: var(--km-dark-t1);
+  padding: 48px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.kn-masuk-form {
+  grid-column: 2;
+  grid-row: 1;
+  background: var(--km-paper);
+  color: var(--km-ink);
+  padding: 48px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kn-masuk-brand {
+  font-family: var(--f-disp);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.16em;
+  color: var(--km-dark-t1);
+}
+.kn-masuk-brandsub {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--km-dark-t2);
+  margin-top: 4px;
+}
+.kn-masuk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--km-red-line);
+  color: var(--km-red);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.kn-masuk-h1 {
+  font-family: var(--f-disp);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  margin: 0;
+  max-width: 19ch;
+}
+.kn-masuk-lede {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--km-dark-t2);
+  max-width: 62ch;
+}
+.kn-masuk-card {
+  border-radius: 12px;
+  border: 1px solid #2a3441;
+  background: var(--km-dark2);
+  padding: 16px 18px;
+}
+.kn-masuk-card h3 {
+  margin: 0 0 12px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--km-dark-t2);
+}
+.kn-masuk-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.kn-masuk-stat b {
+  display: block;
+  font-family: var(--f-disp);
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--km-dark-t1);
+}
+.kn-masuk-stat span {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--km-dark-t2);
+}
+.kn-masuk-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kn-masuk-chip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.kn-masuk-chip svg {
+  flex: none;
+  margin-top: 5px;
+}
+.kn-masuk-chip b {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--km-dark-t1);
+}
+.kn-masuk-chip span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--km-dark-t2);
+}
+.kn-masuk-inner {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.kn-masuk-inner h1 {
+  font-family: var(--f-disp);
+  font-size: 25px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--km-ink);
+}
+.kn-masuk-inner > p {
+  margin: 7px 0 26px;
+  font-size: 13.5px;
+  color: var(--km-ink2);
+}
+.kn-field {
+  display: block;
+  margin-bottom: 16px;
+}
+.kn-field span {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--km-ink);
+  margin-bottom: 6px;
+}
+.kn-field input {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--km-line);
+  background: var(--km-paper2);
+  color: var(--km-ink);
+  font-family: var(--f-body);
+  font-size: 14px;
+}
+.kn-field input::placeholder {
+  color: #6b625a;
+}
+.kn-masuk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.kn-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--km-ink);
+}
+.kn-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #7a1f18;
+}
+.kn-lupa {
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: #7a1f18;
+  font-family: var(--f-body);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.kn-hint {
+  margin: -8px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--km-ink2);
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--km-line);
+  background: var(--km-paper2);
+}
+.kn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #5d150f;
+  border-radius: 8px;
+  background: #7a1f18;
+  color: #fff6f4;
+  font-family: var(--f-disp);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.kn-submit:hover:not(:disabled) {
+  background: #661810;
+}
+.kn-submit:disabled {
+  cursor: default;
+  background: #8d5751;
+  border-color: #7a4b46;
+}
+.kn-masuk-err {
+  display: flex;
+  gap: 9px;
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border-radius: 8px;
+  border: 1px solid #a8291d;
+  background: #fdeeec;
+  color: #7a1f18;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.kn-masuk-err svg {
+  flex: none;
+  margin-top: 4px;
+}
+.kn-masuk-pending {
+  display: block;
+  margin: 12px 0 0;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  color: var(--km-ink2);
+  min-height: 18px;
+}
+.kn-masuk-foot {
+  margin: 26px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--km-ink2);
+  padding-top: 16px;
+  border-top: 1px solid var(--km-line);
+}
+.kn-masuk-sign {
+  margin: 10px 0 0;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--km-ink2);
+}
+
+/* ---------- motion, only when the visitor has not asked for less of it ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .kn-btn,
+  .kn-scn,
+  .kn-submit,
+  .kn-link {
+    transition: box-shadow 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
+  }
+  .kn-scn:hover:not(:disabled) {
+    box-shadow: 7px 7px 16px var(--kn-lo), -7px -7px 16px var(--kn-hi);
+  }
+  .kn-live {
+    animation: knPulse 2s ease-in-out infinite;
+  }
+  @keyframes knPulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+}
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 1180px) {
+  .kn-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .kn-masuk {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kn-masuk-form {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 40px 22px;
+  }
+  .kn-masuk-copy {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 40px 22px;
+  }
+  .kn-masuk-h1 {
+    font-size: 25px;
+  }
+}

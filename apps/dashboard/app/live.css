@@ -1,0 +1,652 @@
+/* Crown Defense - Live surface (dashboard tab 5).
+   Supplementary styles ONLY. This file must never redefine a talos.css class: talos.css is the visual
+   truth and shadowing it silently broke this project once before (docs/internal/notes.md). Every selector
+   here is prefixed `lv-`, or is a descendant rule scoped inside `.lv-shell`. */
+
+.lv-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* talos.css ships no focus style. Give this surface a visible one without touching shared classes. */
+.lv-shell :focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- sub navigation ---------- */
+.lv-subnav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.lv-subtab {
+  font-family: var(--f-disp);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--bg1);
+  color: var(--t2);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.lv-subtab:hover {
+  color: var(--t1);
+  border-color: var(--t3);
+}
+.lv-subtab.on {
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  color: var(--acc);
+}
+
+/* ---------- boundary statement ---------- */
+.lv-boundary {
+  border: 1px solid var(--acc-line);
+  background: var(--acc-soft);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lv-boundary-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+.lv-boundary-line {
+  font-family: var(--f-disp);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--t1);
+  margin: 0;
+}
+.lv-boundary-line[lang="en"] {
+  font-size: 14px;
+  color: var(--t2);
+  font-weight: 500;
+}
+.lv-boundary-body {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--t2);
+  margin: 0;
+  max-width: 92ch;
+}
+
+/* ---------- narrative step headers ---------- */
+.lv-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 2px 0;
+}
+.lv-step-n {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: var(--acc);
+  border: 1px solid var(--acc-line);
+  background: var(--acc-soft);
+}
+.lv-step-t {
+  font-family: var(--f-disp);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--t2);
+}
+.lv-step-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line-soft);
+}
+
+/* ---------- generic layout helpers ---------- */
+.lv-grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.lv-grid3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.lv-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.lv-scroll {
+  overflow-x: auto;
+}
+.lv-note {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--t3);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.lv-note-lg {
+  font-size: 11.5px;
+  font-family: var(--f-body);
+  color: var(--t2);
+  line-height: 1.5;
+  margin: 0;
+}
+.lv-kv {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: baseline;
+}
+.lv-kv dt {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin: 0;
+}
+.lv-kv dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--t1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lv-hash {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: var(--t2);
+  overflow-wrap: anywhere;
+}
+.lv-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- baseline chart ---------- */
+.lv-chart {
+  width: 100%;
+  height: 84px;
+  display: block;
+}
+.lv-chart-line {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.lv-chart-base {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.lv-chart-empty {
+  height: 84px;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- signal rows ---------- */
+.lv-sig {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) minmax(120px, 1fr) 132px;
+  gap: 10px 14px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.lv-sig:last-child {
+  border-bottom: none;
+}
+.lv-sig-name {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--t1);
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+.lv-sig-track {
+  position: relative;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--bg3);
+  overflow: visible;
+}
+.lv-sig-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--low);
+}
+.lv-sig-fill.on {
+  background: var(--crit);
+}
+.lv-sig-mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--t1);
+  transform: translateX(-1px);
+}
+.lv-sig-mark::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--t1);
+}
+.lv-sig-score {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  color: var(--t1);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.lv-sig-meta {
+  grid-column: 1 / -1;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--t3);
+  letter-spacing: 0.02em;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- provenance and refusal cards ---------- */
+.lv-why {
+  border: 1px solid color-mix(in srgb, var(--crit) 38%, transparent);
+  background: var(--crit-soft);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lv-why-head {
+  font-family: var(--f-disp);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--t1);
+  margin: 0;
+}
+.lv-refuse {
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent);
+  background: var(--ok-soft);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lv-refuse-head {
+  font-family: var(--f-disp);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: var(--t1);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lv-quote {
+  border-left: 3px solid var(--line);
+  padding: 2px 0 2px 12px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--t1);
+  overflow-wrap: anywhere;
+}
+.lv-quote-k {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 4px;
+}
+
+/* ---------- run comparison ---------- */
+.lv-cmp {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.lv-cmp-col {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 13px 15px;
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+.lv-cmp-col.lv-acted {
+  border-color: color-mix(in srgb, var(--crit) 40%, transparent);
+}
+.lv-cmp-col.lv-held {
+  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+}
+.lv-cmp-title {
+  font-family: var(--f-disp);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t1);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* ---------- agent action log ---------- */
+.lv-log {
+  display: flex;
+  flex-direction: column;
+}
+.lv-log-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.lv-log-item:last-child {
+  border-bottom: none;
+}
+.lv-log-t {
+  font-size: 12px;
+  color: var(--t1);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.lv-log-m {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- latency tiles ---------- */
+.lv-lat {
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.lv-lat-v {
+  font-family: var(--f-mono);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--t1);
+  font-variant-numeric: tabular-nums;
+}
+.lv-lat-v .lv-unit {
+  font-size: 13px;
+  color: var(--t3);
+  margin-left: 3px;
+}
+.lv-lat-k {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--t3);
+  line-height: 1.4;
+}
+.lv-lat-note {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--t3);
+  margin: 0;
+}
+
+/* ---------- run buttons ---------- */
+.lv-runs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+.lv-runbtn {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  color: var(--t1);
+  border-radius: 8px;
+  padding: 9px 11px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.lv-runbtn:hover:not(:disabled) {
+  border-color: var(--t3);
+}
+.lv-runbtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.lv-runbtn .lv-runbtn-l {
+  font-family: var(--f-disp);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lv-runbtn .lv-runbtn-s {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--t3);
+}
+
+/* ---------- dial ---------- */
+.lv-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.lv-dialset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.lv-dial-in {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.lv-dial {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 8px;
+}
+.lv-dialbtn {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  color: var(--t2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+.lv-dialbtn:hover:has(.lv-dial-in:enabled) {
+  border-color: var(--t3);
+  color: var(--t1);
+}
+.lv-dialbtn:has(.lv-dial-in:checked) {
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  color: var(--t1);
+}
+.lv-dialbtn:has(.lv-dial-in:focus-visible) {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+.lv-dialbtn:has(.lv-dial-in:disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
+.lv-dialbtn-b {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.lv-dialbtn-l {
+  font-family: var(--f-disp);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lv-dialbtn-m {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  color: var(--t3);
+  overflow-wrap: anywhere;
+}
+
+/* A broken chain link is never colour alone: the row also carries an icon and a text label. */
+.lv-broken-row td {
+  background: var(--crit-soft);
+}
+.lv-broken-row td:first-child {
+  box-shadow: inset 3px 0 0 var(--crit);
+}
+
+/* ---------- state strip ---------- */
+.lv-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.lv-strip-k {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lv-strip-v {
+  font-family: var(--f-mono);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--t1);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.lv-strip-s {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 7px;
+  letter-spacing: 0.03em;
+}
+.lv-down {
+  border: 1px solid color-mix(in srgb, var(--med) 45%, transparent);
+  background: var(--med-soft);
+  border-radius: 10px;
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lv-beat-dot {
+    animation: lvBeat 1.4s ease-in-out infinite;
+  }
+  @keyframes lvBeat {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.25;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .lv-grid2,
+  .lv-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lv-sig {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+  .lv-sig-track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}

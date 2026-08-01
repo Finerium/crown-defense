@@ -56,7 +56,7 @@ export function decideContainment(
       classification: classify(action, effectiveMode),
       disposition: 'DENY_FAILSAFE',
       reason:
-        'control plane unreachable: deny-by-default — no new destructive action; existing containment maintained',
+        'control plane unreachable: deny-by-default, no new destructive action; existing containment maintained',
     };
   }
 
@@ -70,11 +70,11 @@ export function decideContainment(
       break;
     case 'ASK_TO_ACT': // HUMAN_GATED
       disposition = 'PROPOSE';
-      reason = `HUMAN_GATED: ${action} proposed — requires a second distinct approver (dual control)`;
+      reason = `HUMAN_GATED: ${action} proposed, requires a second distinct approver (dual control)`;
       break;
     default: // NEVER_AUTO (MONITOR_ONLY, ALERT_RECOMMEND)
       disposition = effectiveMode === 'ALERT_RECOMMEND' ? 'ALERT_ONLY' : 'MONITOR_ONLY';
-      reason = `${effectiveMode}: ${action} is NEVER_AUTO here — ${disposition === 'ALERT_ONLY' ? 'alert + recommend only' : 'log only'}`;
+      reason = `${effectiveMode}: ${action} is NEVER_AUTO here, ${disposition === 'ALERT_ONLY' ? 'alert + recommend only' : 'log only'}`;
   }
   return { configuredMode, effectiveMode, action, classification, disposition, reason };
 }

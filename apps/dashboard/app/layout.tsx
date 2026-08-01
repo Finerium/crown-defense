@@ -3,8 +3,9 @@ import './talos.css';
 import { PRODUCT_NAME } from '@crown/contracts';
 
 export const metadata: Metadata = {
-  title: `${PRODUCT_NAME} — Command Dashboard`,
-  description: 'Bank-grade autonomous ransomware defense — command dashboard (demo).',
+  title: { default: PRODUCT_NAME, template: `%s - ${PRODUCT_NAME}` },
+  description:
+    'Pertahanan ransomware otonom kelas perbankan: deteksi multi-sinyal, containment bergerbang dial, audit hash-chained yang tidak bisa diubah.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
