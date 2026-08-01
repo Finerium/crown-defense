@@ -95,7 +95,7 @@ This is realized as **two distinct functions** so neither half of ADR-005 is dro
   dependency is impaired. This is where "reasoning-layer failure degrades the reported autonomy" lands
   (ADR-005, C9), satisfying AC-HEALTH-01 without contradicting AC-FAIL-01.
 
-Surfaced here and in `.crown/notes.md` for the Report.
+Surfaced here and in `docs/internal/notes.md` for the Report.
 
 ## 7. Flagged prod-hardening items (from Gate-0 adversarial review; scheduled, not yet done)
 

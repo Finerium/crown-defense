@@ -11,7 +11,7 @@ fail-safety are the product.**
 - **Locked ADRs** (do not relitigate): `docs/adr/`. Implementation-architecture choices: `docs/architecture.md`.
 - **Acceptance criteria** (Definition of Done): `.crown/feature-list.json` (every criterion, `passes:false` until proven).
 - **Path-scoped rules**: `.claude/rules/` — `contracts.md`, `security.md`, `testing.md`, `product.md`.
-- **Run state / lessons**: `.crown/progress.json` (gates + evidence), `.crown/notes.md` (lessons/deviations).
+- **Run state / lessons**: `.crown/progress.json` (gates + evidence), `docs/internal/notes.md` (lessons/deviations).
 
 ## Non-negotiable invariants (present from line one, never bolted on)
 1. **Fail-safe / deny-by-default.** LLM down or control-plane lost ⇒ degrade toward monitor, maintain

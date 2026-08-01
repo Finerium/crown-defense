@@ -1,4 +1,4 @@
-# Secrets — never commit
+# Secrets, never commit
 .env
 .env.*
 !.env.example
@@ -6,6 +6,8 @@ secrets/
 *.pem
 *.key
 !**/testdata/**/*.key
+# Live demo credentials for the console (the repo is public, the model key spend is real)
+KREDENSIAL-DEMO.md
 
 # Claude local overrides
 .claude/settings.local.json

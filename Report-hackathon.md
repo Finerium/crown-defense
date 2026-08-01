@@ -136,5 +136,5 @@ remain `passes: false` by design.
 ## How the work was graded
 Fresh-context reviewers grade against the locked acceptance criteria; the author never signs off its own code.
 Gates 1, 2, and 3 each went through **multiple adversarial review cycles that caught real wrongful-isolation
-and authorization bugs** before passing (see `.crown/notes.md`). Evidence manifests live under
+and authorization bugs** before passing (see `docs/internal/notes.md`). Evidence manifests live under
 `reports/manifests/`.
