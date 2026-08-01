@@ -1,6 +1,7 @@
 import { type IncidentContext, SCHEMA_VERSION } from '@crown/contracts';
 import { LLMOrchestrator, MockLLM, OpenAICompatClient, llmConfigFromEnv } from '@crown/llm';
 import { NextResponse } from 'next/server';
+import { callerIp, envLimit, limit } from '../../../lib/server/ratelimit';
 
 /**
  * Serverless function: generates a GENUINELY LIVE incident report by calling the on-prem-equivalent LLM
@@ -111,7 +112,26 @@ const FALLBACK = JSON.stringify({
   ],
 });
 
-export async function POST() {
+export async function POST(req: Request) {
+  // Live LLM spend gate. Per-IP and global fixed windows, both env-configurable. The 200 response shape
+  // and the server-side key handling below are untouched; only a limited caller sees a 429 instead.
+  const perIp = limit(
+    `analyze:${callerIp(req)}`,
+    envLimit('ANALYZE_MAX', 4),
+    envLimit('ANALYZE_WINDOW_MS', 10 * 60 * 1000)
+  );
+  const global = limit(
+    'analyze:global',
+    envLimit('ANALYZE_GLOBAL_MAX', 25),
+    envLimit('ANALYZE_GLOBAL_WINDOW_MS', 60 * 60 * 1000)
+  );
+  if (!perIp.allowed || !global.allowed) {
+    return NextResponse.json(
+      { pesan: 'Batas permintaan analisis tercapai. Coba lagi beberapa menit lagi.' },
+      { status: 429 }
+    );
+  }
+
   const cfg = llmConfigFromEnv();
   const llm = cfg ? new OpenAICompatClient(cfg) : new MockLLM(() => FALLBACK, 'fallback-unconfigured');
   const orch = new LLMOrchestrator(llm, { topK: 8 });

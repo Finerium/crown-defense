@@ -48,13 +48,21 @@ export interface DetectionConfig {
   allowlist: string[];
 }
 
-function num(env: NodeJS.ProcessEnv, key: string, dflt: number): number {
+/**
+ * Config source: any string map. Deliberately NOT NodeJS.ProcessEnv, because Next.js augments that global
+ * with a REQUIRED NODE_ENV, which makes `loadConfig({})` a type error the moment this package is pulled
+ * into a Next TS program. Nothing here reads NODE_ENV; the helpers only do `env[key]` lookups. Type-only
+ * widening, no behaviour change.
+ */
+export type ConfigEnv = Record<string, string | undefined>;
+
+function num(env: ConfigEnv, key: string, dflt: number): number {
   const v = env[key];
   if (v === undefined || v === '') return dflt;
   const n = Number(v);
   return Number.isFinite(n) ? n : dflt;
 }
-function list(env: NodeJS.ProcessEnv, key: string): string[] {
+function list(env: ConfigEnv, key: string): string[] {
   const v = env[key];
   if (!v) return [];
   return v
@@ -63,7 +71,7 @@ function list(env: NodeJS.ProcessEnv, key: string): string[] {
     .filter(Boolean);
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): DetectionConfig {
+export function loadConfig(env: ConfigEnv = process.env): DetectionConfig {
   return {
     entropyDeltaThreshold: num(env, ENV_KEYS.entropyDeltaThreshold, 1.5),
     entropyLowBase: num(env, ENV_KEYS.entropyLowBase, 6.0),

@@ -63,12 +63,30 @@ importers:
 
   apps/dashboard:
     dependencies:
+      '@crown/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
+      '@crown/audit':
+        specifier: workspace:*
+        version: link:../../packages/audit
+      '@crown/containment':
+        specifier: workspace:*
+        version: link:../../packages/containment
       '@crown/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@crown/detection':
+        specifier: workspace:*
+        version: link:../../packages/detection
       '@crown/llm':
         specifier: workspace:*
         version: link:../../packages/llm
+      '@crown/simulator':
+        specifier: workspace:*
+        version: link:../../packages/simulator
+      '@crown/test-infra':
+        specifier: workspace:*
+        version: link:../../packages/test-infra
       next:
         specifier: ^15.1.3
         version: 15.5.19(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -78,6 +96,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@types/react':
         specifier: ^19.0.2
