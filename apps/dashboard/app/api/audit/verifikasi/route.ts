@@ -11,5 +11,5 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(): Promise<NextResponse<ChainVerificationResult>> {
-  return NextResponse.json(verifyChain(getChain()));
+  return NextResponse.json(verifyChain(await getChain()));
 }

@@ -18,5 +18,5 @@ export async function GET(req: Request): Promise<NextResponse<KonsolStatus | nul
   if (!session) {
     return NextResponse.json({ pesan: 'Sesi tidak ditemukan. Silakan masuk kembali.' }, { status: 401 });
   }
-  return NextResponse.json(store.getProgress());
+  return NextResponse.json(await store.getProgress());
 }

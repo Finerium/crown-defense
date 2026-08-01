@@ -402,8 +402,8 @@ export const STRINGS = {
   ld_s5_e2_s: { en: 'reports/fp/benign.json', id: 'reports/fp/benign.json' },
   ld_s5_e3_v: { en: '0 to 6', id: '0 sampai 6' },
   ld_s5_e3_l: {
-    en: 'Gates 0 to 6 passed, 134 tests across 16 files. Gate 2 passed with documented residuals.',
-    id: 'Gate 0 sampai 6 lulus, 134 uji di 16 berkas. Gate 2 lulus dengan residual terdokumentasi.',
+    en: 'Gates 0 to 6 passed, 174 tests across 18 files. Gate 2 passed with documented residuals.',
+    id: 'Gate 0 sampai 6 lulus, 174 uji di 18 berkas. Gate 2 lulus dengan residual terdokumentasi.',
   },
   ld_s5_e3_s: {
     en: '.crown/progress.json, reports/manifests/',

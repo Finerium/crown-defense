@@ -346,9 +346,9 @@ describe('claim 2: the dial gates containment on a genuine destructive verdict',
   it('the shipped dial default is MONITOR_ONLY when the deployment sets no override', async () => {
     const { getDial } = await import('../lib/server/store.js');
     if (process.env.CROWN_DIAL_DEFAULT === undefined) {
-      expect(getDial()).toBe('MONITOR_ONLY');
+      expect(await getDial()).toBe('MONITOR_ONLY');
     } else {
-      expect(getDial()).toBe(process.env.CROWN_DIAL_DEFAULT);
+      expect(await getDial()).toBe(process.env.CROWN_DIAL_DEFAULT);
     }
   });
 });

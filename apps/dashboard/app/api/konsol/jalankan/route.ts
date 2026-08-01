@@ -68,7 +68,7 @@ export async function POST(req: Request): Promise<NextResponse<JalankanResponse 
   }
 
   const runId = `run-${Date.now().toString(36)}-${randomBytes(3).toString('hex')}`;
-  const accepted = store.enqueue({
+  const accepted = await store.enqueue({
     runId,
     scenarioId: parsed.data.scenarioId,
     requestedAt: new Date().toISOString(),

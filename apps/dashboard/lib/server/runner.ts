@@ -72,9 +72,13 @@ function detectionConfig(): DetectionConfig {
  * /api/audit/verifikasi. globalThis is shared by every route in the process, so the key is too.
  *
  * ponytail: ephemeral key, never a constant. A constant integrity key makes the chain forgeable by anyone
- * who can read this file. A cold start mints a new one, which is why the chain itself is kept in process
- * memory (see store.ts): a chain that outlives its key would be unverifiable, and an unverifiable audit
- * chain is worse than no chain. Set AUDIT_INTEGRITY_KEY for a key that survives a restart.
+ * who can read this file, so the fallback is minted per process and never written down.
+ *
+ * The fallback is a fallback. Any deployment where the chain crosses a process boundary MUST set
+ * AUDIT_INTEGRITY_KEY, because a chain sealed with one process's random key cannot be verified by
+ * another, and an unverifiable audit chain is worse than no chain. On Vercel that is every deployment:
+ * the telemetry stream seals the chain into the shared store and /api/audit/verifikasi reads it back in a
+ * different Function invocation. The key is read from env here and never logged, returned or persisted.
  */
 const KEY_SLOT = Symbol.for('crown.demo.auditIntegrityKey');
 function integrityKey(): string {

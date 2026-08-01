@@ -33,7 +33,10 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 export async function GET(req: NextRequest): Promise<Response> {
   const encoder = new TextEncoder();
   const heartbeatMs = envNum('TELEMETRI_HEARTBEAT_MS', 2000);
-  const pollMs = envNum('TELEMETRI_POLL_MS', 400);
+  // Each poll is a Runtime Cache round trip on Vercel, so this trades button-press latency against cache
+  // traffic: fast enough that a press shows up while the presenter's finger is still on the mouse, slow
+  // enough not to hammer the cache for the whole length of an idle stream.
+  const pollMs = envNum('TELEMETRI_POLL_MS', 750);
 
   let closed = false;
   req.signal.addEventListener('abort', () => {
@@ -56,10 +59,10 @@ export async function GET(req: NextRequest): Promise<Response> {
         let sinceHeartbeat = heartbeatMs; // beat immediately so a new client sees life at once
         try {
           while (!closed) {
-            const pending = store.takePending();
+            const pending = await store.takePending();
             if (pending) {
               const startedAt = Date.now();
-              store.setProgress({
+              await store.setProgress({
                 runId: pending.runId,
                 scenarioId: pending.scenarioId,
                 phase: 'berjalan',
@@ -70,12 +73,15 @@ export async function GET(req: NextRequest): Promise<Response> {
               try {
                 const result = await runScenario(
                   pending.scenarioId,
-                  getDial(),
+                  await getDial(),
                   (e) => {
                     send(e);
                     // Console-visible progress: counts only, never the verdict that produced them.
+                    // Not awaited: onEvent is synchronous, and the run must never wait on the store. The
+                    // local layer is written before setProgress yields, so only the shared write is
+                    // deferred, and every write is a whole snapshot of monotonic counters.
                     if (e.type === 'tik') {
-                      store.setProgress({
+                      void store.setProgress({
                         runId: pending.runId,
                         scenarioId: pending.scenarioId,
                         phase: 'berjalan',
@@ -87,8 +93,8 @@ export async function GET(req: NextRequest): Promise<Response> {
                   },
                   { runId: pending.runId, signal: req.signal }
                 );
-                setChain(result.chain);
-                store.setProgress({
+                await setChain(result.chain);
+                await store.setProgress({
                   runId: pending.runId,
                   scenarioId: pending.scenarioId,
                   phase: 'selesai',
@@ -103,7 +109,7 @@ export async function GET(req: NextRequest): Promise<Response> {
                   runId: pending.runId,
                   pesan: `Beban kerja gagal dijalankan: ${err instanceof Error ? err.message : 'kesalahan tidak dikenal'}`,
                 });
-                store.setProgress({
+                await store.setProgress({
                   runId: pending.runId,
                   scenarioId: pending.scenarioId,
                   phase: 'selesai',
@@ -122,7 +128,7 @@ export async function GET(req: NextRequest): Promise<Response> {
                 at: new Date().toISOString(),
                 seq: seq++,
                 idle: true,
-                dial: getDial(),
+                dial: await getDial(),
               });
               sinceHeartbeat = 0;
             }

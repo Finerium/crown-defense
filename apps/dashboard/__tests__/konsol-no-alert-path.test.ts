@@ -199,7 +199,7 @@ function post(url: string, body: unknown, cookie = cookieHeader): Request {
 async function drain(): Promise<void> {
   const { store } = await import('../lib/server/store.js');
   for (let i = 0; i < 64; i++) {
-    if (store.takePending() === null) return;
+    if ((await store.takePending()) === null) return;
   }
 }
 
@@ -479,7 +479,7 @@ describe('(c) injection: a crafted console request cannot smuggle a decision any
     const { store } = await import('../lib/server/store.js');
     await POST(post('http://t/api/konsol/jalankan', hostile));
 
-    const progress = store.getProgress() as Record<string, unknown> | null;
+    const progress = (await store.getProgress()) as Record<string, unknown> | null;
     expect(progress).not.toBeNull();
     expect(Object.keys(progress as Record<string, unknown>).sort()).toEqual([
       'elapsedMs',
@@ -491,7 +491,7 @@ describe('(c) injection: a crafted console request cannot smuggle a decision any
     ]);
     expect(JSON.stringify(progress)).not.toContain(SENTINEL);
 
-    const pending = store.takePending() as Record<string, unknown> | null;
+    const pending = (await store.takePending()) as Record<string, unknown> | null;
     expect(pending).not.toBeNull();
     expect(Object.keys(pending as Record<string, unknown>).sort()).toEqual([
       'requestedAt',
@@ -541,7 +541,7 @@ describe('(c) injection: a crafted console request cannot smuggle a decision any
     ]) {
       const res = await POST(post('http://t/api/konsol/jalankan', { scenarioId: bad }));
       expect(res.status, `scenarioId ${JSON.stringify(bad)} was accepted`).toBe(400);
-      expect(store.takePending(), `scenarioId ${JSON.stringify(bad)} was enqueued`).toBeNull();
+      expect(await store.takePending(), `scenarioId ${JSON.stringify(bad)} was enqueued`).toBeNull();
     }
     // A body that is not an object at all must not throw a 500 either.
     for (const raw of ['null', '[]', '"x"', 'not json']) {
@@ -557,7 +557,7 @@ describe('(c) injection: a crafted console request cannot smuggle a decision any
     const { store } = await import('../lib/server/store.js');
     const res = await POST(post('http://t/api/konsol/jalankan', { scenarioId: 'rad-ws-radiologi' }, ''));
     expect(res.status).toBe(401);
-    expect(store.takePending()).toBeNull();
+    expect(await store.takePending()).toBeNull();
   });
 
   it('a forged session cookie is rejected, so the console cannot be driven without the secret', async () => {
@@ -613,13 +613,13 @@ describe('(d) provenance: a destructive verdict comes from DetectionEngine.inges
     expect(res.status).toBe(200);
 
     // 2) Consume it exactly as app/api/telemetri/aliran does: runId + scenarioId + the dial. Nothing else.
-    const pending = store.takePending();
+    const pending = await store.takePending();
     expect(pending).not.toBeNull();
     const { runScenario } = await import('../lib/server/runner.js');
     const events: Array<Record<string, unknown>> = [];
     await runScenario(
       (pending as { scenarioId: string }).scenarioId,
-      getDial(),
+      await getDial(),
       (e) => events.push(e as unknown as Record<string, unknown>),
       { runId: (pending as { runId: string }).runId }
     );
@@ -694,10 +694,10 @@ describe('(d) provenance: a destructive verdict comes from DetectionEngine.inges
         corroborating_count: 9,
       })
     );
-    const pending = store.takePending() as { runId: string; scenarioId: string };
+    const pending = (await store.takePending()) as { runId: string; scenarioId: string };
     const { runScenario } = await import('../lib/server/runner.js');
     const events: Array<Record<string, unknown>> = [];
-    const result = await runScenario(pending.scenarioId, getDial(), (e) => events.push(e as never), {
+    const result = await runScenario(pending.scenarioId, await getDial(), (e) => events.push(e as never), {
       runId: pending.runId,
     });
 

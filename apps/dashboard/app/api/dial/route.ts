@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 const Body = z.object({ position: AutonomyMode });
 
 export async function GET(): Promise<NextResponse<DialResponse>> {
-  return NextResponse.json({ position: getDial() });
+  return NextResponse.json({ position: await getDial() });
 }
 
 export async function POST(req: Request): Promise<NextResponse<DialResponse | PesanResponse>> {
@@ -30,6 +30,6 @@ export async function POST(req: Request): Promise<NextResponse<DialResponse | Pe
   if (!parsed.success) {
     return NextResponse.json({ pesan: 'Posisi dial tidak dikenal.' }, { status: 400 });
   }
-  setDial(parsed.data.position);
-  return NextResponse.json({ position: getDial() });
+  await setDial(parsed.data.position);
+  return NextResponse.json({ position: await getDial() });
 }
