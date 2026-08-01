@@ -1,6 +1,6 @@
 # Crown Defense
 
-[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 134](https://img.shields.io/badge/uji-134-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
+[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 174](https://img.shields.io/badge/uji-174-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
 
 Ketika ransomware sudah mulai mengenkripsi, pertanyaannya bukan lagi siapa yang menyerang, melainkan berapa detik yang tersisa. Crown Defense adalah sistem pertahanan ransomware otonom kelas perbankan: ia mendeteksi enkripsi massal lewat fusi banyak sinyal, mengisolasi host lewat dial otonomi yang bisa diatur, meminta analisis insiden ke LLM yang di produksi dijalankan sendiri di dalam infrastruktur bank, lalu menuliskan setiap tindakannya ke jejak audit hash-chained yang tidak bisa diubah.
 
@@ -321,7 +321,7 @@ Perilaku ini punya bukti tersendiri di `reports/llm/negative.json`, yang mencata
 
 </details>
 
-Sisi positifnya juga terekam. `reports/llm/faithfulness.json` mencatat sebuah analisis yang lulus dengan skor `1`, nol klaim tak berdukung, dan langkah-langkah yang terlacak ke `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, serta `PB-RECOVER-BACKUP`. Pada demo langsung, `reports/dashboard/deploy.json` mencatat panggilan DeepSeek sungguhan dengan faithfulness `1` dan 16 klaim bersitasi.
+Sisi positifnya juga terekam. `reports/llm/faithfulness.json` mencatat sebuah analisis yang lulus dengan skor `1`, nol klaim tak berdukung, dan langkah-langkah yang terlacak ke `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, serta `PB-RECOVER-BACKUP`. Pada demo langsung saat Gate 6, `reports/dashboard/deploy.json` mencatat panggilan DeepSeek sungguhan dengan faithfulness `1` dan 16 klaim bersitasi. Perlu dicatat dengan jujur: per 2 Agustus 2026 kunci API DeepSeek yang dipakai purwarupa sudah kedaluwarsa dan penyedia menolaknya dengan HTTP 401, sehingga `/api/analyze` mengembalikan `LLM_UNAVAILABLE`. Jalur itu belum diverifikasi ulang sampai kunci diganti. Yang justru terbukti dari kondisi ini adalah perilaku fail-safe: lapisan LLM mati tidak menghentikan deteksi maupun containment, dan tidak ada tindakan destruktif baru yang dimulai.
 
 Ketika model tidak terjangkau, orkestrator mengembalikan status `LLM_UNAVAILABLE` dengan `degraded: true` dan **tetap mengembalikan blast radius**, karena peta itu deterministik. Deteksi dan containment tidak terpengaruh sama sekali: LLM bersifat saran dan berjalan **sesudah** containment, bukan di jalur kritisnya.
 
@@ -488,7 +488,7 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Klaim | Angka | Bukti |
 | --- | --- | --- |
 | Typecheck bersih | `tsc -b` keluar dengan kode 0 | `pnpm typecheck` |
-| Suite uji | 134 uji di 16 berkas | `pnpm test` |
+| Suite uji | 174 uji di 18 berkas, 169 lulus | `pnpm test` |
 | Uji tanpa basis data dan tanpa kunci model | 129 dari 134 lulus; 5 yang gagal adalah 3 uji store audit basis data langsung, 1 uji pengikatan audit langsung, dan 1 uji integrasi model langsung | `pnpm test` tanpa `pnpm db:up` dan tanpa `DEEPSEEK_API_KEY` |
 | Cakupan keluarga dan mode evasi | 24 keluarga, 5 mode evasi | `reports/sim/coverage.json` |
 | Deteksi pada battery simulator aman | 24 dari 24 terdeteksi, laju deteksi 1,0 | `reports/detection/coverage.json` |
@@ -511,7 +511,8 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Degradasi saat LLM mati | `LLM_UNAVAILABLE`, `degraded: true`, tanpa crash, blast radius tetap dikembalikan | `reports/resilience/llm_down.json` |
 | Aksesibilitas | status dan severity tidak pernah lewat warna saja; baris fleet bisa dioperasikan keyboard | `reports/dashboard/a11y.json` |
 | i18n | kamus EN dan ID untuk setiap string yang menghadap pengguna, termasuk label aksesibilitas | `reports/dashboard/i18n.json` |
-| Demo langsung | HTTP 200, publik, DeepSeek V4 Pro, faithfulness 1, 16 klaim bersitasi | `reports/dashboard/deploy.json` |
+| Demo langsung | HTTP 200, publik. Empat permukaan hidup: `/`, `/dashboard`, `/konsol` (307 ke login), `/konsol/masuk` | dicek langsung dengan `curl -o /dev/null -w "%{http_code}"` |
+| Laporan LLM langsung | **TIDAK TERVERIFIKASI HARI INI.** Kunci DeepSeek kedaluwarsa, penyedia menolak dengan HTTP 401. `/api/analyze` mengembalikan `LLM_UNAVAILABLE` dan sistem merosot persis seperti rancangannya: deteksi dan containment tidak terpengaruh. Terakhir terverifikasi pada Gate 6 | `reports/dashboard/deploy.json` mencatat verifikasi Gate 6, bukan hari ini |
 | Closed loop end-to-end | 5 paket nyata tersambung, urutan audit-lalu-perintah ditegaskan, jalur fail-safe tidak mengirim perintah | `reports/closed-loop/end-to-end.json` |
 
 ### Target proposal dibandingkan yang terukur
