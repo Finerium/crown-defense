@@ -132,7 +132,7 @@ def d06():
     # --- B1 model output
     b.append(box(MX, 150, MW, 110, MID, DARK, 3))
     b.append(T(ml, 196, "Keluaran model bahasa", 30, WHITE, "bold", maxw=mmax, tag="06b1h"))
-    b.append(T(ml, 232, "Model swakelola di dalam bank. JSON ketat, suhu 0,1.", 22, PALE, maxw=mmax, tag="06b1a"))
+    b.append(T(ml, 232, "Produksi: model swakelola. Purwarupa: API. Suhu 0,1.", 22, PALE, maxw=mmax, tag="06b1a"))
 
     def guard(n, y, h, title, lines):
         o = [box(MX, y, MW, h, LGREY, MID, 2.5), bar(MX + 6, y + 10, h - 20, MID)]
