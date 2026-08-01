@@ -99,7 +99,7 @@
         "live_demo": "https://crown-defense.vercel.app (public, 200) - browser-verified: scenario plays, live DeepSeek report renders (faithfulness 1, 7 cited steps). reports/dashboard/deploy.json",
         "repo": "https://github.com/Finerium/crown-defense (private; auto-redeploy on push to main)",
         "report": "Report-hackathon.md",
-        "tests": "16 files / 134 tests pass; tsc -b clean.",
+        "tests": "18 files / 174 tests pass (134 at the Gate 6 checkpoint, +40 added by the final-round sprint); tsc -b clean.",
         "STOP": "Bank-grade Phases 7-15 intentionally NOT built (later relaunch)."
       }
     }
@@ -110,7 +110,7 @@
   "session_state_at_pause": {
     "gates_passed": [0, 1, 2, 3, 4, 5, 6],
     "checkpoint": "GATE 6 REACHED — hackathon checkpoint complete. Deliberate STOP. Bank-grade Phases 7-15 are a later relaunch and intentionally NOT built.",
-    "tests": "16 files / 134 tests passing (incl. live DeepSeek + closed-loop e2e); tsc -b clean",
+    "tests": "18 files / 174 tests passing (incl. live DeepSeek + closed-loop e2e + 40 console-invariant tests from the final-round sprint); tsc -b clean",
     "packages": "contracts, audit, simulator, test-infra, detection, agent, containment, control-plane, llm + apps/dashboard",
     "feature_list": "24/70 criteria passing (gates 0-5; gate-6 closed-loop/demo tracked in the gate-6 manifest, not added to the locked 70-criterion set)",
     "live_demo": "https://crown-defense.vercel.app (Vercel project crown-defense, root apps/dashboard, auto-redeploy on push to main; DeepSeek key server-side env var)",

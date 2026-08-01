@@ -439,7 +439,7 @@ pnpm typecheck
 pnpm --filter @crown/dashboard dev     # http://localhost:3100
 ```
 
-Tanpa langkah 3 dan 4, lima uji yang bergantung basis data langsung dan model langsung akan gagal; 129 uji sisanya tetap lulus. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
+Tanpa langkah 3 dan 4, lima uji yang bergantung basis data langsung dan model langsung akan gagal; 169 uji sisanya tetap lulus. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
 
 ## Perintah
 
@@ -489,7 +489,7 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | --- | --- | --- |
 | Typecheck bersih | `tsc -b` keluar dengan kode 0 | `pnpm typecheck` |
 | Suite uji | 174 uji di 18 berkas, 169 lulus | `pnpm test` |
-| Uji tanpa basis data dan tanpa kunci model | 129 dari 134 lulus; 5 yang gagal adalah 3 uji store audit basis data langsung, 1 uji pengikatan audit langsung, dan 1 uji integrasi model langsung | `pnpm test` tanpa `pnpm db:up` dan tanpa `DEEPSEEK_API_KEY` |
+| Uji tanpa basis data dan tanpa kunci model | 169 dari 174 lulus; 5 yang gagal adalah 3 uji store audit basis data langsung, 1 uji pengikatan audit langsung, dan 1 uji integrasi model langsung | `pnpm test` tanpa `pnpm db:up` dan tanpa `DEEPSEEK_API_KEY` |
 | Cakupan keluarga dan mode evasi | 24 keluarga, 5 mode evasi | `reports/sim/coverage.json` |
 | Deteksi pada battery simulator aman | 24 dari 24 terdeteksi, laju deteksi 1,0 | `reports/detection/coverage.json` |
 | Berkas hilang sebelum containment | maksimum 2, p95 2, dari anggaran 10 | `reports/detection/coverage.json`, `reports/containment/files_lost.json` |

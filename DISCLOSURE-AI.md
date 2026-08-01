@@ -179,9 +179,9 @@ Seluruh dasar pernyataan ini bisa diperiksa langsung dari repositori ini, tanpa 
 ```bash
 pnpm install
 pnpm typecheck                # tsc -b, keluar dengan kode 0
-pnpm test                     # 134 uji di 16 berkas
+pnpm test                     # 174 uji di 18 berkas
                               # tanpa pnpm db:up dan tanpa DEEPSEEK_API_KEY,
-                              # 129 lulus dan 5 uji yang bergantung layanan luar gagal
+                              # 169 lulus dan 5 uji yang bergantung layanan luar gagal
 ```
 
 Aturan pembangunannya ada di `CLAUDE.md` dan `.claude/rules/`. Penegakannya ada di `.claude/hooks/`.
