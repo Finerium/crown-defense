@@ -12,9 +12,10 @@
  * Node runtime, not edge: SSE works fine on the default Node runtime on Vercel and the runner needs
  * node:fs and node:crypto.
  */
+import { randomBytes } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { runScenario } from '../../../../lib/server/runner';
-import { getDial, setChain, store } from '../../../../lib/server/store';
+import { claimStream, getDial, isStreamCurrent, setChain, store } from '../../../../lib/server/store';
 import type { AliranEvent } from '../../../../lib/server/types';
 
 export const runtime = 'nodejs';
@@ -43,6 +44,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     closed = true;
   });
 
+  // Take the stream token. A dashboard reload leaves the previous stream running server side (Vercel does
+  // not reliably abort req.signal on client disconnect), and a zombie that keeps polling would steal the
+  // next button press and run it into a dead socket. Newest connection wins; see store.claimStream.
+  const streamId = `s-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
+
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const send = (e: AliranEvent): void => {
@@ -58,7 +64,12 @@ export async function GET(req: NextRequest): Promise<Response> {
         let seq = 0;
         let sinceHeartbeat = heartbeatMs; // beat immediately so a new client sees life at once
         try {
+          await claimStream(streamId);
           while (!closed) {
+            if (!(await isStreamCurrent(streamId))) {
+              closed = true; // a newer dashboard connection took over; stop competing for the queue
+              break;
+            }
             const pending = await store.takePending();
             if (pending) {
               const startedAt = Date.now();

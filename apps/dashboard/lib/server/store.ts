@@ -52,6 +52,7 @@ const KEY = {
   progress: `crown:demo:${SCOPE}:progress`,
   dial: `crown:demo:${SCOPE}:dial`,
   chain: `crown:demo:${SCOPE}:chain`,
+  stream: `crown:demo:${SCOPE}:stream`,
 } as const;
 
 /**
@@ -325,4 +326,42 @@ export async function getChain(): Promise<ActionRecord[]> {
   if (!Array.isArray(cached)) return read().chain;
   // Whole or nothing: a chain with a link quietly dropped would verify as broken and read as tampering.
   return cached.every(isRecord) ? (cached as ActionRecord[]).slice(-MAX_CHAIN) : read().chain;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Which telemetry stream is allowed to take work.                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * On Vercel a disconnected SSE client does NOT reliably abort req.signal, so a dashboard reload can leave
+ * a ZOMBIE stream polling for the rest of its maxDuration (300s). A zombie that calls takePending() steals
+ * the next button press and runs the whole scenario into a socket nobody is listening to, which on stage
+ * is indistinguishable from the product being broken. Observed live: a console POST returned accepted,
+ * the run genuinely executed (status reached 'selesai' with 37 events in 8.2s), and the stream the
+ * presenter was actually watching saw only heartbeats.
+ *
+ * So a stream CLAIMS a token when it connects and re-checks it on every poll. Newest connection wins;
+ * older ones notice they are superseded and stop. Claiming is not a lock, it is a last-writer-wins token,
+ * which is all a single-presenter demo needs.
+ *
+ * ponytail: no fencing, no lease renewal. If two judges open the dashboard at once the later one takes
+ * over and the earlier one goes quiet, which is the behaviour we want anyway.
+ */
+const STREAM_TTL_S = 320; // just over the stream's maxDuration, so a claim outlives the stream that made it
+let localStreamId: string | null = null;
+
+export async function claimStream(id: string): Promise<void> {
+  localStreamId = id;
+  await push(KEY.stream, { id, at: Date.now() }, STREAM_TTL_S);
+}
+
+/** False means a newer stream has taken over and this one must stop polling. */
+export async function isStreamCurrent(id: string): Promise<boolean> {
+  const cached = await pull(KEY.stream);
+  const claimed =
+    cached && typeof cached === 'object' && str((cached as { id?: unknown }).id)
+      ? (cached as { id: string }).id
+      : localStreamId;
+  // No claim recorded anywhere (cache absent, e.g. local dev): never deadlock the demo, keep working.
+  return claimed === null || claimed === id;
 }
