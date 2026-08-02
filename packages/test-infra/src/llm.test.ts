@@ -195,5 +195,9 @@ describe.runIf(!!cfg)('live DeepSeek integration (dev/test only)', () => {
     expect(['OK', 'BLOCKED_LOW_FAITHFULNESS', 'MALFORMED_OUTPUT']).toContain(a.status);
     expect(a.degraded).toBe(false); // the model answered
     expect(a.blast_radius.nodes.length).toBe(2);
-  }, 60000);
+    // Wall clock only. Every assertion above is unchanged. Measured single-attempt orchestration latency
+    // against deepseek-v4-pro with topK 8 is 51 to 64 seconds, so the previous 60s budget made this test
+    // flake by construction: it was racing the model rather than testing it. The client now allows
+    // 120s with one retry, so this must sit above that worst case to fail for a real reason.
+  }, 260000);
 });

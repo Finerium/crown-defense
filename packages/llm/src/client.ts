@@ -30,13 +30,32 @@ export interface LLMConfig {
   maxRetries?: number;
 }
 
+/** Bounded numeric env read. Falls back to the default on missing, empty or non-finite input. */
+function numFromEnv(env: NodeJS.ProcessEnv, key: string, dflt: number): number {
+  const raw = env[key];
+  if (raw === undefined || raw === '') return dflt;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : dflt;
+}
+
 /** Read the dev/test LLM config from env. Returns null if unset (then the layer degrades gracefully). */
 export function llmConfigFromEnv(env: NodeJS.ProcessEnv = process.env): LLMConfig | null {
   const apiKey = env.DEEPSEEK_API_KEY;
   const baseUrl = env.LLM_API_BASE_URL;
   const model = env.LLM_MODEL;
   if (!apiKey || !baseUrl || !model) return null;
-  return { apiKey, baseUrl, model, timeoutMs: 30000, maxRetries: 2 };
+  // 12-factor: these were hardcoded 30000/2, which is far too tight for a reasoning model. Measured
+  // end-to-end orchestration latency against deepseek-v4-pro with topK 8 is 51 to 64 seconds for a
+  // SINGLE attempt, so a 30s ceiling aborted every first try and the retries merely paid for the same
+  // work twice. Defaults now match the measurement; both stay overridable per deployment.
+  // Worst case must fit the caller's own budget: timeout * (1 + retries) <= the route's maxDuration.
+  return {
+    apiKey,
+    baseUrl,
+    model,
+    timeoutMs: numFromEnv(env, 'LLM_TIMEOUT_MS', 120000),
+    maxRetries: numFromEnv(env, 'LLM_MAX_RETRIES', 1),
+  };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

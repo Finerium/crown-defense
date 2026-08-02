@@ -10,7 +10,10 @@ import { callerIp, envLimit, limit } from '../../../lib/server/ratelimit';
  * faithfulness gate + C7 output. If the LLM is unconfigured/unreachable, it degrades gracefully (honest).
  */
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+// Measured orchestration latency against deepseek-v4-pro is 51 to 64 seconds for a single attempt, and
+// the client allows one retry, so the worst case is about 240 seconds. A 60 second budget killed this
+// route before the model could answer, which surfaced as LLM_UNAVAILABLE that was really our own timeout.
+export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
 function incidentContext(): IncidentContext {
