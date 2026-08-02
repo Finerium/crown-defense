@@ -30,8 +30,9 @@ Armada & Host, Sistem, **Langsung**. Konsol sudah Indonesia sejak awal.
 tidak terbuka, run akan menggantung di fase "Antre".
 
 **Dial.** Di panel "Dial otonomi, kendali langsung", pilih **"Otomatis penuh"** (FULL_AUTO). Jangan percaya
-kliknya: tunggu sampai posisi itu terbaca ulang dari "Detak server" (maksimal sekitar 2 detik). Dial adalah
-memori proses, cold start mengembalikannya ke MONITOR_ONLY. FULL_AUTO dipakai karena hanya di posisi ini
+kliknya: tunggu sampai posisi itu terbaca ulang dari "Detak server" (maksimal sekitar 2 detik). Dial kini
+dibagikan lintas fungsi lewat Runtime Cache dengan masa berlaku pendek, jadi ia bertahan antar-permintaan
+tetapi tetap kembali ke MONITOR_ONLY setelah dibiarkan lama. FULL_AUTO dipakai karena hanya di posisi ini
 perintah isolasi benar-benar diterbitkan, dan penolakan isolasi pada beban kerja sah jadi jauh lebih kuat
 justru karena terjadi pada dial paling permisif.
 
@@ -100,8 +101,12 @@ yang benar, panel penolakan tetap muncul karena tidak ada perintah yang diterbit
 sah" tidak berperilaku seperti dilatih, ganti ke kartu **"Kompaksi log"**: tiga sinyal konteks menyala dan
 aturan fusi menahan vonis destruktif.
 
-**Cold start.** Dial kembali ke MONITOR_ONLY dan rantai audit kosong. Selalu cek pembacaan ulang dial dari
-"Detak server" sebelum tombol rekam ditekan.
+**Cold start.** Setelah jeda panjang, dial kembali ke MONITOR_ONLY (fail-safe yang disengaja) dan rantai
+audit kosong. Selalu cek pembacaan ulang dial dari "Detak server" sebelum tombol rekam ditekan.
+
+**Satu tab dasbor saja.** Aliran telemetri memakai token: koneksi terbaru yang menang, koneksi lama berhenti
+mengambil pekerjaan. Kalau dasbor dibuka di dua tab, hanya tab yang paling terakhir dimuat yang akan
+bereaksi terhadap tombol konsol. Kalau dasbor dimuat ulang di tengah latihan, tab baru itulah yang aktif.
 
 ---
 
