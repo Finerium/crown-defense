@@ -816,10 +816,10 @@ const SCENARIO: DemoScenario = {
   },
 
   integrations: [
-    { name: 'EDR Sensor Mesh', kind: 'Telemetry', status: 'online', meta: '1,284 agents · 18.4k ev/s' },
+    { name: 'EDR Sensor Mesh', kind: 'Telemetry', status: 'online', meta: '1,284 agents terdaftar' },
     { name: 'Active Directory', kind: 'Identity', status: 'online', meta: 'mrh.local · 2 DCs' },
     { name: 'VaultSync Backup', kind: 'Recovery', status: 'online', meta: 'Last immutable snapshot 02:00' },
-    { name: 'SIEM Forwarder', kind: 'Export', status: 'online', meta: 'CEF · 4.2k ev/s forwarded' },
+    { name: 'SIEM Forwarder', kind: 'Export', status: 'online', meta: 'CEF' },
     { name: 'Email Gateway', kind: 'Prevention', status: 'degraded', meta: 'Sync latency 4m — retrying' },
     { name: 'Firewall Mgmt', kind: 'Enforcement', status: 'online', meta: 'Egress blocklist v1182' },
   ],
