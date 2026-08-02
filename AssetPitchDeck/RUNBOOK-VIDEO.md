@@ -25,6 +25,30 @@ tekan "Masuk". Masuk SATU kali saja sebelum rekaman: batas masuk 5 kali per 5 me
 bertuliskan `EN`. Klik satu kali sampai bertuliskan `ID`. Nama tab berubah menjadi Ringkasan, Insiden,
 Armada & Host, Sistem, **Langsung**. Konsol sudah Indonesia sejak awal.
 
+**Laporan AI, dibuat SEBELUM rekaman.** Ini bagian pra-terbang yang paling gampang membunuh take, baca
+sampai habis. Satu panggilan `/api/analyze` yang hidup memakan **sekitar 76 detik** round trip penuh
+(orkestrasi satu percobaan sendiri terukur 51 sampai 64 detik). Itu LEBIH LAMA daripada seluruh take 60
+detik. Karena itu laporan tidak pernah, dalam kondisi apa pun, dibuat di dalam take. Urutannya:
+
+1. **Muat ulang dasbor sekarang, bukan nanti.** Kalau sudah dimuat ulang sejak masuk, lewati. Memuat ulang
+   mengembalikan bahasa ke `EN`, jadi setel lagi ke `ID` sesudahnya. Ini kesempatan terakhir memuat ulang:
+   laporan disimpan di state halaman, dan memuat ulang menghapusnya.
+2. Buka tab **"Insiden"**, gulir ke panel "Rencana pemulihan" sub "LLM · saran", tekan **"Buat laporan
+   insiden"** SATU kali. Tombol berubah jadi "Membuat (LLM on-prem)…" dan bertahan begitu sekitar 76 detik.
+   Itu normal, bukan hang. Rute diberi `maxDuration` 300 detik dan klien diberi `LLM_TIMEOUT_MS` 120000
+   dengan `LLM_MAX_RETRIES` 1, jadi ia punya ruang untuk selesai. Jangan menekan dua kali.
+3. Tunggu sampai panel terisi: lencana **"Kesetiaan 1"** di kepala panel, satu paragraf ringkasan, dan
+   tujuh langkah rencana yang masing-masing berbaris "sitasi: PB-...".
+4. Periksa baris paling bawah panel. Ia harus berbunyi `model deepseek-v4-pro · LANGSUNG · hanya saran
+   (tidak pernah mengeluarkan aksi)`. Kalau tertulis `cadangan`, itu jalur degradasi, bukan laporan hidup.
+5. **Setelah laporan terpasang, jangan memuat ulang dasbor sampai seluruh sesi rekaman selesai.** Laporan
+   bertahan saat berpindah tab, termasuk pergi ke "Langsung" lalu kembali ke "Insiden", karena ia disimpan
+   di halaman dan bukan di dalam tab. Ia TIDAK bertahan menghadapi muat ulang. Kalau aliran telemetri putus
+   setelah laporan jadi, tekan **"Sambungkan ulang sekarang"**, jangan memuat ulang.
+
+Satu laporan yang sudah jadi bisa dipakai untuk beberapa take berturut-turut. Itu sebabnya beat AI di tabel
+shot tidak memuat klik apa pun.
+
 **Aliran.** Buka tab "Langsung". Tunggu lencana **LANGSUNG** (LIVE) di panel "Aliran telemetri" dan
 "Detak server" mulai naik. Beban kerja HANYA diambil selama ada koneksi aliran hidup. Kalau tab Langsung
 tidak terbuka, run akan menggantung di fase "Antre".
@@ -37,17 +61,24 @@ perintah isolasi benar-benar diterbitkan, dan penolakan isolasi pada beban kerja
 justru karena terjadi pada dial paling permisif.
 
 **Posisi awal.** Gulir jendela kanan sampai panel "Aliran telemetri" dan langkah 2 "Evaluator sinyal"
-terlihat bersamaan. Muat ulang dasbor tepat sebelum tombol rekam ditekan: koneksi aliran didaur ulang
-sekitar tiap 5 menit, memuat ulang memberi jendela bersih untuk take 60 detik.
+terlihat bersamaan. Koneksi aliran didaur ulang sekitar tiap 5 menit, dan hitungannya baru mulai saat tab
+"Langsung" dibuka, bukan saat halaman dimuat. Karena tunggu 76 detik untuk laporan terjadi SEBELUM tab
+"Langsung" disentuh, jendela 5 menit itu praktis masih utuh saat tombol rekam ditekan. Kalau aliran
+telanjur putus, pakai **"Sambungkan ulang sekarang"**, bukan muat ulang.
 
-**Batas laju, baca ini sebelum latihan.** Satu take penuh memakan 2 run + 1 analisis.
+**Batas laju dan biaya, baca ini sebelum latihan.** Dengan laporan dibuat lebih dulu, satu take penuh
+memakan **2 run dan 0 analisis**, dan laporan yang sama melayani take berikutnya selama dasbor tidak
+dimuat ulang.
 
 - Run: 6 per 5 menit per sesi, 40 per jam global. Maksimal 3 take dalam 5 menit.
 - Analisis: 4 per 10 menit per IP, 25 per jam global.
 
-Latih timing dengan gerakan tanpa klik. JANGAN menekan "Buat laporan insiden" untuk latihan: kalau kuota
-analisis habis, panel "Rencana pemulihan" tampil nyaris kosong di kamera, dan itu satu-satunya kondisi
-yang terlihat rusak.
+Tiap panggilan analisis memotong kredit DeepSeek yang nyata, dan saldonya sekitar USD 3,18 saat runbook ini
+ditulis. Jadi menekan "Buat laporan insiden" untuk latihan mahal tiga kali: memakan kuota, memakan saldo,
+dan mengunci presenter 76 detik tiap penekanan. Tekan sekali di pra-terbang, tidak pernah di dalam take,
+tidak pernah untuk latihan. Latih timing dengan gerakan tanpa klik. Kalau kuota analisis habis SEBELUM
+laporan sempat jadi, panel "Rencana pemulihan" tetap kosong dan beat AI tidak punya isi; hentikan
+persiapan dan tunggu jendela 10 menit lewat, jangan mulai merekam.
 
 **Terakhir.** Matikan notifikasi, sembunyikan bilah bookmark, tutup tab lain.
 
@@ -57,20 +88,26 @@ yang terlihat rusak.
 
 Total 60 detik. KIRI = konsol, KANAN = dasbor.
 
+Beat AI (24-35) menampilkan laporan yang SUDAH jadi dari pra-terbang. Tidak ada klik "Buat laporan insiden"
+di mana pun dalam tabel ini, dan itu bukan penghematan gaya: panggilan modelnya makan sekitar 76 detik,
+lebih lama daripada seluruh take, jadi menekannya di dalam take menjamin take mati di depan kamera.
+
 | Detik | Di layar | Klik (label persis) | Ucapan / caption | Durasi |
 | --- | --- | --- | --- | --- |
-| 00-07 | KANAN, tab "Langsung". "Detak server" naik `#n` tiap 2 detik, "Jam server (UTC)" berjalan, "Laju peristiwa aliran" datar, tulisan "Menunggu beban kerja" dan catatan "Diam sesuai rancangan..." | tidak ada, diam saja | "Dasbor dalam keadaan diam. Detak server naik tiap dua detik: alirannya hidup, telemetrinya kosong. Sistem tidak mengarang data." | 7 dtk |
-| 07-10 | KIRI, panel "Simulasi serangan" | tombol **"Jalankan beban kerja"** pada kartu **"Serangan pada workstation radiologi"** (host `mrh-rad-ws-07`). Panel "Kemajuan beban kerja" berpindah "Antre" lalu "Berjalan" | "Dari konsol terpisah, saya nyalakan serangan pada workstation radiologi." | 3 dtk |
-| 10-18 | KANAN. "Peristiwa masuk" naik, panel "Evaluator sinyal": lima baris `CANARY_TAMPER`, `ENTROPY_DELTA`, `OP_FREQUENCY`, `TYPE_HEADER_CHANGE`, `FORMAT_VALIDATION_FAIL` dengan skor, penanda "titik nyala teramati", lencana **MENYALA** / **DIAM**. Lalu langkah 3 "Asal usul keputusan": `MASS_ENCRYPTION`, `ISOLATE_HOST`, "JALUR CEPAT KANARI" | tidak ada, hanya gulir pelan ke langkah 3 | "Konsol tidak pernah mengirim vonis. Mesin membaca telemetri sendiri. Kanari tersentuh, jalur cepat menyala, vonis MASS_ENCRYPTION." | 8 dtk |
-| 18-25 | KANAN, langkah 4 "Log aksi agen", sub "CATATAN AUDIT DITULIS SEBELUM PERINTAH DITERBITKAN": catatan audit dengan `chain_seq` dan `record_hash` lebih dulu, lalu baris **"PERINTAH DITERBITKAN"** beserta jenis perintah dan host tujuan. Di sebelahnya "Latensi, sebagaimana diukur", kolom "Deteksi, jam dinding terukur" dengan lencana TERUKUR | gulir ke langkah 4 | "Catatan audit ditulis lebih dulu, baru perintah isolasi diterbitkan. Deteksi terukur di angka milidetik." | 7 dtk |
-| 25-36 | KANAN, tab **"Insiden"**, panel "Rencana pemulihan" sub "LLM · saran". Tombol berubah jadi "Membuat (LLM on-prem)…", lalu muncul ringkasan, langkah rencana dengan "sitasi: PB-...", lencana "Kesetiaan" dan baris model | tab **"Insiden"**, lalu tombol **"Buat laporan insiden"** | "Model menulis laporan insiden dan rencana pemulihan, bergerbang kesetiaan, tiap langkah bersitasi playbook. Model hanya memberi saran, tidak pernah menerbitkan aksi." | 11 dtk |
-| 36-40 | Kembali KANAN ke tab **"Langsung"** (permukaan kosong lagi, itu wajar), lalu KIRI panel "Beban kerja sah" | tab **"Langsung"**, lalu tombol **"Jalankan beban kerja"** pada kartu **"Enkripsi arsip sah"** (host `mrh-nas-01`) | "Sekarang bagian terpentingnya: beban kerja yang benar-benar sah." | 4 dtk |
-| 40-54 | KANAN. Sinyal naik lagi, vonis tetap `MASS_ENCRYPTION`, lalu panel **"Tidak mengisolasi, dengan sengaja"** dengan judul **"ISOLASI DITOLAK"**, kutipan "Mesin, kata demi kata", "Modul kontainmen, kata demi kata", "Alasan yang tercatat di katalog skenario sebelum proses berjalan", dan **"TIDAK ADA PERINTAH DITERBITKAN"** | gulir ke langkah 3 | "Entropi melonjak, format gagal, vonisnya tetap MASS_ENCRYPTION. Dial masih Otomatis penuh. Dan isolasi tetap ditolak, dengan alasan mesin itu sendiri, kata demi kata." | 14 dtk |
+| 00-06 | KANAN, tab "Langsung". "Detak server" naik `#n` tiap 2 detik, "Jam server (UTC)" berjalan, "Laju peristiwa aliran" datar, tulisan "Menunggu beban kerja" dan catatan "Diam sesuai rancangan..." | tidak ada, diam saja | "Dasbor diam. Detak server naik tiap dua detik: aliran hidup, telemetri kosong. Sistem tidak mengarang data." | 6 dtk |
+| 06-09 | KIRI, panel "Simulasi serangan" | tombol **"Jalankan beban kerja"** pada kartu **"Serangan pada workstation radiologi"** (host `mrh-rad-ws-07`). Panel "Kemajuan beban kerja" berpindah "Antre" lalu "Berjalan" | "Dari konsol terpisah, saya nyalakan serangan pada workstation radiologi." | 3 dtk |
+| 09-17 | KANAN. "Peristiwa masuk" naik, panel "Evaluator sinyal": lima baris `CANARY_TAMPER`, `ENTROPY_DELTA`, `OP_FREQUENCY`, `TYPE_HEADER_CHANGE`, `FORMAT_VALIDATION_FAIL` dengan skor, penanda "titik nyala teramati", lencana **MENYALA** / **DIAM**. Lalu langkah 3 "Asal usul keputusan": `MASS_ENCRYPTION`, `ISOLATE_HOST`, "JALUR CEPAT KANARI" | tidak ada, hanya gulir pelan ke langkah 3 | "Konsol tidak pernah mengirim vonis. Mesin membaca telemetri sendiri. Kanari tersentuh, jalur cepat menyala, vonis MASS_ENCRYPTION." | 8 dtk |
+| 17-24 | KANAN, langkah 4 "Log aksi agen", sub "CATATAN AUDIT DITULIS SEBELUM PERINTAH DITERBITKAN": catatan audit dengan `chain_seq` dan `record_hash` lebih dulu, lalu baris **"PERINTAH DITERBITKAN"** beserta jenis perintah dan host tujuan. Di sebelahnya "Latensi, sebagaimana diukur", kolom "Deteksi, jam dinding terukur" dengan lencana TERUKUR | gulir ke langkah 4 | "Catatan audit ditulis lebih dulu, baru perintah isolasi diterbitkan. Deteksi terukur di angka milidetik." | 7 dtk |
+| 24-35 | KANAN, tab **"Insiden"**, panel "Rencana pemulihan" sub "LLM · saran", SUDAH terisi sejak pra-terbang: lencana **"Kesetiaan 1"** di kepala panel, ringkasan, tujuh langkah rencana masing-masing berbaris "sitasi: PB-...", dan di bawah `model deepseek-v4-pro · LANGSUNG · hanya saran (tidak pernah mengeluarkan aksi)`. Tombol "Buat laporan insiden" tidak ada lagi di layar, karena panel terisi menggantikannya | tab **"Insiden"**, lalu gulir pelan menyusuri langkah rencana. **TIDAK ADA** klik "Buat laporan insiden" | "Laporan dan rencana pemulihan ini dari panggilan model sungguhan. Satu panggilan makan sekitar tujuh puluh enam detik, jadi saya jalankan sebelum rekaman. Tiap langkah bersitasi playbook dan lolos gerbang kesetiaan. Model hanya memberi saran." | 11 dtk |
+| 35-39 | Kembali KANAN ke tab **"Langsung"** (permukaan kosong lagi, itu wajar), lalu KIRI panel "Beban kerja sah" | tab **"Langsung"**, lalu tombol **"Jalankan beban kerja"** pada kartu **"Enkripsi arsip sah"** (host `mrh-nas-01`) | "Sekarang bagian terpentingnya: beban kerja yang benar-benar sah." | 4 dtk |
+| 39-54 | KANAN. Sinyal naik lagi, vonis tetap `MASS_ENCRYPTION`, lalu panel **"Tidak mengisolasi, dengan sengaja"** dengan judul **"ISOLASI DITOLAK"**, kutipan "Mesin, kata demi kata", "Modul kontainmen, kata demi kata", "Alasan yang tercatat di katalog skenario sebelum proses berjalan", dan **"TIDAK ADA PERINTAH DITERBITKAN"** | gulir ke langkah 3 | "Entropi melonjak, format gagal, vonisnya tetap MASS_ENCRYPTION. Dial masih Otomatis penuh. Dan isolasi tetap ditolak, dengan alasan mesin itu sendiri, kata demi kata." | 15 dtk |
 | 54-60 | KANAN, panel "Pernyataan batas" di atas tab Langsung | tidak ada | "Peristiwa tersimulasi, mesin keputusan asli. Tidak ada malware nyata di mana pun." | 6 dtk |
 
-Catatan urutan: pindah ke tab "Insiden" me-reset permukaan Langsung (komponennya dilepas). Itu tidak merusak
-take, karena run beban kerja sah mengisinya lagi dari nol. Kalau tim ingin panel "Dua proses terakhir,
-berdampingan" tetap memuat kedua run, tukar beat 25-36 dengan beat 40-54 (laporan model dipindah ke akhir).
+Catatan urutan: pindah ke tab "Insiden" me-reset permukaan Langsung (komponennya dilepas), tetapi TIDAK
+menghapus laporan AI, karena laporan disimpan di state halaman dan bukan di dalam tab. Reset permukaan
+Langsung tidak merusak take, karena run beban kerja sah mengisinya lagi dari nol. Kalau tim ingin panel
+"Dua proses terakhir, berdampingan" tetap memuat kedua run, tukar beat 24-35 dengan beat 39-54 sehingga
+laporan model tampil di akhir; laporan tetap ada di sana karena tidak bergantung pada run mana pun.
 
 ---
 
@@ -89,11 +126,20 @@ memakan kuota. Pemicu cadangan: panel "Jalankan beban kerja" yang ada di dalam t
 lagi." atau "Batas global per jam tercapai. Demo dijeda sementara untuk menjaga biaya." Berhenti, tunggu
 jendela 5 menit lewat, jangan menekan berulang.
 
-**Model tidak tersedia.** Kalau kunci model tidak terkonfigurasi, panel tetap menampilkan tiga langkah
-rencana tetapi baris model berbunyi "cadangan". Itu degradasi jujur, boleh tayang, sebut apa adanya.
-Kalau gerbang kesetiaan menahan keluaran, panel berbunyi "Diteruskan ke manusia" diikuti angka kesetiaan:
-juga hasil sah, ucapkan "gerbang kesetiaan menahan keluaran model". Kalau kuota analisis habis, panel jadi
-nyaris kosong: hentikan take, jangan pernah membakar kuota analisis untuk latihan.
+**Laporan AI hilang di tengah sesi.** Penyebabnya hampir selalu satu: dasbor dimuat ulang. Laporan hidup di
+state halaman, jadi muat ulang menghapusnya dan beat 24-35 kehilangan isinya. Pemulihannya bukan di dalam
+take: hentikan, tekan "Buat laporan insiden" sekali, tunggu sekitar 76 detik, verifikasi baris model
+berbunyi `LANGSUNG`, baru mulai take dari awal. Berpindah tab, mengganti bahasa, dan menggeser dial tidak
+menghapus laporan; hanya muat ulang yang menghapusnya.
+
+**Model tidak tersedia.** Per 2 Agustus 2026 kunci model sudah diganti dan jalur ini hidup lagi: `/api/analyze`
+menjawab HTTP 200 dengan status OK, `live: true`, `degraded: false`, model `deepseek-v4-pro`, kesetiaan 1
+lulus, 15 klaim bersitasi tanpa satu pun klaim tak berdukung, dan rencana 7 langkah. Kalau suatu saat kunci
+model tidak terkonfigurasi lagi, panel merosot dengan jujur dan baris model berbunyi "cadangan": boleh
+tayang, sebut apa adanya. Kalau gerbang kesetiaan menahan keluaran, panel berbunyi "Diteruskan ke manusia"
+diikuti angka kesetiaan: juga hasil sah, ucapkan "gerbang kesetiaan menahan keluaran model". Kalau kuota
+analisis habis, panel jadi nyaris kosong: itu ketahuan di pra-terbang, bukan di kamera, dan itulah gunanya
+membuat laporan lebih dulu. Jangan pernah membakar kuota analisis untuk latihan.
 
 **Run tanpa vonis destruktif.** Panel "Asal usul keputusan" berbunyi "Tidak ada vonis destruktif pada proses
 ini". Pada run serangan: hentikan take, jangan mengulang di kamera. Pada beban kerja sah: itu justru hasil
@@ -118,7 +164,11 @@ bereaksi terhadap tombol konsol. Kalau dasbor dimuat ulang di tengah latihan, ta
   waktu proses mesin di dalam proses, bukan waktu di endpoint nyata dan bukan round trip jaringan.
   "Deteksi, lini masa SIMULASI" bukan latensi produksi sama sekali, dan layar sudah menandainya.
 - Jangan bilang laporan model menganalisis run yang barusan berjalan. Panggilan modelnya hidup, tetapi
-  konteks insiden yang dikirim adalah konteks demo tetap (INC-2026-0612-004).
+  konteks insiden yang dikirim adalah konteks demo tetap (INC-2026-0612-004). Justru karena konteksnya
+  tetap, membuat laporan sebelum rekaman tidak mengubah isinya sama sekali.
+- Jangan menyiratkan laporan itu muncul seketika, dan jangan diam soal kapan ia dibuat. Ia dibuat sebelum
+  rekaman karena satu panggilan makan sekitar 76 detik. Kalimat itu ada di naskah beat 24-35 dan harus
+  benar-benar diucapkan. Kalau juri bertanya, sebut angkanya apa adanya.
 - Jangan menyebut tab Ringkasan, Insiden, Armada & Host, dan Sistem sebagai data langsung. Hanya tab
   "Langsung" yang berasal dari aliran. Spanduk demo di atas layar sudah menyatakannya.
 - Jangan menyebut angka false positive sebagai laju statistik.

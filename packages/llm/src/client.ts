@@ -1,7 +1,7 @@
 /**
  * Model-agnostic LLM serving abstraction (ADR-002). The PRODUCTION model is a self-hosted open-weight
  * model on-premise (SGLang/vLLM); for THIS build's dev/test + the demo it is the DeepSeek cloud API
- * (OpenAI-API-compatible). Swapping prod<->dev is a CONFIG change behind this one interface — never a code
+ * (OpenAI-API-compatible). Swapping prod<->dev is a CONFIG change behind this one interface, never a code
  * change, and the cloud API is NEVER the production answer (security telemetry must not egress; AC-COMP-01).
  */
 export interface LLMMessage {

@@ -1,6 +1,6 @@
 # Crown Defense
 
-[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 174](https://img.shields.io/badge/uji-174-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
+[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 170 dari 174](https://img.shields.io/badge/uji-170%2F174%20lulus-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
 
 Ketika ransomware sudah mulai mengenkripsi, pertanyaannya bukan lagi siapa yang menyerang, melainkan berapa detik yang tersisa. Crown Defense adalah sistem pertahanan ransomware otonom kelas perbankan: ia mendeteksi enkripsi massal lewat fusi banyak sinyal, mengisolasi host lewat dial otonomi yang bisa diatur, meminta analisis insiden ke LLM yang di produksi dijalankan sendiri di dalam infrastruktur bank, lalu menuliskan setiap tindakannya ke jejak audit hash-chained yang tidak bisa diubah.
 
@@ -321,9 +321,11 @@ Perilaku ini punya bukti tersendiri di `reports/llm/negative.json`, yang mencata
 
 </details>
 
-Sisi positifnya juga terekam. `reports/llm/faithfulness.json` mencatat sebuah analisis yang lulus dengan skor `1`, nol klaim tak berdukung, dan langkah-langkah yang terlacak ke `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, serta `PB-RECOVER-BACKUP`. Pada demo langsung saat Gate 6, `reports/dashboard/deploy.json` mencatat panggilan DeepSeek sungguhan dengan faithfulness `1` dan 16 klaim bersitasi. Perlu dicatat dengan jujur: per 2 Agustus 2026 kunci API DeepSeek yang dipakai purwarupa sudah kedaluwarsa dan penyedia menolaknya dengan HTTP 401, sehingga `/api/analyze` mengembalikan `LLM_UNAVAILABLE`. Jalur itu belum diverifikasi ulang sampai kunci diganti. Yang justru terbukti dari kondisi ini adalah perilaku fail-safe: lapisan LLM mati tidak menghentikan deteksi maupun containment, dan tidak ada tindakan destruktif baru yang dimulai.
+Sisi positifnya juga terekam. `reports/llm/faithfulness.json` mencatat sebuah analisis yang lulus dengan skor `1`, nol klaim tak berdukung, dan langkah-langkah yang terlacak ke `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, serta `PB-RECOVER-BACKUP`. Pada demo langsung saat Gate 6, `reports/dashboard/deploy.json` mencatat panggilan DeepSeek sungguhan dengan faithfulness `1` dan 16 klaim bersitasi.
 
-Ketika model tidak terjangkau, orkestrator mengembalikan status `LLM_UNAVAILABLE` dengan `degraded: true` dan **tetap mengembalikan blast radius**, karena peta itu deterministik. Deteksi dan containment tidak terpengaruh sama sekali: LLM bersifat saran dan berjalan **sesudah** containment, bukan di jalur kritisnya.
+Jalur itu sempat mati, dan riwayatnya layak ditulis. Pada 2 Agustus 2026 kunci API DeepSeek yang dipakai purwarupa kedaluwarsa, penyedia menolaknya dengan HTTP 401, dan `/api/analyze` mengembalikan `LLM_UNAVAILABLE`. Kuncinya sudah diganti pada hari yang sama dan jalurnya **terverifikasi ulang**: HTTP 200 dengan status `OK`, `live: true`, `degraded: false`, model `deepseek-v4-pro`, kesetiaan `1` lulus, 15 klaim bersitasi tanpa satu pun klaim tak berdukung, dan rencana pemulihan 7 langkah. Yang tetap layak dicatat dari pemadaman itu bukan pemadamannya, melainkan apa yang ia buktikan tanpa diminta: lapisan LLM mati tidak menghentikan deteksi maupun containment, dan tidak ada tindakan destruktif baru yang dimulai. Perilaku fail-safe itu diuji, lalu kebetulan diuji sekali lagi oleh kejadian sungguhan.
+
+Ketika model tidak terjangkau, orkestrator mengembalikan status `LLM_UNAVAILABLE` dengan `degraded: true` dan **tetap mengembalikan blast radius**, karena peta itu deterministik. Deteksi dan containment tidak terpengaruh sama sekali: LLM bersifat saran dan berjalan **sesudah** containment, bukan di jalur kritisnya. Itu bukan pembelaan retoris, dan latensinya yang mengukur: satu percobaan orkestrasi memakan 51 sampai 64 detik dan round trip rute langsung penuh sekitar 76 detik. Angka sebesar itu akan fatal di jalur deteksi, dan justru karena itu lapisan LLM tidak pernah diletakkan di sana.
 
 ---
 
@@ -439,7 +441,7 @@ pnpm typecheck
 pnpm --filter @crown/dashboard dev     # http://localhost:3100
 ```
 
-Tanpa langkah 3 dan 4, lima uji yang bergantung basis data langsung dan model langsung akan gagal; 169 uji sisanya tetap lulus. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
+Tanpa langkah 3 dan 4, empat uji yang bergantung basis data langsung akan gagal; 170 uji sisanya tetap lulus, dengan catatan `DEEPSEEK_API_KEY` terisi. Tanpa kunci itu, uji integrasi model langsung ikut gagal sehingga yang gagal menjadi lima. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
 
 ## Perintah
 
@@ -488,8 +490,8 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Klaim | Angka | Bukti |
 | --- | --- | --- |
 | Typecheck bersih | `tsc -b` keluar dengan kode 0 | `pnpm typecheck` |
-| Suite uji | 174 uji di 18 berkas, 169 lulus | `pnpm test` |
-| Uji tanpa basis data dan tanpa kunci model | 169 dari 174 lulus; 5 yang gagal adalah 3 uji store audit basis data langsung, 1 uji pengikatan audit langsung, dan 1 uji integrasi model langsung | `pnpm test` tanpa `pnpm db:up` dan tanpa `DEEPSEEK_API_KEY` |
+| Suite uji | 174 uji di 18 berkas, 170 lulus | `pnpm test` |
+| Uji tanpa basis data | 170 dari 174 lulus; 4 yang gagal semuanya menuntut Postgres yang hidup, yaitu 3 uji store audit dan 1 uji pengikatan audit. Mesin pembangunan ini tidak menjalankan daemon Docker, jadi keempatnya gagal karena tidak menemukan basis data, bukan karena logikanya salah | `pnpm test` tanpa `pnpm db:up` |
 | Cakupan keluarga dan mode evasi | 24 keluarga, 5 mode evasi | `reports/sim/coverage.json` |
 | Deteksi pada battery simulator aman | 24 dari 24 terdeteksi, laju deteksi 1,0 | `reports/detection/coverage.json` |
 | Berkas hilang sebelum containment | maksimum 2, p95 2, dari anggaran 10 | `reports/detection/coverage.json`, `reports/containment/files_lost.json` |
@@ -512,7 +514,8 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Aksesibilitas | status dan severity tidak pernah lewat warna saja; baris fleet bisa dioperasikan keyboard | `reports/dashboard/a11y.json` |
 | i18n | kamus EN dan ID untuk setiap string yang menghadap pengguna, termasuk label aksesibilitas | `reports/dashboard/i18n.json` |
 | Demo langsung | HTTP 200, publik. Empat permukaan hidup: `/`, `/dashboard`, `/konsol` (307 ke login), `/konsol/masuk` | dicek langsung dengan `curl -o /dev/null -w "%{http_code}"` |
-| Laporan LLM langsung | **TIDAK TERVERIFIKASI HARI INI.** Kunci DeepSeek kedaluwarsa, penyedia menolak dengan HTTP 401. `/api/analyze` mengembalikan `LLM_UNAVAILABLE` dan sistem merosot persis seperti rancangannya: deteksi dan containment tidak terpengaruh. Terakhir terverifikasi pada Gate 6 | `reports/dashboard/deploy.json` mencatat verifikasi Gate 6, bukan hari ini |
+| Laporan LLM langsung | **Terverifikasi ulang 2 Agustus 2026.** HTTP 200, status `OK`, `live: true`, `degraded: false`, model `deepseek-v4-pro`, kesetiaan `1` lulus, 15 klaim bersitasi dengan 0 klaim tak berdukung, rencana pemulihan 7 langkah. Sitasi yang terpakai: `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, `PB-FORENSICS`, `PB-SHADOW`, `PB-CREDENTIAL`, `PB-NOTIFY-OJK`, `PB-RECOVER-BACKUP`, `PB-CANARY` | POST langsung ke `/api/analyze` produksi, ditambah uji integrasi model langsung `packages/test-infra/src/llm.test.ts`, 8 dari 8 lulus dalam 83,9 detik |
+| Latensi orkestrasi LLM | 51 sampai 64 detik untuk satu percobaan orkestrasi, sekitar 76 detik untuk round trip rute langsung penuh. Angka ini besar dan tidak disembunyikan: LLM berjalan sesudah containment, bukan di jalur kritis deteksi. Konfigurasi disesuaikan agar rutenya tidak dibunuh lebih dulu, yaitu `LLM_TIMEOUT_MS` 120000, `LLM_MAX_RETRIES` 1, dan `maxDuration` 300 pada `/api/analyze` | diukur terhadap produksi pada 2 Agustus 2026; `packages/test-infra/src/llm.test.ts` |
 | Closed loop end-to-end | 5 paket nyata tersambung, urutan audit-lalu-perintah ditegaskan, jalur fail-safe tidak mengirim perintah | `reports/closed-loop/end-to-end.json` |
 
 ### Target proposal dibandingkan yang terukur
