@@ -1,5 +1,5 @@
 /**
- * i18n — no hardcoded user-facing strings; locale-ready Indonesian + English (Indonesian-market product,
+ * i18n, no hardcoded user-facing strings; locale-ready Indonesian + English (Indonesian-market product,
  * AC-I18N). A tiny dictionary + lookup; the active locale is a UI toggle.
  */
 export type Lang = 'en' | 'id';
@@ -41,11 +41,22 @@ export const STRINGS = {
   generate_report: { en: 'Generate incident report', id: 'Buat laporan insiden' },
   generating: { en: 'Generating (on-prem LLM)…', id: 'Membuat (LLM on-prem)…' },
   faithfulness: { en: 'Faithfulness', id: 'Kesetiaan' },
-  routed_human: { en: 'Routed to human — low faithfulness', id: 'Diteruskan ke manusia — kesetiaan rendah' },
+  routed_human: {
+    en: 'Routed to a human, low faithfulness. Not displayed as fact.',
+    id: 'Diteruskan ke analis manusia, kesetiaan rendah. Tidak ditampilkan sebagai fakta.',
+  },
+  // A degraded model must LOOK degraded. Before this existed, an LLM_UNAVAILABLE response fell through to
+  // the success branch and rendered an empty panel with the word LIVE under it, which presented a dead
+  // model as a live one. The fail-safe itself is the thing worth showing here.
+  llm_degraded_title: { en: 'Model layer unavailable', id: 'Lapisan model tidak tersedia' },
+  llm_degraded_body: {
+    en: 'Detection and containment are unaffected and no new destructive action is started. The AI layer is advisory only, so losing it degrades the system toward the safe position rather than stopping it.',
+    id: 'Deteksi dan containment tidak terpengaruh dan tidak ada tindakan destruktif baru yang dimulai. Lapisan AI bersifat penasihat saja, jadi kehilangannya menurunkan sistem ke posisi aman, bukan menghentikannya.',
+  },
   trigger_scenario: { en: 'Trigger simulated attack', id: 'Picu serangan simulasi' },
   demo_banner: {
-    en: 'DEMO — simulated scenario on synthetic data. Not the production agent. The detection/containment/agent run on a host, not here.',
-    id: 'DEMO — skenario simulasi pada data sintetis. Bukan agen produksi. Deteksi/kontainmen/agen berjalan di host, bukan di sini.',
+    en: 'DEMO, simulated scenario on synthetic data. Not the production agent. The detection/containment/agent run on a host, not here.',
+    id: 'DEMO, skenario simulasi pada data sintetis. Bukan agen produksi. Deteksi/kontainmen/agen berjalan di host, bukan di sini.',
   },
   files_lost: { en: 'Files lost before containment', id: 'File hilang sebelum kontainmen' },
   search_hosts: { en: 'Search hosts', id: 'Cari host' },
@@ -106,13 +117,13 @@ export const STRINGS = {
   kv_risk: { en: 'Risk', id: 'Risiko' },
   kv_last_seen: { en: 'Last seen', id: 'Terakhir terlihat' },
   effective_autonomy_note: {
-    en: 'effective_autonomy: {mode} — reflects the fail-safe override (drops toward MONITOR if a dependency is impaired).',
-    id: 'otonomi_efektif: {mode} — mencerminkan override fail-safe (turun ke MONITOR jika dependensi terganggu).',
+    en: 'effective_autonomy: {mode}, reflects the fail-safe override (drops toward MONITOR if a dependency is impaired).',
+    id: 'otonomi_efektif: {mode}, mencerminkan override fail-safe (turun ke MONITOR jika dependensi terganggu).',
   },
   kpi_enrolled: { en: 'Enrolled', id: 'Terdaftar' },
   kpi_online: { en: 'Online', id: 'Daring' },
   kpi_offline: { en: 'Offline', id: 'Luring' },
-  dual_control_sub: { en: 'HUMAN_GATED — dual control', id: 'HUMAN_GATED — kontrol ganda' },
+  dual_control_sub: { en: 'HUMAN_GATED, dual control', id: 'HUMAN_GATED, kontrol ganda' },
   no_pending_approvals: { en: 'No pending approvals.', id: 'Tidak ada persetujuan tertunda.' },
   time_box: { en: 'time-box →', id: 'batas-waktu →' },
   label_signals: { en: 'signals', id: 'sinyal' },
@@ -175,7 +186,7 @@ export const STRINGS = {
     en: 'APPROVED BY OPR-03 · {at} UTC · QUEUED',
     id: 'DISETUJUI OLEH OPR-03 · {at} UTC · DIANTRIKAN',
   },
-  plan_held: { en: 'HELD — OPERATOR OVERRIDE · {at} UTC', id: 'DITAHAN — OVERRIDE OPERATOR · {at} UTC' },
+  plan_held: { en: 'HELD, OPERATOR OVERRIDE · {at} UTC', id: 'DITAHAN, OVERRIDE OPERATOR · {at} UTC' },
   affected_sub: { en: '{n} IN SCOPE', id: '{n} DALAM CAKUPAN' },
   search_host_ip: { en: 'host / ip', id: 'host / ip' },
   chip_all: { en: 'ALL', id: 'SEMUA' },
@@ -218,12 +229,17 @@ export const STRINGS = {
     id: 'PLATFORM {product} · MESIN DETEKSI · INTEGRASI',
   },
   panel_detection_engine: { en: 'Detection engine', id: 'Mesin deteksi' },
-  stat_uptime: { en: 'UPTIME 90D', id: 'UPTIME 90H' },
   stat_detect_p50: { en: 'DETECT P50', id: 'DETEKSI P50' },
-  stat_eps: { en: 'EVENTS / SEC', id: 'PERISTIWA / DTK' },
-  stat_false_pos: { en: 'FALSE POSITIVE', id: 'POSITIF PALSU' },
   stat_p95: { en: 'P95 {v}', id: 'P95 {v}' },
-  stat_30day: { en: '30-DAY', id: '30-HARI' },
+  stat_coverage: { en: 'DETECTED', id: 'TERDETEKSI' },
+  stat_false_pos: { en: 'WRONGFUL ISOLATION', id: 'ISOLASI KELIRU' },
+  stat_files_lost: { en: 'FILES LOST, MAX', id: 'BERKAS HILANG, MAKS' },
+  // The one caption that keeps these four tiles honest. They are measured on the safe-simulator battery,
+  // they are not field measurements on real endpoints, and the surface must say so rather than imply it.
+  engine_measured_note: {
+    en: 'Measured on the safe-simulator battery (24 families, 5 evasion modes) and the benign workload suite. Engine decision latency, not a field measurement on real endpoints. Sources: reports/detection/coverage.json, reports/fp/benign.json.',
+    id: 'Diukur pada battery simulator aman (24 keluarga, 5 mode pengelabuan) dan suite beban kerja jinak. Ini latensi keputusan mesin, bukan pengukuran lapangan pada endpoint nyata. Sumber: reports/detection/coverage.json, reports/fp/benign.json.',
+  },
   engine_meta: {
     en: 'MODEL UPDATED {updated} · SIGNATURE FEED {ver} · BEHAVIORAL + ENTROPY ANALYSIS',
     id: 'MODEL DIPERBARUI {updated} · UMPAN SIGNATURE {ver} · ANALISIS PERILAKU + ENTROPI',
@@ -231,8 +247,8 @@ export const STRINGS = {
   coverage_sub: { en: '{online} / {enrolled} ONLINE', id: '{online} / {enrolled} DARING' },
   fleet_coverage: { en: 'FLEET COVERAGE', id: 'CAKUPAN ARMADA' },
   coverage_offline_note: {
-    en: '{offline} OFFLINE — {down} POWERED DOWN (MAINTENANCE WINDOW) · {pending} PENDING ENROLL',
-    id: '{offline} LURING — {down} DIMATIKAN (JENDELA PEMELIHARAAN) · {pending} MENUNGGU PENDAFTARAN',
+    en: '{offline} OFFLINE, {down} POWERED DOWN (MAINTENANCE WINDOW) · {pending} PENDING ENROLL',
+    id: '{offline} LURING, {down} DIMATIKAN (JENDELA PEMELIHARAAN) · {pending} MENUNGGU PENDAFTARAN',
   },
   dial_positions: { en: '4 POSITIONS · MONITOR_ONLY DEFAULT', id: '4 POSISI · MONITOR_ONLY DEFAULT' },
   panel_autonomy_policy: { en: 'Autonomy policy', id: 'Kebijakan otonomi' },

@@ -106,10 +106,14 @@ export function System({
         {/* Detection Engine */}
         <Panel title={t('panel_detection_engine', lang)} sub={e.model} right={<StatusPill status="online" />}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            <StatTile k={t('stat_uptime', lang)} v={e.uptime} />
             <StatTile k={t('stat_detect_p50', lang)} v={e.p50} sub={tf('stat_p95', lang, { v: e.p95 })} />
-            <StatTile k={t('stat_eps', lang)} v={e.eps} />
-            <StatTile k={t('stat_false_pos', lang)} v={e.falsePos} sub={t('stat_30day', lang)} />
+            <StatTile k={t('stat_coverage', lang)} v={e.coverage} sub={e.coverageSub} />
+            <StatTile k={t('stat_false_pos', lang)} v={e.falsePos} sub={e.falsePosSub} />
+            <StatTile k={t('stat_files_lost', lang)} v={e.filesLost} sub={e.filesLostSub} />
+          </div>
+          {/* Without this caption the four tiles above read as production telemetry. They are not. */}
+          <div style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--t3)', marginTop: 12 }}>
+            {t('engine_measured_note', lang)}
           </div>
           <div
             className="mono"

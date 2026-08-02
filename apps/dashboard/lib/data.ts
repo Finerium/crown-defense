@@ -131,11 +131,14 @@ export interface Segment {
 export interface EngineInfo {
   model: string;
   updated: string;
-  uptime: string;
   p50: string;
   p95: string;
-  eps: string;
+  coverage: string;
+  coverageSub: string;
   falsePos: string;
+  falsePosSub: string;
+  filesLost: string;
+  filesLostSub: string;
 }
 
 export interface AgentVersion {
@@ -418,7 +421,7 @@ const SCENARIO: DemoScenario = {
     containment: 92,
     confidence: 0.97,
     detectedAt: '03:14:07.2 UTC',
-    detectLatency: '1.8s',
+    detectLatency: '6 ms', // measured p50, reports/detection/coverage.json. Was a fabricated '1.8s'.
     patientZero: 'mrh-rad-ws-07',
     vector: 'Phishing — XLSM macro (Invoice_Q2_2026.xlsm)',
     cve: 'CVE-2026-21412',
@@ -791,14 +794,25 @@ const SCENARIO: DemoScenario = {
     ],
   },
 
+  /**
+   * MEASURED values only. Every figure here traces to a file under reports/ and the UI labels it as
+   * measured on the safe-simulator battery, NOT as a field measurement on real endpoints.
+   * The design bundle shipped fabricated fixtures in these slots (uptime 99.98%, p50 1.1s, p95 2.6s,
+   * eps 18.4k, falsePos 0.3% over 30 days). They contradicted the project's own evidence by roughly two
+   * orders of magnitude and invented a 30 day field false-positive rate this project does not have, so
+   * they are gone. Uptime and throughput have no honest replacement and are not shown at all.
+   */
   engine: {
     model: `${ENGINE_ID} v4.2.1`,
     updated: '2026-06-08',
-    uptime: '99.98%',
-    p50: '1.1s',
-    p95: '2.6s',
-    eps: '18.4k',
-    falsePos: '0.3%',
+    p50: '6 ms', // reports/detection/coverage.json detect_latency_ms.p50
+    p95: '333 ms', // reports/detection/coverage.json detect_latency_ms.p95
+    coverage: '24 / 24', // reports/detection/coverage.json detected / attacks
+    coverageSub: '24 keluarga, 5 mode', // reports/sim/coverage.json
+    falsePos: '0', // reports/fp/benign.json destructive_false_positives
+    falsePosSub: '320 skenario jinak', // reports/fp/benign.json benign_scenarios
+    filesLost: '2', // reports/detection/coverage.json files_lost.max
+    filesLostSub: 'anggaran 10', // proposal Tabel 1.1
   },
 
   integrations: [

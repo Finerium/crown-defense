@@ -602,7 +602,32 @@ function RecoveryLLM({
           }}
         >
           <Glyph k="diamond" size={9} /> {t('routed_human', lang)}
-          {report.faithfulness ? ` — ${report.faithfulness.score}` : ''}
+          {report.faithfulness ? ` (${report.faithfulness.score})` : ''}
+        </div>
+      ) : report.status !== 'OK' ? (
+        // Degraded must look degraded. Falling through to the success branch rendered an empty panel
+        // captioned LIVE, which showed a dead model as a live one.
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 6,
+            background: 'var(--warn-soft, var(--crit-soft))',
+            fontSize: 12,
+            display: 'grid',
+            gap: 6,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--warn, var(--crit))' }}>
+            <Glyph k="diamond" size={9} />
+            <strong>{t('llm_degraded_title', lang)}</strong>
+            <span className="mono" style={{ fontSize: 10 }}>
+              {report.status}
+            </span>
+          </div>
+          <p style={{ color: 'var(--t2)', margin: 0 }}>{t('llm_degraded_body', lang)}</p>
+          <div className="mono" style={{ fontSize: 9, color: 'var(--t3)' }}>
+            {tf('model_line', lang, { model: report.model_id, live: t('live_fallback', lang) })}
+          </div>
         </div>
       ) : (
         <div>
@@ -633,7 +658,7 @@ function RecoveryLLM({
           <div className="mono" style={{ fontSize: 9, color: 'var(--t3)', marginTop: 10 }}>
             {tf('model_line', lang, {
               model: report.model_id,
-              live: report.live ? t('live_live', lang) : t('live_fallback', lang),
+              live: report.live && report.status === 'OK' ? t('live_live', lang) : t('live_fallback', lang),
             })}
           </div>
         </div>

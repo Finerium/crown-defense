@@ -75,7 +75,7 @@ function incidentContext(): IncidentContext {
 
 const FALLBACK = JSON.stringify({
   summary:
-    'LLM not configured in this environment — showing a faithfulness-gated fallback. Configure DEEPSEEK_API_KEY for a live on-prem-equivalent generation.',
+    'LLM not configured in this environment, showing a faithfulness-gated fallback. Configure DEEPSEEK_API_KEY for a live on-prem-equivalent generation.',
   timeline: [{ phase: 'detection', description: 'canary tamper + format-validation failures' }],
   attributed_technique_ids: ['T1486'],
   citations: [
