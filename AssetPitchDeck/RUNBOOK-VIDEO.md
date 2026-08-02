@@ -26,7 +26,7 @@ bertuliskan `EN`. Klik satu kali sampai bertuliskan `ID`. Nama tab berubah menja
 Armada & Host, Sistem, **Langsung**. Konsol sudah Indonesia sejak awal.
 
 **Laporan AI, dibuat SEBELUM rekaman.** Ini bagian pra-terbang yang paling gampang membunuh take, baca
-sampai habis. Satu panggilan `/api/analyze` yang hidup memakan **sekitar 76 detik** round trip penuh
+sampai habis. Satu panggilan `/api/analyze` yang hidup memakan **44 sampai 86 detik** round trip penuh, terukur pada empat run terpisah
 (orkestrasi satu percobaan sendiri terukur 51 sampai 64 detik). Itu LEBIH LAMA daripada seluruh take 60
 detik. Karena itu laporan tidak pernah, dalam kondisi apa pun, dibuat di dalam take. Urutannya:
 
@@ -34,7 +34,7 @@ detik. Karena itu laporan tidak pernah, dalam kondisi apa pun, dibuat di dalam t
    mengembalikan bahasa ke `EN`, jadi setel lagi ke `ID` sesudahnya. Ini kesempatan terakhir memuat ulang:
    laporan disimpan di state halaman, dan memuat ulang menghapusnya.
 2. Buka tab **"Insiden"**, gulir ke panel "Rencana pemulihan" sub "LLM · saran", tekan **"Buat laporan
-   insiden"** SATU kali. Tombol berubah jadi "Membuat (LLM on-prem)…" dan bertahan begitu sekitar 76 detik.
+   insiden"** SATU kali. Tombol berubah jadi "Membuat (LLM on-prem)…" dan bertahan begitu 44 sampai 86 detik. Anggap normal sampai 90 detik.
    Itu normal, bukan hang. Rute diberi `maxDuration` 300 detik dan klien diberi `LLM_TIMEOUT_MS` 120000
    dengan `LLM_MAX_RETRIES` 1, jadi ia punya ruang untuk selesai. Jangan menekan dua kali.
 3. Tunggu sampai panel terisi: lencana **"Kesetiaan 1"** di kepala panel, satu paragraf ringkasan, dan
@@ -62,7 +62,7 @@ justru karena terjadi pada dial paling permisif.
 
 **Posisi awal.** Gulir jendela kanan sampai panel "Aliran telemetri" dan langkah 2 "Evaluator sinyal"
 terlihat bersamaan. Koneksi aliran didaur ulang sekitar tiap 5 menit, dan hitungannya baru mulai saat tab
-"Langsung" dibuka, bukan saat halaman dimuat. Karena tunggu 76 detik untuk laporan terjadi SEBELUM tab
+"Langsung" dibuka, bukan saat halaman dimuat. Karena tunggu sampai 86 detik untuk laporan terjadi SEBELUM tab
 "Langsung" disentuh, jendela 5 menit itu praktis masih utuh saat tombol rekam ditekan. Kalau aliran
 telanjur putus, pakai **"Sambungkan ulang sekarang"**, bukan muat ulang.
 
@@ -75,7 +75,7 @@ dimuat ulang.
 
 Tiap panggilan analisis memotong kredit DeepSeek yang nyata, dan saldonya sekitar USD 3,18 saat runbook ini
 ditulis. Jadi menekan "Buat laporan insiden" untuk latihan mahal tiga kali: memakan kuota, memakan saldo,
-dan mengunci presenter 76 detik tiap penekanan. Tekan sekali di pra-terbang, tidak pernah di dalam take,
+dan mengunci presenter sampai 86 detik tiap penekanan. Tekan sekali di pra-terbang, tidak pernah di dalam take,
 tidak pernah untuk latihan. Latih timing dengan gerakan tanpa klik. Kalau kuota analisis habis SEBELUM
 laporan sempat jadi, panel "Rencana pemulihan" tetap kosong dan beat AI tidak punya isi; hentikan
 persiapan dan tunggu jendela 10 menit lewat, jangan mulai merekam.
@@ -89,7 +89,7 @@ persiapan dan tunggu jendela 10 menit lewat, jangan mulai merekam.
 Total 60 detik. KIRI = konsol, KANAN = dasbor.
 
 Beat AI (24-35) menampilkan laporan yang SUDAH jadi dari pra-terbang. Tidak ada klik "Buat laporan insiden"
-di mana pun dalam tabel ini, dan itu bukan penghematan gaya: panggilan modelnya makan sekitar 76 detik,
+di mana pun dalam tabel ini, dan itu bukan penghematan gaya: panggilan modelnya makan 44 sampai 86 detik,
 lebih lama daripada seluruh take, jadi menekannya di dalam take menjamin take mati di depan kamera.
 
 | Detik | Di layar | Klik (label persis) | Ucapan / caption | Durasi |
@@ -128,7 +128,7 @@ jendela 5 menit lewat, jangan menekan berulang.
 
 **Laporan AI hilang di tengah sesi.** Penyebabnya hampir selalu satu: dasbor dimuat ulang. Laporan hidup di
 state halaman, jadi muat ulang menghapusnya dan beat 24-35 kehilangan isinya. Pemulihannya bukan di dalam
-take: hentikan, tekan "Buat laporan insiden" sekali, tunggu sekitar 76 detik, verifikasi baris model
+take: hentikan, tekan "Buat laporan insiden" sekali, tunggu sampai 90 detik, verifikasi baris model
 berbunyi `LANGSUNG`, baru mulai take dari awal. Berpindah tab, mengganti bahasa, dan menggeser dial tidak
 menghapus laporan; hanya muat ulang yang menghapusnya.
 
@@ -167,7 +167,7 @@ bereaksi terhadap tombol konsol. Kalau dasbor dimuat ulang di tengah latihan, ta
   konteks insiden yang dikirim adalah konteks demo tetap (INC-2026-0612-004). Justru karena konteksnya
   tetap, membuat laporan sebelum rekaman tidak mengubah isinya sama sekali.
 - Jangan menyiratkan laporan itu muncul seketika, dan jangan diam soal kapan ia dibuat. Ia dibuat sebelum
-  rekaman karena satu panggilan makan sekitar 76 detik. Kalimat itu ada di naskah beat 24-35 dan harus
+  rekaman karena satu panggilan makan sampai sekitar 86 detik. Kalimat itu ada di naskah beat 24-35 dan harus
   benar-benar diucapkan. Kalau juri bertanya, sebut angkanya apa adanya.
 - Jangan menyebut tab Ringkasan, Insiden, Armada & Host, dan Sistem sebagai data langsung. Hanya tab
   "Langsung" yang berasal dari aliran. Spanduk demo di atas layar sudah menyatakannya.
