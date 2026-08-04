@@ -52,7 +52,7 @@ const KEY = {
   progress: `crown:demo:${SCOPE}:progress`,
   dial: `crown:demo:${SCOPE}:dial`,
   chain: `crown:demo:${SCOPE}:chain`,
-  stream: `crown:demo:${SCOPE}:stream`,
+  siaran: `crown:demo:${SCOPE}:siaran`,
 } as const;
 
 /**
@@ -333,56 +333,59 @@ export async function getChain(): Promise<ActionRecord[]> {
 /* -------------------------------------------------------------------------- */
 
 /**
- * On Vercel a disconnected SSE client does NOT reliably abort req.signal, so a dashboard reload can leave
- * a ZOMBIE stream polling for the rest of its maxDuration (300s). A zombie that calls takePending() steals
- * the next button press and runs the whole scenario into a socket nobody is listening to, which on stage
- * is indistinguishable from the product being broken.
+ * BROADCAST, and why there is no lease here any more.
  *
- * The first attempt at this was a last-writer-wins TOKEN: newest connection wins, superseded streams
- * close themselves. That was WRONG, and it was worse than the bug it fixed. A superseded stream closing
- * makes the browser's EventSource auto-reconnect, which re-claims the token, which closes the other one,
- * which reconnects... Two open dashboards livelock, killing each other every couple of seconds. Observed
- * live: the server heartbeat never got past #0 across a four second window, and three people on three
- * machines each saw a different subset of runs, non-deterministically. Worse, a judge opening the
- * dashboard from the QR code would have stolen the stream out from under the presenter mid-demo.
+ * On Vercel a disconnected SSE client does NOT reliably abort req.signal, so a dashboard reload leaves a
+ * ZOMBIE stream whose server loop keeps running for the rest of its maxDuration (300s) with nobody
+ * listening. Two designs were tried against that and both were wrong:
  *
- * So this is a LEASE, not a token, and losing it is not fatal:
- *   - the holder renews on every poll, so a live holder keeps it
- *   - a newcomer does NOT steal a live lease; it stays passive and keeps heartbeating
- *   - if the holder dies, its lease goes stale and the next poller takes over automatically
- * Nobody ever closes anybody. A passive stream is still a fully useful stream: it just does not take
- * work, and the route tells the client so via `aktif` on the heartbeat.
+ *   1. A last-writer-wins TOKEN. Superseded streams closed themselves, the browser auto-reconnected and
+ *      re-claimed, and two open dashboards livelocked, killing each other every couple of seconds.
+ *   2. A renewable LEASE. No more livelock, but a zombie renews just as happily as a live client, so the
+ *      zombie held the lease forever and starved every real viewer. Measured: a run reached 'selesai'
+ *      with 37 events while both watching dashboards received nothing at all.
  *
- * ponytail: LEASE_MS is longer than a run so the holder does not lose the lease mid-scenario while it is
- * awaiting the runner instead of polling. If runs ever get longer than this, renew inside the run loop
- * rather than raising it further.
+ * Both failed for the same reason: the server cannot tell a dead client from a live one, so ANY scheme
+ * that hands exclusive rights to a stream is guessing.
+ *
+ * So stop guessing. Nobody gets exclusive rights. takePending() is already a pop, so exactly one stream
+ * executes a given run whether it is a zombie or not. The executor then PUBLISHES the run's events here,
+ * and every stream, including passive ones and ones that connect mid-run, replays from this key. A zombie
+ * executing becomes harmless: the work still happens and the results still reach every real viewer.
+ *
+ * This also fixes the thing that made the QR code on the last slide a trap. Judges opening the dashboard
+ * on their phones now see the same run as the presenter, instead of stealing it or seeing nothing.
+ *
+ * ponytail: batched whole-array writes, not an append log, so a run is bounded by MAX_SIARAN events and
+ * one cache item. Fine for a ~45 event run. If runs ever get long, switch to per-chunk keys.
  */
-const STREAM_TTL_S = 320; // just over the stream's maxDuration, so a lease outlives the stream that made it
-const LEASE_MS = 25_000; // comfortably longer than a 6 to 10 second run, short enough to recover fast
-let localLease: { id: string; at: number } | null = null;
+const SIARAN_TTL_S = 900; // a finished run stays replayable for a while, then ages out on its own
+const MAX_SIARAN = 400; // hard bound; a real run is about 45 events
 
-interface Lease {
-  id: string;
+export interface Siaran {
+  runId: string;
+  events: unknown[];
+  done: boolean;
   at: number;
 }
 
-function toLease(v: unknown): Lease | null {
-  if (!v || typeof v !== 'object') return null;
-  const l = v as Partial<Lease>;
-  return str(l.id) && num(l.at) ? { id: l.id, at: l.at } : null;
+let localSiaran: Siaran | null = null;
+
+/** Executor only: publish the run so far. Called batched, not per event. */
+export async function publishRun(runId: string, events: unknown[], done: boolean): Promise<void> {
+  const siaran: Siaran = { runId, events: events.slice(0, MAX_SIARAN), done, at: Date.now() };
+  localSiaran = siaran;
+  await push(KEY.siaran, siaran, SIARAN_TTL_S);
 }
 
-/**
- * Try to hold the work lease. Returns true if this stream may take work, false if it must stay passive.
- * Calling this renews the lease when it is already ours, so the holder simply keeps holding.
- */
-export async function acquireStreamLease(id: string): Promise<boolean> {
-  const now = Date.now();
-  const held = toLease(await pull(KEY.stream)) ?? localLease;
-  const liveAndSomeoneElses = held !== null && held.id !== id && now - held.at < LEASE_MS;
-  if (liveAndSomeoneElses) return false;
-  const mine = { id, at: now };
-  localLease = mine;
-  await push(KEY.stream, mine, STREAM_TTL_S);
-  return true;
+/** Every stream: what run is being broadcast right now, and how far has it got. */
+export async function readRun(): Promise<Siaran | null> {
+  const cached = await pull(KEY.siaran);
+  if (cached && typeof cached === 'object') {
+    const c = cached as Partial<Siaran>;
+    if (str(c.runId) && Array.isArray(c.events) && typeof c.done === 'boolean' && num(c.at)) {
+      return { runId: c.runId, events: c.events, done: c.done, at: c.at };
+    }
+  }
+  return localSiaran;
 }

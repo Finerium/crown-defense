@@ -15,7 +15,7 @@
 import { randomBytes } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { runScenario } from '../../../../lib/server/runner';
-import { acquireStreamLease, getDial, setChain, store } from '../../../../lib/server/store';
+import { getDial, publishRun, readRun, setChain, store } from '../../../../lib/server/store';
 import type { AliranEvent } from '../../../../lib/server/types';
 
 export const runtime = 'nodejs';
@@ -38,19 +38,23 @@ export async function GET(req: NextRequest): Promise<Response> {
   // traffic: fast enough that a press shows up while the presenter's finger is still on the mouse, slow
   // enough not to hammer the cache for the whole length of an idle stream.
   const pollMs = envNum('TELEMETRI_POLL_MS', 750);
+  // How often the executing stream republishes an in-flight run for everyone else to follow.
+  const SIAR_FLUSH_MS = envNum('TELEMETRI_SIAR_MS', 400);
 
   let closed = false;
   req.signal.addEventListener('abort', () => {
     closed = true;
   });
 
-  // Take the stream token. A dashboard reload leaves the previous stream running server side (Vercel does
-  // not reliably abort req.signal on client disconnect), and a zombie that keeps polling would steal the
-  // next button press and run it into a dead socket. Newest connection wins; see store.claimStream.
+  // No lease and no token: see store.publishRun for why every exclusivity scheme failed here. Exactly one
+  // stream executes a given run because takePending() is a pop, and every stream replays the run from the
+  // broadcast, so it does not matter which one won.
   const streamId = `s-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
-  // Does this stream currently hold the work lease? Published on every heartbeat so the dashboard can
-  // say plainly that it is a passive viewer rather than silently showing nothing.
+  // True only while THIS stream is the one executing. Informational, it gates nothing.
   let aktif = false;
+  // Replay bookkeeping for runs this stream did not execute itself.
+  let seenRunId: string | null = null;
+  let seenIndex = 0;
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -68,12 +72,17 @@ export async function GET(req: NextRequest): Promise<Response> {
         let sinceHeartbeat = heartbeatMs; // beat immediately so a new client sees life at once
         try {
           while (!closed) {
-            // Renew or acquire the work lease. Losing it is NOT fatal: this stream stays connected and
-            // keeps heartbeating, it just does not take work while another dashboard holds the lease.
-            // Closing here is what made two dashboards livelock each other, see store.acquireStreamLease.
-            aktif = await acquireStreamLease(streamId);
-            const pending = aktif ? await store.takePending() : null;
+            const pending = await store.takePending();
             if (pending) {
+              aktif = true;
+              // Buffer every event so passive dashboards can replay this run. Flushed on a timer and at
+              // each milestone, never once per tick, so a run costs a handful of cache writes not forty.
+              const siar: unknown[] = [];
+              let lastFlush = 0;
+              const flush = (done: boolean): void => {
+                void publishRun(pending.runId, [...siar], done);
+                lastFlush = Date.now();
+              };
               const startedAt = Date.now();
               await store.setProgress({
                 runId: pending.runId,
@@ -89,6 +98,9 @@ export async function GET(req: NextRequest): Promise<Response> {
                   await getDial(),
                   (e) => {
                     send(e);
+                    siar.push(e);
+                    // Milestones go out immediately; ticks ride the timer.
+                    if (e.type !== 'tik' || Date.now() - lastFlush >= SIAR_FLUSH_MS) flush(false);
                     // Console-visible progress: counts only, never the verdict that produced them.
                     // Not awaited: onEvent is synchronous, and the run must never wait on the store. The
                     // local layer is written before setProgress yields, so only the shared write is
@@ -106,6 +118,7 @@ export async function GET(req: NextRequest): Promise<Response> {
                   },
                   { runId: pending.runId, signal: req.signal }
                 );
+                flush(true); // final state, so a late viewer sees the whole run rather than a truncated one
                 await setChain(result.chain);
                 await store.setProgress({
                   runId: pending.runId,
@@ -116,6 +129,7 @@ export async function GET(req: NextRequest): Promise<Response> {
                   elapsedMs: Date.now() - startedAt,
                 });
               } catch (err) {
+                flush(true);
                 send({
                   type: 'galat',
                   at: new Date().toISOString(),
@@ -131,8 +145,29 @@ export async function GET(req: NextRequest): Promise<Response> {
                   elapsedMs: Date.now() - startedAt,
                 });
               }
+              aktif = false;
+              seenRunId = pending.runId; // already delivered live; never replay our own run
+              seenIndex = siar.length;
               sinceHeartbeat = heartbeatMs;
               continue;
+            }
+
+            // Follow a run this stream did not execute. This is what makes a second dashboard, a judge's
+            // phone, or a stream that connected mid-run see the same thing the presenter sees.
+            const siaran = await readRun();
+            if (siaran && siaran.events.length > 0) {
+              if (siaran.runId !== seenRunId) {
+                seenRunId = siaran.runId;
+                // Join a run in progress from the beginning so the story still makes sense. A run that
+                // was already finished before we arrived is NOT replayed, or every new tab would watch
+                // an old attack unfold as if it were happening now.
+                seenIndex = siaran.done ? siaran.events.length : 0;
+              }
+              while (seenIndex < siaran.events.length && !closed) {
+                send(siaran.events[seenIndex] as AliranEvent);
+                seenIndex++;
+              }
+              if (seenIndex < siaran.events.length) sinceHeartbeat = heartbeatMs;
             }
 
             if (sinceHeartbeat >= heartbeatMs) {
