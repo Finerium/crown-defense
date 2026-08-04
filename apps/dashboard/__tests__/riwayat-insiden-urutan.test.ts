@@ -69,11 +69,20 @@ async function modul() {
   return await import('../lib/server/insiden.js');
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.resetModules();
   daftarBlob.current = [];
   isiBlob.current = new Map();
   process.env.BLOB_READ_WRITE_TOKEN = 'uji';
+  // Re-establish the default reader. A test that simulates a suspended store must not leak that
+  // simulation into the next one, which is how a passing suite starts lying.
+  const { get } = (await import('@vercel/blob')) as unknown as { get: ReturnType<typeof vi.fn> };
+  get.mockReset();
+  get.mockImplementation(async (pathname: string) => {
+    const isi = isiBlob.current.get(pathname);
+    if (isi === undefined) return null;
+    return { stream: new Response(JSON.stringify(isi)).body };
+  });
 });
 
 describe('incident history ordering past the page limit', () => {
@@ -188,7 +197,30 @@ describe('a store that refuses us is not an empty history', () => {
     expect(pulih.rows).toHaveLength(1);
   });
 
-  it('counts without reading a single incident blob, which is what suspended the store', async () => {
+  /**
+   * The exact production shape on demo morning: list() answered, every get() was refused. The first fix
+   * reported that as "27 incidents, storage healthy" on the proof panel while the History table sat
+   * empty, which is a worse failure than the one it replaced because two surfaces now contradicted each
+   * other in front of the reader.
+   */
+  it('reports gagal when the store lists records but refuses to read any of them', async () => {
+    for (let i = 0; i < 5; i++) {
+      const ms = Date.UTC(2026, 7, 5, 3, i, 0);
+      const id = runId(ms, `s${i}`);
+      const iso = new Date(ms).toISOString();
+      tulis(`insiden/${iso.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, iso, `Run ${i}`));
+    }
+    const { get } = (await import('@vercel/blob')) as unknown as { get: ReturnType<typeof vi.fn> };
+    get.mockImplementation(async () => null); // suspended: metadata yes, content no
+
+    const { daftarInsiden, hitungInsiden } = await modul();
+    expect((await daftarInsiden()).status).toBe('gagal');
+    const h = await hitungInsiden();
+    expect(h.status).toBe('gagal');
+    expect(h.jumlah).toBe(0); // never publish a count we cannot stand behind
+  });
+
+  it('counts with one read probe, not one read per record, which is what suspended the store', async () => {
     for (let i = 0; i < 12; i++) {
       const ms = Date.UTC(2026, 7, 5, 2, i, 0);
       const id = runId(ms, `c${i}`);
@@ -200,7 +232,9 @@ describe('a store that refuses us is not an empty history', () => {
     const { hitungInsiden } = await modul();
     const hasil = await hitungInsiden();
     expect(hasil).toEqual({ status: 'hidup', jumlah: 12 });
-    expect(get).not.toHaveBeenCalled(); // the whole point: a count costs list(), never a read per record
+    // Exactly ONE read across twelve records: a health probe, not a read per record. Thirty-one
+    // operations per poll is what exhausted the store's allowance and suspended it.
+    expect(get).toHaveBeenCalledTimes(1);
   });
 });
 
