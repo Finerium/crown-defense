@@ -16,10 +16,10 @@ import type { CatatanInsiden, RingkasanInsiden } from './types';
  *
  *     insiden/2026-08-04T10-22-00-000Z_run-xxxx.json
  *
- * That detail is load bearing. Because the name sorts lexicographically in timestamp order, list() with
- * a prefix returns the history already in order, so there is NO index blob to keep in sync and therefore
- * NO read-modify-write race when two runs finish close together. Each run writes only its own file and
- * can never clobber another.
+ * The timestamp in the name is the REQUEST time, recovered from the runId, not the execution's own start
+ * (see waktuPermintaan). There is still NO index blob to keep in sync and therefore NO read-modify-write
+ * race when two runs finish close together. Ordering is NOT taken from list(), which returns ascending
+ * and truncates from the wrong end; it is decided in daftarNama() from the request time.
  *
  * TIMESTAMPS. The frozen contracts require UTC ISO-8601 with milliseconds everywhere, and that is what is
  * stored, without exception. Waktu Indonesia Barat is a RENDERING concern and is applied at display time
@@ -33,16 +33,76 @@ import type { CatatanInsiden, RingkasanInsiden } from './types';
  */
 
 const PREFIX = 'insiden/';
-/** Bounded read. The dashboard shows a recent history, not an archive; nobody paginates on stage. */
-const MAX_LIST = 50;
+/** How many incidents the history shows. The dashboard shows a recent history, not an archive. */
+const MAX_TAMPIL = 30;
+/** Pages of list() to walk before giving up. 5 x 1000 is far past anything a demo store will hold. */
+const MAX_HALAMAN = 5;
 
 function aktif(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
-/** Pathname sorts in timestamp order, which is what removes the need for an index. */
+/**
+ * The request time, recovered from the runId.
+ *
+ * runIds are minted as `run-<base36 ms>-<hex>` once, when the request is ENQUEUED. That matters twice
+ * over. It gives every record a scheme-independent sort key that does not depend on parsing a pathname,
+ * and it is stable across a request that gets executed more than once, which is a thing that provably
+ * happens: takePending() is a read-modify-write across instances, and an audit measured one request
+ * popped by two streams, executed twice, and written as TWO history rows for one runId with two
+ * different chain head hashes. Naming the blob from the REQUEST rather than from each execution's own
+ * start makes both writes land on the same pathname, so the second collapses onto the first.
+ */
+function waktuPermintaan(runId: string, cadangan: string): number {
+  const ms = Number.parseInt(runId.split('-')[1] ?? '', 36);
+  if (Number.isFinite(ms) && ms > 0) return ms;
+  const t = new Date(cadangan).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
 function namaBerkas(startedAtUtc: string, runId: string): string {
-  return `${PREFIX}${startedAtUtc.replace(/[:.]/g, '-')}_${runId}.json`;
+  const iso = new Date(waktuPermintaan(runId, startedAtUtc)).toISOString();
+  return `${PREFIX}${iso.replace(/[:.]/g, '-')}_${runId}.json`;
+}
+
+/** runId out of `insiden/<ts>_<runId>.json`, or null if the name does not fit the scheme. */
+function runIdDari(pathname: string): string | null {
+  const m = /_([^/]+)\.json$/.exec(pathname);
+  return m?.[1] ?? null;
+}
+
+/**
+ * Every incident pathname, newest first, one entry per runId.
+ *
+ * list() returns lexicographic ASCENDING and `limit` truncates from the front, so the previous version
+ * asked for 50 and got the 50 OLDEST. An audit proved it: past the 51st incident the newest records fell
+ * off the history entirely and their detail views 404ed. That is the worst possible shape of failure,
+ * because what goes missing is the run that was just performed on stage, and it fails silently.
+ *
+ * So the whole prefix is walked by cursor and the ordering is decided here, on the request time carried
+ * inside the runId, which is scheme-independent and survives a rename of the pathname format.
+ */
+async function daftarNama(): Promise<{ pathname: string; ms: number }[]> {
+  const semua: { pathname: string; ms: number }[] = [];
+  let cursor: string | undefined;
+  for (let i = 0; i < MAX_HALAMAN; i++) {
+    const r = await list({ prefix: PREFIX, limit: 1000, cursor });
+    for (const b of r.blobs) {
+      const runId = runIdDari(b.pathname);
+      if (runId) semua.push({ pathname: b.pathname, ms: waktuPermintaan(runId, '') });
+    }
+    if (!r.hasMore || !r.cursor) break;
+    cursor = r.cursor;
+  }
+  // One row per runId even if a legacy duplicate pair predates the naming fix: keep the newest write.
+  const perRun = new Map<string, { pathname: string; ms: number }>();
+  for (const e of semua) {
+    const runId = runIdDari(e.pathname);
+    if (!runId) continue;
+    const ada = perRun.get(runId);
+    if (!ada || e.pathname > ada.pathname) perRun.set(runId, e);
+  }
+  return [...perRun.values()].sort((a, b) => b.ms - a.ms);
 }
 
 /** Persist one finished incident. Fails soft: a storage outage must never break a running demo. */
@@ -73,7 +133,7 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
 export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
   if (!aktif()) return [];
   try {
-    const { blobs } = await list({ prefix: PREFIX, limit: MAX_LIST });
+    const blobs = (await daftarNama()).slice(0, MAX_TAMPIL);
     const rows = await Promise.all(
       blobs.map(async (b) => {
         try {
@@ -97,9 +157,9 @@ export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
         }
       })
     );
-    return rows
-      .filter((r): r is RingkasanInsiden => r !== null)
-      .sort((a, b) => b.startedAtUtc.localeCompare(a.startedAtUtc));
+    // Order was already decided by daftarNama() on the request time; do not re-sort on the execution
+    // start, which is what let two executions of one request interleave in the list.
+    return rows.filter((r): r is RingkasanInsiden => r !== null);
   } catch {
     return [];
   }
@@ -109,8 +169,9 @@ export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
 export async function ambilInsiden(runId: string): Promise<CatatanInsiden | null> {
   if (!aktif()) return null;
   try {
-    const { blobs } = await list({ prefix: PREFIX, limit: MAX_LIST });
-    const match = blobs.find((b) => b.pathname.endsWith(`_${runId}.json`));
+    // Walks the whole prefix, so a detail view still resolves past the 51st incident. find() on a
+    // truncated ascending page is what made recent runs 404 while their row was still on screen.
+    const match = (await daftarNama()).find((b) => b.pathname.endsWith(`_${runId}.json`));
     if (!match) return null;
     const g = await get(match.pathname, { access: 'private', useCache: false });
     if (!g) return null;

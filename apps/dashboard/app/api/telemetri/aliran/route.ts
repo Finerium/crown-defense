@@ -41,6 +41,8 @@ export async function GET(req: NextRequest): Promise<Response> {
   // traffic: fast enough that a press shows up while the presenter's finger is still on the mouse, slow
   // enough not to hammer the cache for the whole length of an idle stream.
   const pollMs = envNum('TELEMETRI_POLL_MS', 750);
+  // How long a broadcast that never finished blocks the next run before it is treated as dead.
+  const runGuardMs = envNum('TELEMETRI_RUN_GUARD_MS', 30000);
   // How often the executing stream republishes an in-flight run for everyone else to follow.
   const SIAR_FLUSH_MS = envNum('TELEMETRI_SIAR_MS', 400);
 
@@ -75,7 +77,15 @@ export async function GET(req: NextRequest): Promise<Response> {
         let sinceHeartbeat = heartbeatMs; // beat immediately so a new client sees life at once
         try {
           while (!closed) {
-            const pending = await store.takePending();
+            // ONE RUN ON THE WIRE AT A TIME. publishRun writes a single shared key, so two runs that
+            // overlap overwrite each other's broadcast. Measured on production: a six-event run was
+            // clobbered mid-flight by a thirty-six-event run, and NO viewer, not even the executor's own
+            // dashboard, received its last three ticks or its `selesai`. The Live tab invites exactly
+            // this by asking for the same workload twice at two dial positions. Runs now wait their turn
+            // instead of overlapping. The guard is time-boxed so an executor that dies cannot wedge it.
+            const siaran = await readRun();
+            const sedangSiar = siaran !== null && !siaran.done && Date.now() - siaran.at < runGuardMs;
+            const pending = sedangSiar ? null : await store.takePending();
             if (pending) {
               aktif = true;
               // Buffer every event so passive dashboards can replay this run. Flushed on a timer and at
@@ -124,12 +134,22 @@ export async function GET(req: NextRequest): Promise<Response> {
                   { runId: pending.runId, signal: req.signal }
                 );
                 flush(true); // final state, so a late viewer sees the whole run rather than a truncated one
-                await setChain(result.chain);
+                // Only a run that actually sealed something may replace the shared chain. The three
+                // legitimate workloads never reach a destructive verdict, so result.chain is empty for
+                // them, and writing it unconditionally wiped the attack chain a judge had just watched
+                // being sealed: the natural "now run a benign workload, now verify the chain" sequence
+                // returned count 0 and a tamper demo with nothing to tamper with.
+                if (result.chain.length > 0) await setChain(result.chain);
                 // RECORD THE INCIDENT. Everything above this line is ephemeral: the stream frames vanish
                 // when the socket closes and the shared chain is overwritten by the next run. This is the
                 // only thing that outlives the session, which is what makes "we ran five attacks, where
                 // are the records" answerable at all. Fails soft on purpose.
-                void simpanInsiden(buatCatatan(pending.scenarioId, dialSaatMulai, result, siar));
+                //
+                // AWAITED, not fire-and-forget. A blob write takes 150-300 ms and the previous `void`
+                // left it racing the end of the function. The most common thing a viewer does is close
+                // the tab the moment a run finishes, and the run they close on is the one that just
+                // happened, which is precisely the record worth keeping. simpanInsiden never throws.
+                await simpanInsiden(buatCatatan(pending.scenarioId, dialSaatMulai, result, siar));
                 await store.setProgress({
                   runId: pending.runId,
                   scenarioId: pending.scenarioId,
@@ -164,7 +184,6 @@ export async function GET(req: NextRequest): Promise<Response> {
 
             // Follow a run this stream did not execute. This is what makes a second dashboard, a judge's
             // phone, or a stream that connected mid-run see the same thing the presenter sees.
-            const siaran = await readRun();
             if (siaran && siaran.events.length > 0) {
               if (siaran.runId !== seenRunId) {
                 seenRunId = siaran.runId;

@@ -504,7 +504,16 @@ function Provenance({
   );
 }
 
-function Refusal({ run, lang }: { run: RunView; lang: Lang }) {
+/**
+ * Two outcomes reach this panel and they are not the same thing.
+ *
+ * REFUSED: the engine declined to isolate, and that is the end of it. A green check is correct.
+ * PROPOSED: the dial is at HUMAN_GATED, so a destructive verdict became a proposal awaiting a second
+ * distinct approver. Rendering that as a refusal put a green check under the words "ISOLATION REFUSED"
+ * while the quoted containment reason directly beneath it read "requires a second distinct approver".
+ * The header denied its own body, on the one invariant this product is built around.
+ */
+function Refusal({ run, lang, diusulkan }: { run: RunView; lang: Lang; diusulkan: boolean }) {
   const engineReason = run.lastTick?.suppressionReason ?? null;
   const decision = run.kontainmen?.decision ?? null;
   const outcomeReason = run.kontainmen?.outcomeReason ?? null;
@@ -512,10 +521,10 @@ function Refusal({ run, lang }: { run: RunView; lang: Lang }) {
   return (
     <div className="lv-refuse">
       <h3 className="lv-refuse-head">
-        <Glyph k="check" size={16} color="var(--ok)" />
-        {t('lv_refused', lang)}
+        <Glyph k={diusulkan ? 'tri' : 'check'} size={16} color={diusulkan ? 'var(--med)' : 'var(--ok)'} />
+        {t(diusulkan ? 'lv_tunggu_head' : 'lv_refused', lang)}
       </h3>
-      <p className="lv-note-lg">{t('lv_refusal_lead', lang)}</p>
+      <p className="lv-note-lg">{t(diusulkan ? 'lv_tunggu_lead' : 'lv_refusal_lead', lang)}</p>
       {engineReason ? <Quote k={t('lv_engine_reason', lang)}>{engineReason}</Quote> : null}
       {decision ? (
         <Quote k={t('lv_containment_reason', lang)}>{decision.reason}</Quote>
@@ -1113,6 +1122,8 @@ export function Live({ lang }: { lang: Lang }) {
   );
   const finished = run?.selesai ?? null;
   const commandIssued = run?.kontainmen?.command != null;
+  // PROPOSE means held for an approver, not declined. Same panel, different claim.
+  const diusulkan = finished?.disposition === 'PROPOSE';
   const showRefusal = run !== null && finished !== null && !commandIssued;
   const latency = finished?.latency ?? run?.putusan?.latency ?? null;
 
@@ -1229,8 +1240,8 @@ export function Live({ lang }: { lang: Lang }) {
               />
               {showRefusal ? (
                 <div style={{ marginTop: 14 }}>
-                  <Panel title={t('lv_refusal', lang)}>
-                    <Refusal run={run} lang={lang} />
+                  <Panel title={t(diusulkan ? 'lv_tunggu' : 'lv_refusal', lang)}>
+                    <Refusal run={run} lang={lang} diusulkan={diusulkan} />
                   </Panel>
                 </div>
               ) : null}

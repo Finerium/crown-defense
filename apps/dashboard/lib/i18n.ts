@@ -852,6 +852,14 @@ export const STRINGS = {
     en: 'The signals rose and the engine still did not isolate. This is the decision, and this is the reason for it, taken word for word from the engine and from the containment module.',
     id: 'Sinyal naik dan mesin tetap tidak mengisolasi. Ini keputusannya, dan ini alasannya, diambil kata demi kata dari mesin dan dari modul kontainmen.',
   },
+  // A HUMAN_GATED verdict is PROPOSED, not refused. Rendering it as a refusal made the panel header
+  // contradict the reason quoted directly underneath it.
+  lv_tunggu: { en: 'Held for a second approver', id: 'Ditahan menunggu penyetuju kedua' },
+  lv_tunggu_head: { en: 'AWAITING A SECOND APPROVER', id: 'MENUNGGU PENYETUJU KEDUA' },
+  lv_tunggu_lead: {
+    en: 'The engine reached a destructive verdict and the dial is at HUMAN_GATED, so containment was PROPOSED rather than executed. It waits for a second, distinct approver. This build does not implement the approval executor, which is Phase 7, so nothing here will ever approve it: the point being shown is that the command was withheld, and the reason it was withheld, taken word for word from the containment module.',
+    id: 'Mesin mencapai vonis destruktif dan dial berada di HUMAN_GATED, sehingga containment DIUSULKAN, bukan dieksekusi. Ia menunggu penyetuju kedua yang berbeda. Build ini belum mengimplementasikan eksekutor persetujuan, itu Phase 7, jadi tidak ada apa pun di sini yang akan menyetujuinya: yang sedang ditunjukkan adalah perintahnya ditahan, dan alasan ia ditahan, diambil kata demi kata dari modul kontainmen.',
+  },
   lv_engine_reason: { en: 'Engine, word for word', id: 'Mesin, kata demi kata' },
   lv_containment_reason: {
     en: 'Containment module, word for word',
