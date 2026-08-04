@@ -225,7 +225,7 @@ export async function runScenario(
     const latency = emptyLatency();
 
     let verdict: DetectionVerdict | null = null;
-  let suppressionAtVerdict: string | null = null;
+    let suppressionAtVerdict: string | null = null;
     let lastVerdictLabel: DetectionVerdict['verdict'] = 'BENIGN';
     let containmentExecuted = false;
     let disposition: SelesaiEvent['disposition'] = null;

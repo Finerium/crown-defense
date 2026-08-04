@@ -13,10 +13,13 @@
  * node:fs and node:crypto.
  */
 import { randomBytes } from 'node:crypto';
+import type { ActionRecord } from '@crown/contracts';
 import type { NextRequest } from 'next/server';
 import { runScenario } from '../../../../lib/server/runner';
+import { type CatatanInsiden, simpanInsiden } from '../../../../lib/server/insiden';
+import { scenarioById, summarize } from '../../../../lib/server/scenarios';
 import { getDial, publishRun, readRun, setChain, store } from '../../../../lib/server/store';
-import type { AliranEvent } from '../../../../lib/server/types';
+import type { AliranEvent, SelesaiEvent } from '../../../../lib/server/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,6 +81,7 @@ export async function GET(req: NextRequest): Promise<Response> {
               // Buffer every event so passive dashboards can replay this run. Flushed on a timer and at
               // each milestone, never once per tick, so a run costs a handful of cache writes not forty.
               const siar: unknown[] = [];
+              let dialSaatMulai: Awaited<ReturnType<typeof getDial>> = 'MONITOR_ONLY';
               let lastFlush = 0;
               const flush = (done: boolean): void => {
                 void publishRun(pending.runId, [...siar], done);
@@ -93,9 +97,10 @@ export async function GET(req: NextRequest): Promise<Response> {
                 elapsedMs: 0,
               });
               try {
+                dialSaatMulai = await getDial();
                 const result = await runScenario(
                   pending.scenarioId,
-                  await getDial(),
+                  dialSaatMulai,
                   (e) => {
                     send(e);
                     siar.push(e);
@@ -120,6 +125,11 @@ export async function GET(req: NextRequest): Promise<Response> {
                 );
                 flush(true); // final state, so a late viewer sees the whole run rather than a truncated one
                 await setChain(result.chain);
+                // RECORD THE INCIDENT. Everything above this line is ephemeral: the stream frames vanish
+                // when the socket closes and the shared chain is overwritten by the next run. This is the
+                // only thing that outlives the session, which is what makes "we ran five attacks, where
+                // are the records" answerable at all. Fails soft on purpose.
+                void simpanInsiden(buatCatatan(pending.scenarioId, dialSaatMulai, result, siar));
                 await store.setProgress({
                   runId: pending.runId,
                   scenarioId: pending.scenarioId,
@@ -208,4 +218,57 @@ export async function GET(req: NextRequest): Promise<Response> {
       'x-accel-buffering': 'no',
     },
   });
+}
+
+/**
+ * Assemble the permanent record from what the run already produced. Nothing here is recomputed or
+ * guessed: the verdict fields come from the putusan frame the engine emitted, the chain comes from the
+ * containment module, and the timestamps are the UTC ones the contracts require. WIB is applied by the
+ * UI at render time and never stored.
+ */
+function buatCatatan(
+  scenarioId: string,
+  dialAtStart: Awaited<ReturnType<typeof getDial>>,
+  result: { runId: string; summary: SelesaiEvent; chain: ActionRecord[] },
+  siar: unknown[]
+): CatatanInsiden {
+  const sc = scenarioById(scenarioId);
+  const ring = sc ? summarize(sc) : null;
+  const frames = siar as AliranEvent[];
+  const mulai = frames.find((e) => e.type === 'mulai');
+  const putusan = frames.find((e) => e.type === 'putusan');
+  const tikTerakhir = [...frames].reverse().find((e) => e.type === 'tik');
+  const kontainmen = frames.find((e) => e.type === 'kontainmen');
+  const v = putusan?.verdict ?? null;
+
+  return {
+    runId: result.runId,
+    scenarioId,
+    scenarioLabel: ring?.labelId ?? scenarioId,
+    group: (ring?.group ?? 'serangan') as 'serangan' | 'sah',
+    host: ring?.host ?? '',
+    segment: ring?.segment ?? '',
+    family: ring?.family ?? null,
+    mode: ring?.mode ?? null,
+    startedAtUtc: mulai?.at ?? result.summary.at,
+    finishedAtUtc: result.summary.at,
+    dialAtStart,
+    finalVerdict: result.summary.finalVerdict,
+    destructiveVerdictReached: result.summary.destructiveVerdictReached,
+    corroboratingCount: v ? v.corroborating_count : null,
+    fastPath: v ? v.fast_path : null,
+    signalsFired: v ? v.signals.filter((x) => x.fired).map((x) => x.signal_type) : [],
+    suppressedByAllowlist: tikTerakhir?.suppressedByAllowlist ?? false,
+    suppressionReason: tikTerakhir?.suppressionReason ?? null,
+    disposition: result.summary.disposition,
+    containmentExecuted: result.summary.containmentExecuted,
+    commandIssued: kontainmen?.command != null,
+    filesTouched: result.summary.counts.filesTouched,
+    eventsIngested: result.summary.counts.eventsIngested,
+    detectionWallMs: result.summary.latency.detection_wall_ms,
+    containmentWallMs: result.summary.latency.containment_wall_ms,
+    chain: result.chain,
+    chainHeadHash: result.summary.auditHeadHash,
+    scratchRemoved: result.summary.scratchRemoved,
+  };
 }
