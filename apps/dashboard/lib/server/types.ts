@@ -133,6 +133,13 @@ export interface DetakEvent {
   seq: number;
   idle: boolean;
   dial: AutonomyMode;
+  /**
+   * Does THIS stream currently hold the work lease? A dashboard with aktif=false is connected and healthy
+   * but will not pick up console button presses, because another dashboard is holding the lease. The UI
+   * must say that out loud rather than sitting silently idle, which is what confused three people on
+   * three machines into thinking runs were vanishing.
+   */
+  aktif: boolean;
 }
 
 export interface MulaiEvent {

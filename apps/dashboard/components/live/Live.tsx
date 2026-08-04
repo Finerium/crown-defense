@@ -230,7 +230,14 @@ function Baseline({ v, lang, sinceS }: { v: AliranView; lang: Lang; sinceS: numb
       title={t('lv_stream', lang)}
       sub={t('lv_rate_note', lang)}
       right={
-        v.state === 'langsung' ? (
+        // A connected but PASSIVE stream is the case that confused three people on three machines: the
+        // dashboard looked perfectly healthy and simply never reacted, because another dashboard held the
+        // work lease. Say it out loud instead of sitting there silently.
+        v.state === 'langsung' && v.beat !== null && v.beat.aktif === false ? (
+          <Tag kind="med" glyph="arc">
+            {t('lv_state_pasif', lang)}
+          </Tag>
+        ) : v.state === 'langsung' ? (
           <Tag kind="ok" glyph="circle">
             {t(stateKey, lang)}
           </Tag>

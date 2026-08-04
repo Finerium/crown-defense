@@ -15,7 +15,7 @@
 import { randomBytes } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { runScenario } from '../../../../lib/server/runner';
-import { claimStream, getDial, isStreamCurrent, setChain, store } from '../../../../lib/server/store';
+import { acquireStreamLease, getDial, setChain, store } from '../../../../lib/server/store';
 import type { AliranEvent } from '../../../../lib/server/types';
 
 export const runtime = 'nodejs';
@@ -48,6 +48,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   // not reliably abort req.signal on client disconnect), and a zombie that keeps polling would steal the
   // next button press and run it into a dead socket. Newest connection wins; see store.claimStream.
   const streamId = `s-${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
+  // Does this stream currently hold the work lease? Published on every heartbeat so the dashboard can
+  // say plainly that it is a passive viewer rather than silently showing nothing.
+  let aktif = false;
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -64,13 +67,12 @@ export async function GET(req: NextRequest): Promise<Response> {
         let seq = 0;
         let sinceHeartbeat = heartbeatMs; // beat immediately so a new client sees life at once
         try {
-          await claimStream(streamId);
           while (!closed) {
-            if (!(await isStreamCurrent(streamId))) {
-              closed = true; // a newer dashboard connection took over; stop competing for the queue
-              break;
-            }
-            const pending = await store.takePending();
+            // Renew or acquire the work lease. Losing it is NOT fatal: this stream stays connected and
+            // keeps heartbeating, it just does not take work while another dashboard holds the lease.
+            // Closing here is what made two dashboards livelock each other, see store.acquireStreamLease.
+            aktif = await acquireStreamLease(streamId);
+            const pending = aktif ? await store.takePending() : null;
             if (pending) {
               const startedAt = Date.now();
               await store.setProgress({
@@ -140,6 +142,7 @@ export async function GET(req: NextRequest): Promise<Response> {
                 seq: seq++,
                 idle: true,
                 dial: await getDial(),
+                aktif,
               });
               sinceHeartbeat = 0;
             }

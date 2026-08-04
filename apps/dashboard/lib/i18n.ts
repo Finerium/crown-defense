@@ -602,6 +602,11 @@ export const STRINGS = {
     id: 'Aliran tidak dapat dijangkau, jadi permukaan ini tidak punya data untuk ditampilkan. Tidak ada yang diisi dari ingatan atau dari singgahan: setiap angka tetap tanda hubung sampai server bicara lagi. Penyambungan ulang dicoba otomatis.',
   },
   lv_reconnect: { en: 'Reconnect now', id: 'Sambungkan ulang sekarang' },
+  lv_state_pasif: { en: 'PASSIVE VIEWER', id: 'PENONTON PASIF' },
+  lv_pasif_note: {
+    en: 'Another dashboard currently holds the work lease, so this one will not pick up console button presses. It is connected and healthy, it is just watching. It takes over automatically if the other one goes away.',
+    id: 'Dasbor lain sedang memegang sewa pekerjaan, jadi yang ini tidak akan mengambil penekanan tombol konsol. Sambungannya sehat, dia hanya menonton. Dia mengambil alih sendiri kalau yang satunya pergi.',
+  },
   lv_beat: { en: 'Server heartbeat', id: 'Detak server' },
   lv_beat_seq: { en: 'beat', id: 'detak' },
   lv_beat_note: {

@@ -336,32 +336,53 @@ export async function getChain(): Promise<ActionRecord[]> {
  * On Vercel a disconnected SSE client does NOT reliably abort req.signal, so a dashboard reload can leave
  * a ZOMBIE stream polling for the rest of its maxDuration (300s). A zombie that calls takePending() steals
  * the next button press and runs the whole scenario into a socket nobody is listening to, which on stage
- * is indistinguishable from the product being broken. Observed live: a console POST returned accepted,
- * the run genuinely executed (status reached 'selesai' with 37 events in 8.2s), and the stream the
- * presenter was actually watching saw only heartbeats.
+ * is indistinguishable from the product being broken.
  *
- * So a stream CLAIMS a token when it connects and re-checks it on every poll. Newest connection wins;
- * older ones notice they are superseded and stop. Claiming is not a lock, it is a last-writer-wins token,
- * which is all a single-presenter demo needs.
+ * The first attempt at this was a last-writer-wins TOKEN: newest connection wins, superseded streams
+ * close themselves. That was WRONG, and it was worse than the bug it fixed. A superseded stream closing
+ * makes the browser's EventSource auto-reconnect, which re-claims the token, which closes the other one,
+ * which reconnects... Two open dashboards livelock, killing each other every couple of seconds. Observed
+ * live: the server heartbeat never got past #0 across a four second window, and three people on three
+ * machines each saw a different subset of runs, non-deterministically. Worse, a judge opening the
+ * dashboard from the QR code would have stolen the stream out from under the presenter mid-demo.
  *
- * ponytail: no fencing, no lease renewal. If two judges open the dashboard at once the later one takes
- * over and the earlier one goes quiet, which is the behaviour we want anyway.
+ * So this is a LEASE, not a token, and losing it is not fatal:
+ *   - the holder renews on every poll, so a live holder keeps it
+ *   - a newcomer does NOT steal a live lease; it stays passive and keeps heartbeating
+ *   - if the holder dies, its lease goes stale and the next poller takes over automatically
+ * Nobody ever closes anybody. A passive stream is still a fully useful stream: it just does not take
+ * work, and the route tells the client so via `aktif` on the heartbeat.
+ *
+ * ponytail: LEASE_MS is longer than a run so the holder does not lose the lease mid-scenario while it is
+ * awaiting the runner instead of polling. If runs ever get longer than this, renew inside the run loop
+ * rather than raising it further.
  */
-const STREAM_TTL_S = 320; // just over the stream's maxDuration, so a claim outlives the stream that made it
-let localStreamId: string | null = null;
+const STREAM_TTL_S = 320; // just over the stream's maxDuration, so a lease outlives the stream that made it
+const LEASE_MS = 25_000; // comfortably longer than a 6 to 10 second run, short enough to recover fast
+let localLease: { id: string; at: number } | null = null;
 
-export async function claimStream(id: string): Promise<void> {
-  localStreamId = id;
-  await push(KEY.stream, { id, at: Date.now() }, STREAM_TTL_S);
+interface Lease {
+  id: string;
+  at: number;
 }
 
-/** False means a newer stream has taken over and this one must stop polling. */
-export async function isStreamCurrent(id: string): Promise<boolean> {
-  const cached = await pull(KEY.stream);
-  const claimed =
-    cached && typeof cached === 'object' && str((cached as { id?: unknown }).id)
-      ? (cached as { id: string }).id
-      : localStreamId;
-  // No claim recorded anywhere (cache absent, e.g. local dev): never deadlock the demo, keep working.
-  return claimed === null || claimed === id;
+function toLease(v: unknown): Lease | null {
+  if (!v || typeof v !== 'object') return null;
+  const l = v as Partial<Lease>;
+  return str(l.id) && num(l.at) ? { id: l.id, at: l.at } : null;
+}
+
+/**
+ * Try to hold the work lease. Returns true if this stream may take work, false if it must stay passive.
+ * Calling this renews the lease when it is already ours, so the holder simply keeps holding.
+ */
+export async function acquireStreamLease(id: string): Promise<boolean> {
+  const now = Date.now();
+  const held = toLease(await pull(KEY.stream)) ?? localLease;
+  const liveAndSomeoneElses = held !== null && held.id !== id && now - held.at < LEASE_MS;
+  if (liveAndSomeoneElses) return false;
+  const mine = { id, at: now };
+  localLease = mine;
+  await push(KEY.stream, mine, STREAM_TTL_S);
+  return true;
 }

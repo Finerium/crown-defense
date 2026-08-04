@@ -143,9 +143,15 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="demo-banner" role="note">
-        <Glyph k="diamond" size={9} /> {t('demo_banner', lang)}
-      </div>
+      {/* The Live tab carries its own, more accurate boundary statement ("events simulated, deciding
+          engine real"). This banner says detection runs on a host and not here, which is true of the four
+          fixture tabs and NOT true of Live, where the committed engine genuinely decides server side.
+          Showing both at once was a contradiction a judge could catch, so the banner yields on Live. */}
+      {screen !== 'live' ? (
+        <div className="demo-banner" role="note">
+          <Glyph k="diamond" size={9} /> {t('demo_banner', lang)}
+        </div>
+      ) : null}
 
       <main className="app-main">
         {screen === 'overview' ? <Overview s={s} lang={lang} onOpen={() => setScreen('incident')} /> : null}
@@ -154,7 +160,14 @@ export default function Page() {
         ) : null}
         {screen === 'fleet' ? <Fleet s={s} lang={lang} /> : null}
         {screen === 'system' ? <System s={s} lang={lang} dial={dial} setDial={setDial} /> : null}
-        {screen === 'live' ? <Live lang={lang} /> : null}
+        {/* Live stays MOUNTED and is hidden with CSS instead of being unmounted. Unmounting threw away
+            the whole telemetry stream state, so leaving the tab and coming back wiped the run history a
+            presenter had just built up. display:contents keeps the existing layout exactly as it was.
+            Keeping it mounted also means the stream keeps observing while the presenter is on the
+            Incident tab showing the AI report, which the demo choreography depends on. */}
+        <div style={{ display: screen === 'live' ? 'contents' : 'none' }}>
+          <Live lang={lang} />
+        </div>
       </main>
     </>
   );
