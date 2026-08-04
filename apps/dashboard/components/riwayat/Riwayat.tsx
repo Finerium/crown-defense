@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { CatatanInsiden, RingkasanInsiden } from '../../lib/server/types';
 import { type Lang, t } from '../../lib/i18n';
 import { Btn, Glyph, Panel } from '../ui';
+import { BuktiHidup } from './Bukti';
 
 /**
  * RIWAYAT INSIDEN. The surface that answers "we ran five attacks, where are the records".
@@ -173,8 +174,6 @@ export function Riwayat({ lang }: { lang: Lang }) {
       .finally(() => setMemuat(false));
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: muat is a stable useCallback with no deps;
-  // this is the mount-time load and must not re-run on every render.
   useEffect(() => {
     muat();
   }, [muat]);
@@ -188,6 +187,7 @@ export function Riwayat({ lang }: { lang: Lang }) {
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
+      <BuktiHidup lang={lang} />
       <Panel
         title={t('rw_judul', lang)}
         sub={t('rw_sub', lang)}

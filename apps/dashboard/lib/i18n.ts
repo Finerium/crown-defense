@@ -151,6 +151,22 @@ export const STRINGS = {
   // ---- Riwayat Insiden. The only surface with a past, which is why it is the strongest anti-mockup
   // evidence the product has: it survives a reload and is identical on someone else's phone.
   nav_riwayat: { en: 'History', id: 'Riwayat' },
+  // ---- Bukti hidup. Answers the fair suspicion "is any of this actually running" without asking for trust.
+  bk_judul: { en: 'Proof of life', id: 'Bukti hidup' },
+  bk_sub: { en: 'CHECK THESE YOURSELF', id: 'PERIKSA SENDIRI' },
+  bk_penjelas: {
+    en: 'None of these require trusting us. The commit SHA is the exact code serving this page right now and can be pasted into the public repository. The server clock advances while you watch it. The recorded-incident count grows only when a run genuinely completes.',
+    id: 'Tidak ada satu pun di sini yang menuntut Anda percaya kami. SHA commit adalah kode persis yang sedang melayani halaman ini dan bisa ditempel ke repositori publik. Jam server berjalan sambil Anda lihat. Jumlah insiden tercatat hanya bertambah kalau sebuah proses benar-benar selesai.',
+  },
+  bk_commit: { en: 'Commit serving this page', id: 'Commit yang melayani halaman ini' },
+  bk_cabang: { en: 'Branch', id: 'Cabang' },
+  bk_wilayah: { en: 'Region', id: 'Wilayah' },
+  bk_lingkungan: { en: 'Environment', id: 'Lingkungan' },
+  bk_waktu: { en: 'Server clock', id: 'Jam server' },
+  bk_insiden: { en: 'Incidents recorded', id: 'Insiden tercatat' },
+  bk_simpan_aktif: { en: 'durable storage active', id: 'penyimpanan permanen aktif' },
+  bk_simpan_mati: { en: 'durable storage unavailable, history will not persist', id: 'penyimpanan permanen tidak tersedia, riwayat tidak akan bertahan' },
+  bk_lokal: { en: 'running locally, no deployment metadata', id: 'berjalan lokal, tanpa metadata deployment' },
   rw_judul: { en: 'Incident history', id: 'Riwayat insiden' },
   rw_sub: { en: 'EVERY RUN, RECORDED, SURVIVES RELOAD', id: 'SETIAP PROSES, TERCATAT, TAHAN MUAT ULANG' },
   rw_penjelas: {
