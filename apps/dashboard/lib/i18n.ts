@@ -167,6 +167,28 @@ export const STRINGS = {
   bk_simpan_aktif: { en: 'durable storage active', id: 'penyimpanan permanen aktif' },
   bk_simpan_mati: { en: 'durable storage unavailable, history will not persist', id: 'penyimpanan permanen tidak tersedia, riwayat tidak akan bertahan' },
   bk_lokal: { en: 'running locally, no deployment metadata', id: 'berjalan lokal, tanpa metadata deployment' },
+  // ---- Panel kejujuran. Naming the sample data ourselves, before a judge finds it, is what buys
+  // credibility for the surfaces that genuinely work. Hiding it would risk all of them at once.
+  jj_judul: { en: 'What is live, and what is sample data', id: 'Mana yang hidup, mana data contoh' },
+  jj_sub: { en: 'WE SAY IT FIRST', id: 'KAMI SEBUT DULUAN' },
+  jj_intro: {
+    en: 'This prototype mixes a working system with a designed mockup, and it is worth being exact about which is which rather than letting you guess.',
+    id: 'Purwarupa ini mencampur sistem yang berjalan dengan mockup rancangan, dan lebih baik kami tegas menyebut mana yang mana daripada membiarkan Anda menebak.',
+  },
+  jj_hidup_judul: { en: 'Genuinely running', id: 'Benar-benar berjalan' },
+  jj_hidup: {
+    en: 'The Live tab and the simulation console. Telemetry comes from the safe simulator, the committed detection engine decides, the containment module applies the autonomy dial, the audit chain is sealed before any command is issued, and the LLM layer is called for real. The History tab records all of it durably. Every number on those surfaces is measured.',
+    id: 'Tab Langsung dan konsol simulasi. Telemetri berasal dari simulator aman, mesin deteksi yang sudah dikomit yang memutuskan, modul containment menerapkan dial otonomi, rantai audit disegel sebelum perintah diterbitkan, dan lapisan LLM benar-benar dipanggil. Tab Riwayat mencatat semuanya secara permanen. Setiap angka di permukaan itu terukur.',
+  },
+  jj_contoh_judul: { en: 'Sample data', id: 'Data contoh' },
+  jj_contoh: {
+    en: 'This Overview, plus the Incident, Fleet and System tabs. They render a fictional hospital and a fictional incident, ported from the interface design so the operator experience can be shown at full scale. Controls there that would need a real fleet behind them are labelled and do not pretend to act. Dual control that actually executes is Phase 7 and is deliberately not built.',
+    id: 'Halaman Ringkasan ini, ditambah tab Insiden, Armada, dan Sistem. Keduanya menampilkan rumah sakit fiktif dan insiden fiktif, hasil port dari rancangan antarmuka supaya pengalaman operator bisa ditunjukkan dalam skala penuh. Kontrol di sana yang menuntut armada sungguhan sudah dilabeli dan tidak berpura-pura bertindak. Kendali ganda yang benar-benar mengeksekusi adalah Phase 7 dan sengaja belum dibangun.',
+  },
+  jj_ajakan: {
+    en: 'Start at the Live tab if you want to see the parts that work, then open History to check that what you just watched was actually recorded.',
+    id: 'Mulai dari tab Langsung kalau ingin melihat bagian yang bekerja, lalu buka Riwayat untuk memeriksa bahwa yang barusan Anda tonton memang tercatat.',
+  },
   rw_judul: { en: 'Incident history', id: 'Riwayat insiden' },
   rw_sub: { en: 'EVERY RUN, RECORDED, SURVIVES RELOAD', id: 'SETIAP PROSES, TERCATAT, TAHAN MUAT ULANG' },
   rw_penjelas: {

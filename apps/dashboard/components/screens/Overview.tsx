@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChartLabel, DemoScenario, FeedItem, FeedKind, Segment, SegmentState } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
 import { Btn, Glyph, Kpi, Panel, Sev } from '../ui';
+import { Kejujuran } from '../riwayat/Kejujuran';
 
 /**
  * Command Overview — ported 1:1 from the design (crown-defense-design/screen-overview.jsx). The design's
@@ -298,6 +299,11 @@ export function Overview({ s, lang, onOpen }: { s: DemoScenario; lang: Lang; onO
         <span className="sub">
           {s.org.toUpperCase()} · SOC-A · {t('all_segments', lang).toUpperCase()}
         </span>
+      </div>
+      {/* First thing on the first screen. Saying which parts are sample data before anyone finds out is
+          what protects the credibility of the parts that genuinely work. */}
+      <div style={{ marginBottom: 14 }}>
+        <Kejujuran lang={lang} />
       </div>
       <div className="kpi-row">
         <Kpi
