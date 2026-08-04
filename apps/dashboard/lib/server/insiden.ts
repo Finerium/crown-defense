@@ -45,6 +45,15 @@ const PREFIX = 'insiden/';
  * memoised per function instance, so N viewers polling cost one read burst per window instead of N.
  */
 const MEMO_MS = 30_000;
+/**
+ * How long a FAILING store is left alone before we try again.
+ *
+ * A suspension lasts thirty days on the free tier, and a failed call still spends an operation. Retrying
+ * on every poll for a month is how a quota problem stays a quota problem. Sixty seconds is short enough
+ * that the history reappears within a minute of the store coming back, and long enough that a paused
+ * store is not being hammered four times a minute for weeks.
+ */
+const MEMO_GAGAL_MS = 60_000;
 /** How many incidents the history shows. The dashboard shows a recent history, not an archive. */
 const MAX_TAMPIL = 30;
 /** Pages of list() to walk before giving up. 5 x 1000 is far past anything a demo store will hold. */
@@ -203,15 +212,21 @@ export async function daftarInsiden(): Promise<HasilDaftar> {
     // A suspended store answers list() but refuses get(). Measured on demo morning: 27 records listed,
     // zero readable. Reporting that as an empty history put "27 incidents, storage healthy" on one panel
     // and an empty table on another, which is worse than either failure alone.
-    if (blobs.length > 0 && terbaca.length === 0) return { status: 'gagal', rows: [] };
+    if (blobs.length > 0 && terbaca.length === 0) return gagalDaftar();
     const hasil: HasilDaftar = { status: 'hidup', rows: terbaca };
     memo = { at: Date.now(), hasil };
     return hasil;
   } catch {
-    // A configured store that refuses us is NOT an empty history. Do not memoise a failure: the store
-    // may come back, and a cached error would keep the history blank long after it did.
-    return { status: 'gagal', rows: [] };
+    // A configured store that refuses us is NOT an empty history.
+    return gagalDaftar();
   }
+}
+
+/** Remember a failure briefly, so a paused store is not retried on every single request for a month. */
+function gagalDaftar(): HasilDaftar {
+  const hasil: HasilDaftar = { status: 'gagal', rows: [] };
+  memo = { at: Date.now() - (MEMO_MS - MEMO_GAGAL_MS), hasil };
+  return hasil;
 }
 
 /**
@@ -240,10 +255,15 @@ export async function hitungInsiden(): Promise<{ status: StatusPenyimpanan; juml
       if (!g) status = 'gagal';
     }
     const hasil = { status, jumlah: status === 'hidup' ? jumlah : 0 };
-    if (status === 'hidup') memoHitung = { at: Date.now(), hasil };
+    memoHitung = {
+      at: status === 'hidup' ? Date.now() : Date.now() - (MEMO_MS - MEMO_GAGAL_MS),
+      hasil,
+    };
     return hasil;
   } catch {
-    return { status: 'gagal', jumlah: 0 };
+    const hasil = { status: 'gagal' as const, jumlah: 0 };
+    memoHitung = { at: Date.now() - (MEMO_MS - MEMO_GAGAL_MS), hasil };
+    return hasil;
   }
 }
 

@@ -179,22 +179,41 @@ describe('a store that refuses us is not an empty history', () => {
     expect(hasil.rows).toEqual([]);
   });
 
-  it('does not memoise a failure, so the history returns as soon as the store does', async () => {
+  /**
+   * A failure IS remembered, briefly, and that is a deliberate trade-off rather than an oversight.
+   *
+   * A free-tier suspension lasts thirty days and a failed call still spends an operation, so retrying on
+   * every poll is how a quota problem stays a quota problem. Sixty seconds is short enough that the
+   * history reappears within a minute of the store returning, and long enough that a paused store is not
+   * hammered four times a minute for a month. This test pins both halves of that bargain.
+   */
+  it('backs off for a minute after a failure, then recovers on its own', async () => {
     const ms = Date.UTC(2026, 7, 5, 1, 0, 0);
     const id = runId(ms, 'pulih');
     const iso = new Date(ms).toISOString();
     tulis(`insiden/${iso.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, iso, 'Setelah pulih'));
 
     const { list } = (await import('@vercel/blob')) as unknown as { list: ReturnType<typeof vi.fn> };
+    const asli = list.getMockImplementation();
     list.mockImplementationOnce(() => {
       throw new Error('suspended');
     });
     const { daftarInsiden } = await modul();
     expect((await daftarInsiden()).status).toBe('gagal');
-    // Immediately afterwards, inside what would be the memo window, the store answers again.
+
+    // Straight away, the store is answering again, but we deliberately do not ask it yet.
+    const panggilanSebelum = list.mock.calls.length;
+    expect((await daftarInsiden()).status).toBe('gagal');
+    expect(list.mock.calls.length).toBe(panggilanSebelum); // no operation spent while backing off
+
+    // A minute later it tries again and the history is back.
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 61_000);
     const pulih = await daftarInsiden();
+    vi.useRealTimers();
     expect(pulih.status).toBe('hidup');
     expect(pulih.rows).toHaveLength(1);
+    expect(list.getMockImplementation()).toBe(asli);
   });
 
   /**
