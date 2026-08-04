@@ -1,6 +1,6 @@
 # Crown Defense
 
-[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 170 dari 174](https://img.shields.io/badge/uji-170%2F174%20lulus-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
+[![Lisensi Apache-2.0](https://img.shields.io/badge/lisensi-Apache--2.0-black)](#lisensi) [![Demo langsung](https://img.shields.io/badge/demo-langsung-brightgreen)](https://crown-defense.vercel.app) [![Node 22+](https://img.shields.io/badge/Node-22%2B-black)](package.json) [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-blue)](tsconfig.base.json) [![Uji 186 dari 190](https://img.shields.io/badge/uji-186%2F190%20lulus-success)](#status-dan-verifikasi) [![Gate 6](https://img.shields.io/badge/gate-6%20tercapai-blue)](#status-dan-verifikasi)
 
 Ketika ransomware sudah mulai mengenkripsi, pertanyaannya bukan lagi siapa yang menyerang, melainkan berapa detik yang tersisa. Crown Defense adalah sistem pertahanan ransomware otonom kelas perbankan: ia mendeteksi enkripsi massal lewat fusi banyak sinyal, mengisolasi host lewat dial otonomi yang bisa diatur, meminta analisis insiden ke LLM yang di produksi dijalankan sendiri di dalam infrastruktur bank, lalu menuliskan setiap tindakannya ke jejak audit hash-chained yang tidak bisa diubah.
 
@@ -71,15 +71,84 @@ Dasbor berjalan dalam **DEMO MODE**: frontend statis ditambah fungsi serverless 
 
 > **Tentang konsol yang berpagar kredensial.** Setiap kali konsol dijalankan, ia melakukan panggilan sungguhan ke model dan menghabiskan kredit model yang berbayar. Karena itu `/konsol` dipagari login supaya tidak dijalankan oleh lalu lintas anonim. **Kredensialnya dibagikan secara privat kepada dewan juri dan tidak pernah dituliskan di repositori ini.** Tidak ada kredensial di README ini, di kode, di riwayat git, maupun di berkas mana pun yang ter-commit.
 
+### Tur visual
+
+Lima layar, urut dari yang paling mudah dibantah sampai yang paling sulit.
+
+**1. Landing.** Posisi produk, angka nasional, dan sumber tiap angka. Baris latensi di sini menyebut
+"keputusan kebijakan saja" dan mencantumkan angka ujung-ke-ujungnya sekalian, karena keduanya bukan
+pengukuran yang sama dan menamainya sama akan jadi kontradiksi begitu Anda membuka dasbornya.
+
+![Landing page Crown Defense](docs/images/01-landing-hero.png)
+
+**2. Overview, dan pengakuan yang kami dahulukan.** Panel pertama di layar pertama menyebut sendiri mana
+bagian yang berjalan dan mana data contoh. Itu bukan kerendahan hati, itu perhitungan: juri yang
+menemukan sendiri data fixture akan meragukan seluruh layar, termasuk bagian yang nyata. Juri yang
+diberi tahu lebih dulu akan mengarahkan skeptisismenya ke tempat yang tepat.
+
+![Panel kejujuran di layar Overview](docs/images/02-ringkasan-panel-kejujuran.png)
+
+**3. Live, satu-satunya layar yang perlu Anda percayai.** Ini tangkapan sungguhan dari produksi, bukan
+mockup. Dari atas ke bawah: aliran telemetri dengan pencacah detak yang diberi server, lima evaluator
+sinyal beserta nilai mentah dan titik nyalanya, aturan fusi tercetak lengkap sehingga Anda bisa
+memeriksanya sendiri terhadap vonisnya, provenance keputusan yang menyebut aturan mana yang berlaku,
+lalu penolakan isolasi dengan alasan yang dikutip kata demi kata dari modul containment:
+`MONITOR_ONLY: ISOLATE_HOST is NEVER_AUTO here, log only`. Di bawahnya log aksi memperlihatkan catatan
+audit ditulis lebih dulu, perintah menyusul, dan latensinya angka terukur, bukan angka yang kami karang.
+
+![Tab Live dengan provenance keputusan lengkap](docs/images/03-live-bukti-jalan.png)
+
+**4. Riwayat, hal yang tidak bisa dipalsukan dengan murah.** Semua layar lain menggambarkan masa kini.
+Ini satu-satunya yang punya masa lalu, dan masa lalu itulah yang bertahan setelah halaman dimuat ulang,
+identik di ponsel orang lain, dan hash-nya bisa dibandingkan lintas perangkat. Setiap baris membawa jam
+WIB berikut nilai UTC aslinya, karena catatan yang nilai aslinya tidak bisa Anda lihat adalah catatan
+yang harus Anda percayai, bukan Anda periksa. Di kepala halaman ada SHA commit yang sedang berjalan:
+cocokkan dengan GitHub, dan Anda tahu kode yang Anda lihat memang kode yang berjalan.
+
+![Riwayat insiden dengan rantai audit](docs/images/04-riwayat-insiden-dan-rantai.png)
+
+**5. Dial otonomi, dan batas waktunya.** Menaikkan dial sengaja dibatasi waktu. Kalau tidak ada yang
+menurunkannya, ia turun sendiri ke MONITOR_ONLY, karena arah yang aman adalah arah yang seharusnya
+terjadi tanpa diminta. Hitung mundurnya ditampilkan supaya itu jadi kendali, bukan jebakan.
+
+![Dial otonomi dengan hitung mundur](docs/images/06-dial-hitung-mundur.png)
+
+Dasbornya juga terpakai di telepon, karena juri menjangkaunya lewat QR dan yang pertama mereka pegang
+adalah ponsel sendiri.
+
+<img src="docs/images/05-dasbor-di-telepon.png" alt="Dasbor pada viewport 390 piksel" width="300">
+
 ### Alur juri yang disarankan
 
-1. Buka **landing page**. Baca posisi produk dan angka nasionalnya, lalu masuk ke dasbor.
-2. Di **Command Dashboard**, mulailah dari layar **Overview**: KPI armada, grafik aktivitas ancaman, dan feed aksi otonom. Perhatikan bahwa setiap baris feed menyebut aksi apa yang diambil dan atas dasar apa.
-3. Pindah ke layar **Incident**. Di sini ada tiga hal yang layak diperiksa berdampingan: peta blast radius dengan status per host, sinyal deteksi yang menyala beserta yang tidak, dan lini masa insiden. Cari baris yang menyatakan catatan audit terikat **sebelum** perintah. Itu bukan hiasan naratif, itu urutan yang diuji di `packages/test-infra/src/closed-loop.test.ts`.
-4. Masih di layar Incident, tekan **Generate incident report**. Sebuah fungsi serverless memanggil DeepSeek secara langsung, hasilnya dilewatkan **gerbang faithfulness**, dan yang dirender adalah rencana pemulihan dengan sitasi playbook plus skor faithfulness. Keluaran yang tidak bisa ditelusuri tidak ditampilkan sebagai otoritatif, melainkan dialihkan ke manusia.
-5. Buka layar **Fleet** untuk melihat daftar host yang berpaginasi dan berbatas, lalu layar **System** untuk melihat panel Autonomy Policy: dial 4 posisi, otonomi efektif, dan status fail-safe. Geser dial dan perhatikan klasifikasi aksi ikut berubah.
-6. Ganti bahasa **EN / ID** di kanan atas. Seluruh antarmuka termasuk label aksesibilitas ikut berganti, bukan hanya teks isi.
-7. Terakhir, buka **konsol simulasi** dengan kredensial yang dibagikan privat, dan jalankan satu skenario dari awal sampai akhir.
+Mulailah dari bagian yang berjalan, lalu periksa bahwa yang barusan Anda tonton memang tercatat. Urutan
+itu yang mengubah skeptisisme menjadi verifikasi.
+
+1. Buka **tab Live**. Biarkan sebentar dalam keadaan membosankan: detak servernya naik tiap dua detik dan
+   grafiknya datar. Itu server yang benar-benar mengabarkan dirinya hidup, dan pencacahnya diberi server,
+   bukan dihitung browser Anda.
+2. Minta operator menjalankan satu serangan dari konsol. Perhatikan lima evaluator sinyal, lalu bandingkan
+   aturan fusi yang tercetak di layar dengan vonis yang keluar. Kartu keputusannya berjudul alasannya,
+   bukan kata "alert".
+3. Minta satu **beban kerja sah**, misalnya kompaksi log. Tiga sinyal menyala sekaligus dan isolasi tetap
+   ditolak. Panelnya menuliskan alasannya kata demi kata dari mesinnya sendiri. Kalau demo ini dicurangi,
+   yang barusan mustahil.
+4. Minta dial diturunkan ke **MONITOR_ONLY**, lalu serangan yang sama persis diulang. Deteksi tetap
+   menyala, vonis tetap sama, tidak ada perintah yang diterbitkan. Naikkan ke **HUMAN_GATED** dan ulangi:
+   sekarang vonisnya destruktif tetapi containment berstatus PROPOSE, menunggu penyetuju kedua yang
+   berbeda, dan panelnya mengatakan terus terang bahwa eksekutor persetujuan belum dibangun di build ini.
+5. Buka **tab Riwayat**. Semua yang barusan ada di sana, dengan jam WIB, panjang rantai, dan hash-nya.
+   Muat ulang halaman, buka di ponsel Anda sendiri: catatannya sama. Unduh satu sebagai JSON kalau mau.
+6. Di **panel bukti hidup**, cocokkan SHA commit dengan repositori GitHub.
+7. Tekan **verifikasi rantai**, lalu **rusak satu catatan**. Verifikasinya berubah dari valid menjadi
+   tidak valid dan menunjuk indeks yang dirusak. Rantainya bukan hiasan.
+8. Baru setelah itu, buka **Overview, Incident, Fleet, dan System**. Panel kejujuran di Overview sudah
+   menyebutkan bahwa keempatnya adalah rumah sakit fiktif hasil port dari rancangan antarmuka, dipakai
+   untuk menunjukkan pengalaman operator dalam skala penuh.
+9. Di layar Incident, tekan **Generate incident report**. Sebuah fungsi serverless memanggil model
+   sungguhan, hasilnya dilewatkan gerbang faithfulness, dan yang dirender adalah rencana pemulihan dengan
+   sitasi playbook plus skornya. Langkah yang tidak bisa ditelusuri tidak ditampilkan sebagai otoritatif,
+   melainkan dialihkan ke manusia.
+10. Ganti bahasa **EN / ID** di kanan atas. Seluruh antarmuka termasuk label aksesibilitas ikut berganti.
 
 ---
 
@@ -441,7 +510,7 @@ pnpm typecheck
 pnpm --filter @crown/dashboard dev     # http://localhost:3100
 ```
 
-Tanpa langkah 3 dan 4, empat uji yang bergantung basis data langsung akan gagal; 170 uji sisanya tetap lulus, dengan catatan `DEEPSEEK_API_KEY` terisi. Tanpa kunci itu, uji integrasi model langsung ikut gagal sehingga yang gagal menjadi lima. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
+Tanpa langkah 3 dan 4, empat uji yang bergantung basis data langsung akan gagal; 186 uji sisanya tetap lulus, dengan catatan `DEEPSEEK_API_KEY` terisi. Tanpa kunci itu, uji integrasi model langsung ikut gagal sehingga yang gagal menjadi lima. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
 
 ## Perintah
 
@@ -490,13 +559,13 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Klaim | Angka | Bukti |
 | --- | --- | --- |
 | Typecheck bersih | `tsc -b` keluar dengan kode 0 | `pnpm typecheck` |
-| Suite uji | 174 uji di 18 berkas, 170 lulus | `pnpm test` |
-| Uji tanpa basis data | 170 dari 174 lulus; 4 yang gagal semuanya menuntut Postgres yang hidup, yaitu 3 uji store audit dan 1 uji pengikatan audit. Mesin pembangunan ini tidak menjalankan daemon Docker, jadi keempatnya gagal karena tidak menemukan basis data, bukan karena logikanya salah | `pnpm test` tanpa `pnpm db:up` |
+| Suite uji | 190 uji di 20 berkas, 186 lulus | `pnpm test` |
+| Uji tanpa basis data | 186 dari 190 lulus; 4 yang gagal semuanya menuntut Postgres yang hidup, yaitu 3 uji store audit dan 1 uji pengikatan audit. Mesin pembangunan ini tidak menjalankan daemon Docker, jadi keempatnya gagal karena tidak menemukan basis data, bukan karena logikanya salah | `pnpm test` tanpa `pnpm db:up` |
 | Cakupan keluarga dan mode evasi | 24 keluarga, 5 mode evasi | `reports/sim/coverage.json` |
 | Deteksi pada battery simulator aman | 24 dari 24 terdeteksi, laju deteksi 1,0 | `reports/detection/coverage.json` |
 | Berkas hilang sebelum containment | maksimum 2, p95 2, dari anggaran 10 | `reports/detection/coverage.json`, `reports/containment/files_lost.json` |
 | Latensi deteksi pada battery | p50 6 ms, p95 333 ms, n 24 | `reports/detection/coverage.json` |
-| Latensi keputusan containment | 200 run, p95 0,066 ms, dari anggaran 10.000 ms | `reports/containment/latency.json` |
+| Latensi keputusan containment, kebijakan saja | 200 run, p95 0,066 ms, dari anggaran 10.000 ms. Harness ini men-spy sink audit dan penerbit perintah, jadi yang terukur adalah keputusan kebijakan tanpa I/O sama sekali. Angka ujung ke ujungnya ada dua baris di bawah | `reports/containment/latency.json` |
 | Validasi format load-bearing terhadap enkripsi intermiten | `detected_with_format: true`, `detected_without_format: false` per keluarga | `reports/detection/intermittent.json` |
 | Low-and-slow tertangkap | Medusa, Rhysida, ViceSociety, ketiganya terdeteksi, 2 berkas hilang | `reports/detection/low_slow.json` |
 | Fast-path canary | verdict `MASS_ENCRYPTION` dengan `fast_path: true` | `reports/detection/canary.json` |
@@ -516,6 +585,11 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | Demo langsung | HTTP 200, publik. Empat permukaan hidup: `/`, `/dashboard`, `/konsol` (307 ke login), `/konsol/masuk` | dicek langsung dengan `curl -o /dev/null -w "%{http_code}"` |
 | Laporan LLM langsung | **Terverifikasi ulang 2 Agustus 2026.** HTTP 200, status `OK`, `live: true`, `degraded: false`, model `deepseek-v4-pro`, kesetiaan `1` lulus, 15 klaim bersitasi dengan 0 klaim tak berdukung, rencana pemulihan 7 langkah. Sitasi yang terpakai: `PB-CONTAIN-ISOLATE`, `PB-CONTAIN-LATERAL`, `PB-FORENSICS`, `PB-SHADOW`, `PB-CREDENTIAL`, `PB-NOTIFY-OJK`, `PB-RECOVER-BACKUP`, `PB-CANARY` | POST langsung ke `/api/analyze` produksi, ditambah uji integrasi model langsung `packages/test-infra/src/llm.test.ts`, 8 dari 8 lulus dalam 83,9 detik |
 | Latensi orkestrasi LLM | 51 sampai 64 detik untuk satu percobaan orkestrasi, 44 sampai 86 detik untuk round trip rute langsung penuh, terukur pada empat run terpisah. Angka ini besar dan tidak disembunyikan: LLM berjalan sesudah containment, bukan di jalur kritis deteksi. Konfigurasi disesuaikan agar rutenya tidak dibunuh lebih dulu, yaitu `LLM_TIMEOUT_MS` 120000, `LLM_MAX_RETRIES` 1, dan `maxDuration` 300 pada `/api/analyze` | diukur terhadap produksi pada 2 Agustus 2026; `packages/test-infra/src/llm.test.ts` |
+| Latensi containment ujung ke ujung di produksi | 1 sampai 13 ms `containment_wall_ms` pada tujuh run yang tersimpan permanen. Ini termasuk penyegelan catatan audit dan penerbitan perintah, jadi ia **bukan** angka 0,066 ms yang ada di baris atas: yang itu jalur keputusan kebijakan saja dengan sink audit di-spy | catatan permanen di `GET /api/insiden`, bisa dibuka siapa pun |
+| Catatan insiden bertahan lintas sesi | setiap run tersimpan lengkap dengan rantai audit, jam UTC, dan latensi terukur; daftar dan detailnya publik dan bisa diekspor JSON | `GET /api/insiden`, `GET /api/insiden/<runId>` |
+| Kode yang berjalan sama dengan kode yang dipublikasikan | SHA commit yang sedang di-deploy dipublikasikan dan bisa dicocokkan dengan GitHub | `GET /api/bukti` |
+| Dial destruktif menahan diri di HUMAN_GATED | terukur di produksi: `disposition PROPOSE`, `command null`, `executed false`, rantai audit berisi `ISOLATE_HOST` berstatus `QUEUED` di bawah `HUMAN_GATED` | run `run-mseoszbk-0ea8f0` pada 4 Agustus 2026, tersimpan di `/api/insiden` |
+| Beban kerja sah tidak menghapus rantai yang tersegel | sesudah run jinak yang menghasilkan rantai kosong, verifikasi rantai bersama tetap `valid: true, count: 1` | `POST /api/audit/verifikasi` sebelum dan sesudah run `kompaksi-log` |
 | Closed loop end-to-end | 5 paket nyata tersambung, urutan audit-lalu-perintah ditegaskan, jalur fail-safe tidak mengirim perintah | `reports/closed-loop/end-to-end.json` |
 
 ### Target proposal dibandingkan yang terukur
@@ -524,7 +598,7 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | --- | --- | --- |
 | Deteksi dalam hitungan detik | p50 6 ms, p95 333 ms pada battery simulator aman | Ini latensi mesin pada telemetri sintetis, **bukan** waktu deteksi di endpoint nyata. Angka endpoint nyata **belum diukur** |
 | False positive maksimum 0,5 persen | 0 false positive destruktif dari 320 skenario | Korpusnya adalah tipe beban kerja representatif ditambah variannya, **bukan** 320 percobaan statistik independen |
-| Containment p95 di bawah 10 detik | p95 0,066 ms pada 200 run | Ini jalur keputusan dalam proses, **bukan** round-trip jaringan ke endpoint nyata. Angka lapangan **belum diukur** |
+| Containment p95 di bawah 10 detik | p95 0,066 ms pada 200 run untuk keputusan kebijakan saja; 1 sampai 13 ms ujung ke ujung pada tujuh run produksi yang tersimpan | Keduanya jalur dalam proses, **bukan** round-trip jaringan ke endpoint nyata. Angka lapangan **belum diukur** |
 | Maksimum 10 berkas terenkripsi | maksimum 2 berkas | Terukur pada battery simulator aman |
 | Minimal 20 keluarga dan 4 mode evasi | 24 keluarga, 5 mode evasi | Profil perilaku parametrik, bukan sampel asli |
 | Armada 1.000 endpoint | **belum diukur** | Peta host dibatasi dan di-LRU (`maxTrackedHosts`), daftar berpaginasi. Validasi skala armada adalah pekerjaan Phase 11 |
