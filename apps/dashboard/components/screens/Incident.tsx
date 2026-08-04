@@ -101,7 +101,9 @@ function IncidentHeader({ s, lang }: { s: DemoScenario; lang: Lang }) {
           <Glyph k="check" size={8} />
           {I.status}
         </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22 }}>
+        <div
+          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}
+        >
           <HeaderStat k={t('chart_detected', lang)} v={I.detectedAt} />
           <HeaderStat k={t('hdr_latency', lang)} v={I.detectLatency} accent />
           <HeaderStat k={t('hdr_confidence', lang)} v={`${(I.confidence * 100).toFixed(0)}%`} />
