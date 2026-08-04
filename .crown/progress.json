@@ -108,15 +108,32 @@
   "next_action_DONE_THIS_SESSION": "Gates 3 + 4 COMPLETE (control plane reviewed FAIL->fixed; LLM live-DeepSeek verified). Now: Gate 5 (dashboard, Next.js for Vercel) -> Gate 6 (closed loop + LIVE Vercel demo-mode dashboard + Report-hackathon.md).",
   "next_action_obsolete": "Resume at Gate 3 REMAINDER: (a) @crown/control-plane mTLS mutual-auth channel + bad-cert rejection (AC-SEC-01); (b) agent anti-tamper watchdog/integrity (AC-SEC-02); (c) control-plane deny-by-default authz on privileged routes (AC-SEC-03); (d) wire ContainmentModule's AuditSink to the LIVE @crown/audit AuditStore (immutable-record binding) + a containment->audit integration test; (e) fresh-context adversarial review of the control plane (sanitized framing — cyber classifier blocks ~1/3 of security review agents); then write reports/manifests/gate-3.manifest.json evidence + commit Gate 3. THEN Phase 4 (LLM/RAG/faithfulness, DeepSeek for build), Phase 5 (dashboard + design bundle), Phase 6 (closed loop + LIVE Vercel demo-mode dashboard per the addendum) -> Gate 6 stop + Report-hackathon.md.",
   "session_state_at_pause": {
-    "gates_passed": [0, 1, 2, 3, 4, 5, 6],
+    "gates_passed": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
     "checkpoint": "GATE 6 REACHED — hackathon checkpoint complete. Deliberate STOP. Bank-grade Phases 7-15 are a later relaunch and intentionally NOT built.",
-    "tests": "18 files / 174 tests passing (incl. live DeepSeek + closed-loop e2e + 40 console-invariant tests from the final-round sprint); tsc -b clean",
+    "tests": "20 files / 190 tests, 186 passing; the 4 failures all require a live Postgres on 5432 (3 audit store + 1 audit binding) and fail identically on an unmodified tree because Docker will not start on this machine; tsc -b clean, biome lint exits 0",
     "packages": "contracts, audit, simulator, test-infra, detection, agent, containment, control-plane, llm + apps/dashboard",
     "feature_list": "24/70 criteria passing (gates 0-5; gate-6 closed-loop/demo tracked in the gate-6 manifest, not added to the locked 70-criterion set)",
     "live_demo": "https://crown-defense.vercel.app (Vercel project crown-defense, root apps/dashboard, auto-redeploy on push to main; DeepSeek key server-side env var)",
     "repo": "https://github.com/Finerium/crown-defense (private)",
-    "review_cycles": "Gate-1 oracle x2 + Gate-2 detection x3 + Gate-3 control-plane x1 + Gate-5 dashboard a11y/i18n x1 (FAIL->fix->PASS) + Gate-6 closed-loop genuineness x1 — fresh-context review caught real wrongful-isolation, authz, a11y, and i18n defects",
+    "review_cycles": "Gate-1 oracle x2 + Gate-2 detection x3 + Gate-3 control-plane x1 + Gate-5 dashboard a11y/i18n x1 (FAIL->fix->PASS) + Gate-6 closed-loop genuineness x1 — fresh-context review caught real wrongful-isolation, authz, a11y, and i18n defects + FINAL-ROUND WAVE 2026-08-04: 13 fresh-context agents reading code and attacking PRODUCTION (not summaries). 16 ranked findings + 3 blob-store blockers, all applied. Blockers: incident history returned the OLDEST 50 so the newest records vanished past the 51st and their detail 404ed; one request popped by two streams produced two records with one runId and two chain heads; two concurrent runs erased each other's broadcast; a benign run wiped the sealed audit chain to 0; the faithfulness deny-list had a bypass where any negation anywhere in the claim disarmed it (\"Pay the attacker\" + \"do not wipe the backups\" scored 1.0 and PASSED); the dashboard was unusable at 390px with the Live tab off-screen; a HUMAN_GATED run rendered a green-check ISOLATION REFUSED above a reason reading \"requires a second distinct approver\". Honesty: the containment KPI claimed a p95 of 5 ms verdict-to-EXECUTED when 7 stored runs measured 1-13 ms and none executed; the 76x latency contradiction had only relocated to the landing; policy and audit tables promised credential revocation, fleet-wide policy push and C2 blocking, none of which exist in the C6 command enum. Security: per-IP limit keyed on the client-writable leftmost XFF hop (gated both login brute-force and the model spend cap), requireSession threw 500 on a malformed cookie, login form defaulted to GET. A11y: --t3 failed AA in BOTH themes (3.98 dark / 4.36 light), measured and corrected.",
     "classifier_note": "the Opus cyber-classifier blocks ~1/3 of security-flavored review subagents; sanitized data-pipeline framing clears it.",
-    "relaunch_from_here": "Phase 7+ (bank-grade): fleet-scale hardening + statistical FP validation (Phase 11), prod agent backends (eBPF/minifilter, kernel anti-tamper), on-prem LLM serving (SGLang/vLLM) + signed staged updates, SIEM/AD/EDR adapters (Phase 15), DR + compliance surface."
+    "relaunch_from_here": "Phase 7+ (bank-grade): fleet-scale hardening + statistical FP validation (Phase 11), prod agent backends (eBPF/minifilter, kernel anti-tamper), on-prem LLM serving (SGLang/vLLM) + signed staged updates, SIEM/AD/EDR adapters (Phase 15), DR + compliance surface.",
+    "bukti_produksi_2026_08_04": {
+      "dial_berbatas_waktu": "elevated dial now carries expiresAtUtc and the UI counts it down; verified live showing 'lapses back to MONITOR_ONLY in 22:33' at HUMAN_GATED",
+      "human_gated": "run-mseoszbk-0ea8f0: disposition PROPOSE, command null, executed false, chain [ISOLATE_HOST QUEUED HUMAN_GATED], detection 4 ms / containment 11 ms",
+      "rantai_tidak_terhapus": "POST /api/audit/verifikasi after a benign run that produced an empty chain: valid true, count 1",
+      "tamper": "POST /api/audit/rusak: before valid, after invalid at mutatedIndex 0",
+      "riwayat": "10 incidents, 10 unique runIds, descending order, detail resolves, JSON export",
+      "bukti_hidup": "GET /api/bukti publishes the deployed commit SHA; matched local HEAD exactly on every deploy tonight",
+      "telepon": "390px viewport: document 380 wide, no overflow, all six tabs visible without a swipe"
+    }
   }
 }

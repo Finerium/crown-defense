@@ -331,3 +331,46 @@ correct, not a bug). Genuinely-mine features re-grafted INTO their designed home
 plan + dual-control approval queue on the Incident response-plan area; interactive autonomy dial on System's
 Autonomy Policy panel; nav back to the design's 4 tabs. ENGINE_ID='CROWN-DE' replaces the design's "TALOS-DE"
 codename (OQ-5); PRODUCT_NAME stays "Crown Defense". Deployed (CLI, COMMIT_AUTHOR workaround) + browser-verified.
+
+## Final-round wave, 2026-08-04: what thirteen fresh-context agents found
+
+Two lessons are worth more than the fix list.
+
+LESSON 1: a bug that only appears past a threshold nobody reached in testing is the most dangerous kind.
+The incident history returned the OLDEST 50 records because `list()` sorts ascending and `limit` truncates
+from the front. It worked perfectly with 8 records and would have failed silently at 51, and what would
+have disappeared is the run just performed on stage. Nothing errored. Nothing logged. An agent found it by
+writing 60 backdated blobs to the real store and asking the real endpoint, which is a class of test we
+were not running: not "does it work", but "does it still work at ten times the size I have ever seen".
+
+LESSON 2: a safety check whose bypass is opened by GOOD prose is worse than no check. The faithfulness
+deny-list tested its negation cue against the whole claim, and a claim is action plus rationale. So
+
+    action    "Pay the attacker and restore the affected data using the key they provide"
+    rationale "do not wipe the known-good immutable backups while waiting"
+
+scored 1.0 and passed. The responsible half disarmed the check for the dangerous half. The property to
+watch for is inversion: if being more careful makes a guard weaker, the guard is anchored wrong. Fixed by
+anchoring the cue to the text immediately before each prohibited match, so a negation can only excuse its
+own phrase.
+
+THIRD, ON OURSELVES. While correcting a fabricated MTTR we introduced a new wrong number, and while
+correcting a 76x contradiction we only relocated it from the dashboard to the landing page. Both were
+caught by the same review process, not by us. Replacing a fabricated number with a real number from the
+wrong harness is still a wrong number, and fixing a contradiction on one surface is not fixing it if the
+other surface still carries the old value under the same name. The rule that survives: when you correct a
+number, grep the whole repo for the number AND for its label.
+
+FOURTH, ON SCOPE OF A DISCLAIMER. The demo banner covers SAMPLE DATA. It does not cover CAPABILITY CLAIMS.
+Two tables listed credential revocation, fleet-wide policy push and C2 beacon blocking, none of which
+exist in the C6 command enum, under headers reading "what Crown Defense can do without asking" and "every
+action logged, immutable". A fictional hospital is a stage set; a fictional capability is a false
+statement about the product. Deleted rather than relabelled.
+
+Also fixed and verified live: two concurrent runs erasing each other's broadcast (one run on the wire at a
+time now, time-boxed); a benign run wiping the sealed audit chain to zero (only a run that sealed
+something may replace it); the dial reverting to MONITOR_ONLY silently at 600 s (the lapse is correct and
+fail-safe, so it was made VISIBLE with a live countdown rather than removed, and the window moved to
+CROWN_DIAL_TTL_S); a HUMAN_GATED verdict rendered as a refusal instead of a proposal; the dashboard
+unusable at 390px with the Live tab off-screen; --t3 failing WCAG AA in both themes; a per-IP rate limit
+keyed on a client-writable header that gated both login brute-force and the model spend cap.
