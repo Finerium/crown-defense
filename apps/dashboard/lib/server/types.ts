@@ -284,6 +284,9 @@ export interface MasukResponse {
 
 export interface DialResponse {
   position: AutonomyMode;
+  /** UTC ISO-8601 ms at which an elevated dial lapses to the default. null = resting at the default. */
+  expiresAtUtc: string | null;
+  defaultPosition: AutonomyMode;
 }
 
 export interface PesanResponse {

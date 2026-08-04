@@ -165,10 +165,30 @@ export const STRINGS = {
   bk_waktu: { en: 'Server clock', id: 'Jam server' },
   bk_insiden: { en: 'Incidents recorded', id: 'Insiden tercatat' },
   bk_simpan_aktif: { en: 'durable storage active', id: 'penyimpanan permanen aktif' },
-  bk_simpan_mati: { en: 'durable storage unavailable, history will not persist', id: 'penyimpanan permanen tidak tersedia, riwayat tidak akan bertahan' },
-  bk_lokal: { en: 'running locally, no deployment metadata', id: 'berjalan lokal, tanpa metadata deployment' },
+  bk_simpan_mati: {
+    en: 'durable storage unavailable, history will not persist',
+    id: 'penyimpanan permanen tidak tersedia, riwayat tidak akan bertahan',
+  },
+  bk_lokal: {
+    en: 'running locally, no deployment metadata',
+    id: 'berjalan lokal, tanpa metadata deployment',
+  },
   // ---- Panel kejujuran. Naming the sample data ourselves, before a judge finds it, is what buys
   // credibility for the surfaces that genuinely work. Hiding it would risk all of them at once.
+  // ---- Dial berbatas waktu. The lapse back to the default is the fail-safe direction; showing the
+  // countdown is what turns it from an ambush into a control.
+  dial_tenggat: {
+    en: 'Elevated position, lapses back to {mode} in {sisa}',
+    id: 'Posisi dinaikkan, kembali ke {mode} dalam {sisa}',
+  },
+  dial_tenggat_ket: {
+    en: 'Raising the dial is time boxed on purpose. If nobody lowers it, it lowers itself, because the safe direction is the one that should happen by default.',
+    id: 'Menaikkan dial sengaja dibatasi waktu. Kalau tidak ada yang menurunkannya, ia turun sendiri, karena arah yang aman adalah arah yang seharusnya terjadi tanpa diminta.',
+  },
+  dial_istirahat: {
+    en: 'Resting at the shipped default. This position does not expire.',
+    id: 'Berada di posisi bawaan. Posisi ini tidak kedaluwarsa.',
+  },
   jj_judul: { en: 'What is live, and what is sample data', id: 'Mana yang hidup, mana data contoh' },
   jj_sub: { en: 'WE SAY IT FIRST', id: 'KAMI SEBUT DULUAN' },
   jj_intro: {

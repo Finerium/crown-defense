@@ -1,5 +1,5 @@
 'use client';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { type DemoScenario, ENGINE_ID, PRODUCT_NAME } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
 import { Glyph, Panel, StatusPill } from '../ui';
@@ -36,7 +36,38 @@ const DIAL_POSITIONS: { id: string; key: 'dial_monitor' | 'dial_alert' | 'dial_h
   { id: 'FULL_AUTO', key: 'dial_auto' },
 ];
 
-function Dial({ value, onChange, lang }: { value: string; onChange: (v: string) => void; lang: Lang }) {
+/** mm:ss left on an elevated dial. Recomputed on a 1s tick so the number on screen is the real one. */
+function sisaWaktu(tenggat: string): string | null {
+  const ms = new Date(tenggat).getTime() - Date.now();
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function Dial({
+  value,
+  onChange,
+  lang,
+  tenggat,
+  bawaan,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  lang: Lang;
+  tenggat: string | null;
+  bawaan: string;
+}) {
+  const [sisa, setSisa] = useState<string | null>(tenggat ? sisaWaktu(tenggat) : null);
+  useEffect(() => {
+    if (!tenggat) {
+      setSisa(null);
+      return;
+    }
+    setSisa(sisaWaktu(tenggat));
+    const id = setInterval(() => setSisa(sisaWaktu(tenggat)), 1000);
+    return () => clearInterval(id);
+  }, [tenggat]);
+
   return (
     <>
       <div
@@ -50,6 +81,7 @@ function Dial({ value, onChange, lang }: { value: string; onChange: (v: string) 
             <button
               key={d.id}
               type="button"
+              // biome-ignore lint/a11y/useSemanticElements: <input type=radio> cannot carry this layout (icon + label + machine token, full-width targets). role=radio + aria-checked inside a role=radiogroup is the correct ARIA mapping, every position is a real focusable button, and Enter/Space selects it (WCAG 2.1.1).
               role="radio"
               aria-checked={on}
               onClick={() => onChange(d.id)}
@@ -69,9 +101,34 @@ function Dial({ value, onChange, lang }: { value: string; onChange: (v: string) 
           );
         })}
       </div>
+      {/* The lapse, said out loud. Silent expiry was the defect; the expiry itself is the safety property. */}
+      {sisa ? (
+        <div
+          style={{
+            marginTop: 14,
+            borderLeft: '2px solid var(--med)',
+            paddingLeft: 12,
+            fontSize: 11.5,
+            lineHeight: 1.6,
+            color: 'var(--t2)',
+          }}
+        >
+          <div className="mono" style={{ color: 'var(--med)', letterSpacing: '0.04em' }}>
+            {tf('dial_tenggat', lang, { mode: bawaan, sisa })}
+          </div>
+          <div style={{ color: 'var(--t3)', marginTop: 4 }}>{t('dial_tenggat_ket', lang)}</div>
+        </div>
+      ) : (
+        <div
+          className="mono"
+          style={{ fontSize: 10.5, color: 'var(--t3)', marginTop: 14, letterSpacing: '0.04em' }}
+        >
+          {t('dial_istirahat', lang)}
+        </div>
+      )}
       <div
         className="mono"
-        style={{ fontSize: 10.5, color: 'var(--t3)', marginTop: 14, letterSpacing: '0.04em' }}
+        style={{ fontSize: 10.5, color: 'var(--t3)', marginTop: 6, letterSpacing: '0.04em' }}
       >
         {t('dial_gated_note', lang)}
       </div>
@@ -92,8 +149,17 @@ export function System({
   s,
   lang,
   dial,
+  tenggat,
+  bawaan,
   setDial,
-}: { s: DemoScenario; lang: Lang; dial: string; setDial: (v: string) => void }) {
+}: {
+  s: DemoScenario;
+  lang: Lang;
+  dial: string;
+  setDial: (v: string) => void;
+  tenggat: string | null;
+  bawaan: string;
+}) {
   const e = s.engine;
   const a = s.agents;
   return (
@@ -182,7 +248,7 @@ export function System({
 
         {/* Autonomy Dial — product control, governs the action matrix below. Full-width. */}
         <Panel title={t('dial', lang)} sub={t('dial_positions', lang)} style={{ gridColumn: '1 / -1' }}>
-          <Dial value={dial} onChange={setDial} lang={lang} />
+          <Dial value={dial} onChange={setDial} lang={lang} tenggat={tenggat} bawaan={bawaan} />
         </Panel>
 
         {/* Autonomy Policy */}

@@ -63,16 +63,23 @@ const KEY = {
  * CROWN_DIAL_DEFAULT (MONITOR_ONLY) on every cold start, because a stale FULL_AUTO left in storage and
  * picked up by a later process is exactly the kind of quiet escalation deny-by-default exists to prevent.
  * It now has to be shared, because the surface that SETS it and the stream that READS it are different
- * instances. A SHORT ttl is the price: 600 seconds keeps one demo session working and then lets the dial
- * fall back to MONITOR_ONLY on its own, so a FULL_AUTO setting cannot quietly survive into a later
- * session. The AUDIT CHAIN moved for the same cross-instance reason; it is safe to share now only
+ * instances. A ttl is the price, and it is now a FEATURE rather than a leak: an elevated dial LAPSES back
+ * to MONITOR_ONLY on its own, so a FULL_AUTO setting cannot quietly survive into a later session. That
+ * lapse used to be silent, which was the real defect. setDial now stores the expiry alongside the
+ * position so the dashboard can show a live countdown, which is what makes a time-boxed elevation an
+ * honest control rather than a trap. CROWN_DIAL_TTL_S (default 1800) sets the window.
+ * The AUDIT CHAIN moved for the same cross-instance reason; it is safe to share now only
  * because AUDIT_INTEGRITY_KEY is set in the deployment, so a chain sealed on one instance still verifies
  * on another (see runner.ts integrityKey).
  */
+function dialTtlS(): number {
+  const n = Number(process.env.CROWN_DIAL_TTL_S);
+  return Number.isFinite(n) && n > 0 ? n : 1800;
+}
+
 const TTL_S = {
   queue: PENDING_TTL_MS / 1000,
   progress: 300,
-  dial: 600,
   chain: 900,
 } as const;
 
@@ -303,16 +310,53 @@ export const store = {
 /* The dial and the last run's audit chain live beside the queue but are deliberately NOT part of the
  * console-visible progress type. Separate accessors keep KonsolStatus verdict-free. */
 
-export async function getDial(): Promise<AutonomyMode> {
-  const cached = await pull(KEY.dial);
+/**
+ * The dial, with the one fact the previous version hid: when it lapses.
+ *
+ * An elevated position is TIME BOXED. It expires and the system falls back to CROWN_DIAL_DEFAULT, which
+ * is the fail-safe direction and is the behaviour we want. What was wrong was that it happened silently:
+ * a presenter could set HUMAN_GATED, talk for twelve minutes, run an attack, and get MONITOR_ONLY
+ * behaviour without ever being told why. So the stored value now carries its own deadline and the API
+ * hands it to the UI, which counts it down. Same safety, no ambush.
+ */
+export interface DialState {
+  position: AutonomyMode;
+  /** UTC ISO-8601 ms. null when the dial sits at the default, which never expires. */
+  expiresAtUtc: string | null;
+  defaultPosition: AutonomyMode;
+}
+
+function parseDial(raw: unknown): { position: AutonomyMode; expiresAtUtc: string } | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const o = raw as { position?: unknown; expiresAtUtc?: unknown };
+  if (!DIALS.includes(o.position as AutonomyMode)) return null;
+  if (typeof o.expiresAtUtc !== 'string') return null;
+  return { position: o.position as AutonomyMode, expiresAtUtc: o.expiresAtUtc };
+}
+
+export async function getDialState(): Promise<DialState> {
+  const dflt = defaultDial();
   // Anything the cache cannot prove to be one of the four positions falls back to the local dial, which
   // starts at CROWN_DIAL_DEFAULT. Failing safe is the point, so an unrecognised value never widens autonomy.
-  return DIALS.includes(cached as AutonomyMode) ? (cached as AutonomyMode) : read().dial;
+  const parsed = parseDial(await pull(KEY.dial));
+  if (!parsed) return { position: read().dial, expiresAtUtc: null, defaultPosition: dflt };
+  return {
+    position: parsed.position,
+    // The default position is a resting state, not an elevation, so it is not counted down.
+    expiresAtUtc: parsed.position === dflt ? null : parsed.expiresAtUtc,
+    defaultPosition: dflt,
+  };
+}
+
+export async function getDial(): Promise<AutonomyMode> {
+  return (await getDialState()).position;
 }
 
 export async function setDial(position: AutonomyMode): Promise<void> {
   write({ ...read(), dial: position });
-  await push(KEY.dial, position, TTL_S.dial);
+  const ttl = dialTtlS();
+  const expiresAtUtc = new Date(Date.now() + ttl * 1000).toISOString();
+  await push(KEY.dial, { position, expiresAtUtc }, ttl);
 }
 
 export async function setChain(records: ActionRecord[]): Promise<void> {

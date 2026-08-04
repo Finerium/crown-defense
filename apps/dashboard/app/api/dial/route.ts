@@ -4,12 +4,16 @@
  *
  * GET is public so the dashboard can display the current position. POST requires a console session: the
  * dial gates destructive autonomous action, so moving it is an operator act, not a page visitor's.
+ *
+ * GET also returns the expiry of an elevated position. Elevation is time boxed and lapses back to the
+ * default on its own, which is the fail-safe direction; returning the deadline is what keeps that lapse
+ * visible instead of an ambush mid demo.
  */
 import { AutonomyMode } from '@crown/contracts';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireSession } from '../../../lib/server/auth';
-import { getDial, setDial } from '../../../lib/server/store';
+import { getDialState, setDial } from '../../../lib/server/store';
 import type { DialResponse, PesanResponse } from '../../../lib/server/types';
 
 export const runtime = 'nodejs';
@@ -18,7 +22,7 @@ export const dynamic = 'force-dynamic';
 const Body = z.object({ position: AutonomyMode });
 
 export async function GET(): Promise<NextResponse<DialResponse>> {
-  return NextResponse.json({ position: await getDial() });
+  return NextResponse.json(await getDialState());
 }
 
 export async function POST(req: Request): Promise<NextResponse<DialResponse | PesanResponse>> {
@@ -31,5 +35,5 @@ export async function POST(req: Request): Promise<NextResponse<DialResponse | Pe
     return NextResponse.json({ pesan: 'Posisi dial tidak dikenal.' }, { status: 400 });
   }
   await setDial(parsed.data.position);
-  return NextResponse.json({ position: await getDial() });
+  return NextResponse.json(await getDialState());
 }

@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChartLabel, DemoScenario, FeedItem, FeedKind, Segment, SegmentState } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
-import { Btn, Glyph, Kpi, Panel, Sev } from '../ui';
 import { Kejujuran } from '../riwayat/Kejujuran';
+import { Btn, Glyph, Kpi, Panel, Sev } from '../ui';
 
 /**
  * Command Overview — ported 1:1 from the design (crown-defense-design/screen-overview.jsx). The design's

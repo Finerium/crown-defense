@@ -58,25 +58,36 @@ export default function Page() {
    * rather than pretending the change took.
    */
   const [dial, setDialState] = useState('MONITOR_ONLY'); // shipped default, corrected by the server below
+  /* Elevation is time boxed and lapses back to the default on its own. That is the fail-safe direction,
+     but it used to happen silently, so the deadline now travels with the position and gets counted down. */
+  const [tenggat, setTenggat] = useState<string | null>(null);
+  const [bawaan, setBawaan] = useState('MONITOR_ONLY'); // CROWN_DIAL_DEFAULT, told to us by the server
 
   useEffect(() => {
     let alive = true;
-    fetch('/api/dial')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { position?: string } | null) => {
-        if (alive && d?.position) setDialState(d.position);
-      })
-      .catch(() => {
-        /* offline: keep the safe default on screen rather than inventing a position */
-      });
-    const id = setInterval(() => {
+    const baca = (): void => {
       fetch('/api/dial')
         .then((r) => (r.ok ? r.json() : null))
-        .then((d: { position?: string } | null) => {
-          if (alive && d?.position) setDialState(d.position);
-        })
-        .catch(() => {});
-    }, 5000);
+        .then(
+          (
+            d: {
+              position?: string;
+              expiresAtUtc?: string | null;
+              defaultPosition?: string;
+            } | null
+          ) => {
+            if (!alive || !d?.position) return;
+            setDialState(d.position);
+            setTenggat(d.expiresAtUtc ?? null);
+            if (d.defaultPosition) setBawaan(d.defaultPosition);
+          }
+        )
+        .catch(() => {
+          /* offline: keep the safe default on screen rather than inventing a position */
+        });
+    };
+    baca();
+    const id = setInterval(baca, 5000);
     return () => {
       alive = false;
       clearInterval(id);
@@ -91,8 +102,10 @@ export default function Page() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ position }),
     })
-      .then((r) => {
-        if (!r.ok) setDialState(previous);
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('ditolak'))))
+      .then((d: { position?: string; expiresAtUtc?: string | null }) => {
+        if (d?.position) setDialState(d.position);
+        setTenggat(d?.expiresAtUtc ?? null);
       })
       .catch(() => setDialState(previous));
   };
@@ -208,7 +221,9 @@ export default function Page() {
           <Incident s={s} lang={lang} report={report} onGenerate={generate} generating={generating} />
         ) : null}
         {screen === 'fleet' ? <Fleet s={s} lang={lang} /> : null}
-        {screen === 'system' ? <System s={s} lang={lang} dial={dial} setDial={setDial} /> : null}
+        {screen === 'system' ? (
+          <System s={s} lang={lang} dial={dial} setDial={setDial} tenggat={tenggat} bawaan={bawaan} />
+        ) : null}
         {/* Live stays MOUNTED and is hidden with CSS instead of being unmounted. Unmounting threw away
             the whole telemetry stream state, so leaving the tab and coming back wiped the run history a
             presenter had just built up. display:contents keeps the existing layout exactly as it was.

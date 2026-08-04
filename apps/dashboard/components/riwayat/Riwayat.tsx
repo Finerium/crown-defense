@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import type { CatatanInsiden, RingkasanInsiden } from '../../lib/server/types';
 import { type Lang, t } from '../../lib/i18n';
+import type { CatatanInsiden, RingkasanInsiden } from '../../lib/server/types';
 import { Btn, Glyph, Panel } from '../ui';
 import { BuktiHidup } from './Bukti';
 

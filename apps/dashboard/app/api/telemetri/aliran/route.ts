@@ -15,8 +15,8 @@
 import { randomBytes } from 'node:crypto';
 import type { ActionRecord } from '@crown/contracts';
 import type { NextRequest } from 'next/server';
-import { runScenario } from '../../../../lib/server/runner';
 import { type CatatanInsiden, simpanInsiden } from '../../../../lib/server/insiden';
+import { runScenario } from '../../../../lib/server/runner';
 import { scenarioById, summarize } from '../../../../lib/server/scenarios';
 import { getDial, publishRun, readRun, setChain, store } from '../../../../lib/server/store';
 import type { AliranEvent, SelesaiEvent } from '../../../../lib/server/types';

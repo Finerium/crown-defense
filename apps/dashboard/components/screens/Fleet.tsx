@@ -47,7 +47,12 @@ function HostDrawer({
         onClick={onClose}
         style={{ border: 'none', cursor: 'pointer' }}
       />
-      <aside className="drawer" role="dialog" aria-label={tf('drawer_host', lang, { name: host.name })}>
+      <aside
+        className="drawer"
+        // biome-ignore lint/a11y/useSemanticElements: a non-modal side drawer is not <dialog>; <dialog> traps focus and dims the page, which would hide the fleet table this drawer is meant to be read against. role=dialog + aria-label is the correct ARIA mapping, and the sibling backdrop button closes it from the keyboard.
+        role="dialog"
+        aria-label={tf('drawer_host', lang, { name: host.name })}
+      >
         <div className="drawer-h">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)' }}>
@@ -259,9 +264,9 @@ export function Fleet({ s, lang }: { s: DemoScenario; lang: Lang }) {
             </thead>
             <tbody>
               {rows.map((h) => (
-                // biome-ignore lint/a11y/useSemanticElements: a clickable table row has no semantic HTML equivalent; role=button + tabIndex + onKeyDown make it keyboard-operable (WCAG 2.1.1)
                 <tr
                   key={h.name}
+                  // biome-ignore lint/a11y/useSemanticElements: a clickable table row has no semantic HTML equivalent; role=button + tabIndex + onKeyDown make it keyboard-operable (WCAG 2.1.1)
                   role="button"
                   tabIndex={0}
                   aria-label={tf('drawer_host', lang, { name: h.name })}
