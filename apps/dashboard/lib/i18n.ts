@@ -16,8 +16,8 @@ export const STRINGS = {
   kpi_auto_contain: { en: 'Auto-containments (24h)', id: 'Kontainmen otomatis (24j)' },
   kpi_mttr: { en: 'Containment decision, p95', id: 'Keputusan containment, p95' },
   kpi_mttr_sub: {
-    en: 'MEASURED, 200 RUNS, NOT A FIELD TREND',
-    id: 'TERUKUR, 200 PROSES, BUKAN TREN LAPANGAN',
+    en: 'VERDICT TO EXECUTED, MEASURED LIVE, NOT A FIELD TREND',
+    id: 'VONIS SAMPAI DIEKSEKUSI, TERUKUR LANGSUNG, BUKAN TREN LAPANGAN',
   },
   dial: { en: 'Autonomy dial', id: 'Dial otonomi' },
   dial_monitor: { en: 'Monitor only', id: 'Hanya pantau' },

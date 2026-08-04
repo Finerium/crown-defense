@@ -225,6 +225,7 @@ export async function runScenario(
     const latency = emptyLatency();
 
     let verdict: DetectionVerdict | null = null;
+  let suppressionAtVerdict: string | null = null;
     let lastVerdictLabel: DetectionVerdict['verdict'] = 'BENIGN';
     let containmentExecuted = false;
     let disposition: SelesaiEvent['disposition'] = null;
@@ -272,6 +273,7 @@ export async function runScenario(
 
       if (verdict === null && res.verdict.verdict === 'MASS_ENCRYPTION') {
         verdict = res.verdict;
+        suppressionAtVerdict = res.suppressionReason;
         latency.paced_out_ms = pacedMs;
         latency.detection_wall_ms = Math.max(0, tIngest - t0 - pacedMs);
         latency.detection_timeline_ms =
@@ -318,7 +320,12 @@ export async function runScenario(
         const cStart = Date.now();
         // The dial comes from the caller. At MONITOR_ONLY the module decides NOT to execute and the
         // reason below is the module's own string, verbatim. Nothing here synthesises a message.
-        const out = await cm.handleVerdict(verdict, dial, true, { incidentId: runId });
+        const out = await cm.handleVerdict(verdict, dial, true, {
+          incidentId: runId,
+          // Carry the allow-list reason into the permanent record, so "the suppression is auditable"
+          // becomes true of the exported chain and not just of an SSE frame nobody keeps.
+          suppressionReason: suppressionAtVerdict,
+        });
         latency.containment_wall_ms = Date.now() - cStart;
 
         containmentExecuted = out.result?.outcome === 'EXECUTED';

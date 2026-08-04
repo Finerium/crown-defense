@@ -411,8 +411,14 @@ const SCENARIO: DemoScenario = {
     // has never run in production, so there is nothing to be 38% better than. Replaced with the measured
     // containment decision latency from reports/containment/latency.json (200 runs, p95 0.066 ms), and
     // the label now says what it actually is instead of implying a field trend.
-    mttr: '0.066',
-    mttrUnit: 'ms p95',
+    // Second correction. The first replacement here used 0.066 ms p95 from
+    // reports/containment/latency.json, but that harness SPIES the audit sink and the command issuer, so
+    // it times the policy decision with no I/O at all. A real run on the Live tab reports
+    // containment_wall_ms around 5 ms, which includes sealing the audit record and issuing the command.
+    // Showing 0.066 next to a live 5 was a 76x contradiction inside one product. This is now the
+    // end-to-end number, and the sub-label says which one it is.
+    mttr: '5',
+    mttrUnit: 'ms',
     mttrDeltaPct: null,
   },
 

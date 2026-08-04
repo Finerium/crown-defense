@@ -36,7 +36,7 @@ export interface DecisionContext {
 export interface DecisionResult {
   verdict: DetectionVerdict;
   suppressedByAllowlist: boolean;
-  suppressionReason: string | null; // flows to the C4 ActionRecord.justification at containment time
+  suppressionReason: string | null; // carried into the C4 ActionRecord.justification and detail (AC-FP-02)
   attributedProcesses: string[];
 }
 

@@ -68,7 +68,13 @@ export class ContainmentModule {
     verdict: DetectionVerdict,
     configuredMode: AutonomyMode,
     controlPlaneReachable: boolean,
-    opts: { incidentId?: string } = {}
+    /**
+     * suppressionReason: AC-FP-02 claims allow-list suppression is "auditable". It was not. The engine
+     * produced the reason, the SSE tick carried it, and then it died there: the permanent hash chain,
+     * the only thing that can be exported, never mentioned the allow-list at all. Optional so the eight
+     * other callers of handleVerdict keep working unchanged.
+     */
+    opts: { incidentId?: string; suppressionReason?: string | null } = {}
   ): Promise<ContainmentOutcome> {
     // Validate the verdict at this trust boundary (assume an unvalidated/hostile producer) and re-assert
     // the C2 destructive invariant; a verdict that fails is treated as non-actionable (review MEDIUM).
@@ -140,7 +146,7 @@ export class ContainmentModule {
     const at: ActionType = decision.disposition === 'ALERT_ONLY' ? 'ALERT_RAISED' : 'RECOMMENDATION_MADE';
     const outcome = decision.disposition === 'ALERT_ONLY' ? 'EXECUTED' : 'BLOCKED';
     const record = await this.audit.append(
-      this.actionRecord(at, outcome, decision, verdict, incidentId, true)
+      this.actionRecord(at, outcome, decision, verdict, incidentId, true, null, opts.suppressionReason)
     );
     return {
       decision,
@@ -158,7 +164,8 @@ export class ContainmentModule {
     verdict: DetectionVerdict,
     incidentId: string | null,
     reversible: boolean,
-    detail?: string | null
+    detail?: string | null,
+    suppressionReason?: string | null
   ): Omit<ActionRecord, 'chain_seq' | 'prev_hash' | 'record_hash'> {
     const destructive = action === 'ISOLATE_HOST';
     return {
@@ -175,12 +182,18 @@ export class ContainmentModule {
       justification: {
         verdict_id: verdict.verdict_id,
         confidence: verdict.confidence,
-        signals_summary: decision.reason,
+        // The suppression reason is appended rather than replacing the decision reason, so the record
+        // says BOTH what containment decided and why detection held the destructive action back.
+        signals_summary: suppressionReason
+          ? `${decision.reason} | allow-list: ${suppressionReason}`
+          : decision.reason,
       },
       reversible,
       rollback_deadline: destructive && outcome === 'EXECUTED' ? this.deadline() : null,
       outcome,
-      detail: detail ?? decision.reason,
+      detail:
+        detail ??
+        (suppressionReason ? `${decision.reason} | allow-list: ${suppressionReason}` : decision.reason),
     };
   }
 
