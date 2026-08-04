@@ -331,11 +331,7 @@ export function Overview({ s, lang, onOpen }: { s: DemoScenario; lang: Lang; onO
           label={t('kpi_mttr', lang)}
           value={K.mttr}
           unit={K.mttrUnit}
-          sub={
-            <span>
-              <span className="pos">▾ {K.mttrDeltaPct}%</span> {t('vs_baseline', lang).toUpperCase()}
-            </span>
-          }
+          sub={<span>{t('kpi_mttr_sub', lang).toUpperCase()}</span>}
         />
       </div>
       <div className="ov-grid">

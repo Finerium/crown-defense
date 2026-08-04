@@ -14,7 +14,11 @@ export const STRINGS = {
   kpi_active_threats: { en: 'Active threats', id: 'Ancaman aktif' },
   kpi_hosts_protected: { en: 'Hosts protected', id: 'Host terlindungi' },
   kpi_auto_contain: { en: 'Auto-containments (24h)', id: 'Kontainmen otomatis (24j)' },
-  kpi_mttr: { en: 'Mean time to respond', id: 'Rata-rata waktu respons' },
+  kpi_mttr: { en: 'Containment decision, p95', id: 'Keputusan containment, p95' },
+  kpi_mttr_sub: {
+    en: 'MEASURED, 200 RUNS, NOT A FIELD TREND',
+    id: 'TERUKUR, 200 PROSES, BUKAN TREN LAPANGAN',
+  },
   dial: { en: 'Autonomy dial', id: 'Dial otonomi' },
   dial_monitor: { en: 'Monitor only', id: 'Hanya pantau' },
   dial_alert: { en: 'Alert & recommend', id: 'Peringatan & rekomendasi' },

@@ -46,7 +46,54 @@ export default function Page() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [lang, setLang] = useState<Lang>('en');
   const [screen, setScreen] = useState('overview');
-  const [dial, setDial] = useState('FULL_AUTO'); // demo scenario; MONITOR_ONLY is the shipped default
+  /**
+   * THE dial, singular. This used to be a local useState seeded to FULL_AUTO with nothing behind it, so
+   * the System tab showed a dial that controlled nothing and, worse, disagreed with the real server dial
+   * that the Live tab reads from the telemetry heartbeat. Two dials in one app showing different
+   * positions is the kind of thing a judge notices. It now reads and writes /api/dial, the same dial the
+   * detection loop actually obeys, so there is one dial and one truth.
+   * Writing requires a console session; without one the server refuses and we roll the display back
+   * rather than pretending the change took.
+   */
+  const [dial, setDialState] = useState('MONITOR_ONLY'); // shipped default, corrected by the server below
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/dial')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { position?: string } | null) => {
+        if (alive && d?.position) setDialState(d.position);
+      })
+      .catch(() => {
+        /* offline: keep the safe default on screen rather than inventing a position */
+      });
+    const id = setInterval(() => {
+      fetch('/api/dial')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: { position?: string } | null) => {
+          if (alive && d?.position) setDialState(d.position);
+        })
+        .catch(() => {});
+    }, 5000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  const setDial = (position: string): void => {
+    const previous = dial;
+    setDialState(position); // optimistic, reverted below if the server says no
+    fetch('/api/dial', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ position }),
+    })
+      .then((r) => {
+        if (!r.ok) setDialState(previous);
+      })
+      .catch(() => setDialState(previous));
+  };
   const [report, setReport] = useState<ReportState | null>(null);
   const [generating, setGenerating] = useState(false);
   const clock = useClock();

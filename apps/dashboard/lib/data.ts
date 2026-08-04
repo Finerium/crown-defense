@@ -187,7 +187,7 @@ export interface Kpis {
   escalations: number;
   mttr: string;
   mttrUnit: string;
-  mttrDeltaPct: number;
+  mttrDeltaPct: number | null;
 }
 
 export interface ChartLabel {
@@ -366,7 +366,7 @@ const FEED_RAW: Omit<FeedItem, 'meta'>[] = [
   {
     t: '03:14:07',
     kind: 'detect',
-    text: 'VANTAR ransomware confirmed · confidence 0.97 · latency 1.8s',
+    text: 'VANTAR ransomware confirmed · confidence 0.97 · latency 6 ms',
     host: 'mrh-rad-ws-07',
   },
   { t: '03:02:11', kind: 'policy', text: 'Egress policy refresh applied to 1,284 agents', host: null },
@@ -407,9 +407,13 @@ const SCENARIO: DemoScenario = {
     containmentsToday: 3,
     lastContainmentAt: '03:14:09',
     escalations: 0,
-    mttr: '2.4',
-    mttrUnit: 's',
-    mttrDeltaPct: 38,
+    // Was a fabricated "2.4 s, down 38% vs a 30-day baseline". There is no 30-day baseline: this system
+    // has never run in production, so there is nothing to be 38% better than. Replaced with the measured
+    // containment decision latency from reports/containment/latency.json (200 runs, p95 0.066 ms), and
+    // the label now says what it actually is instead of implying a field trend.
+    mttr: '0.066',
+    mttrUnit: 'ms p95',
+    mttrDeltaPct: null,
   },
 
   incident: {
