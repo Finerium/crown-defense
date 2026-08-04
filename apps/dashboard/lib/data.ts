@@ -415,9 +415,15 @@ const SCENARIO: DemoScenario = {
     // reports/containment/latency.json, but that harness SPIES the audit sink and the command issuer, so
     // it times the policy decision with no I/O at all. A real run on the Live tab reports
     // containment_wall_ms around 5 ms, which includes sealing the audit record and issuing the command.
-    // Showing 0.066 next to a live 5 was a 76x contradiction inside one product. This is now the
-    // end-to-end number, and the sub-label says which one it is.
-    mttr: '5',
+    // Showing 0.066 next to a live 5 was a 76x contradiction inside one product.
+    //
+    // Third correction, and this one is mine to own: "5" was a single observation dressed up as a p95,
+    // and "verdict to executed" described a path it had not taken. Seven runs persisted in the incident
+    // log on 2026-08-04 measured containment_wall_ms of 1, 3, 3, 4, 4, 6 and 13, so 5 is neither the p95
+    // nor the median, and every one of those runs finished ALERT_ONLY or MONITOR_ONLY with executed=false
+    // and command=null. A range across a stated number of recorded runs is what the evidence supports.
+    // Re-measure if more runs are recorded before the freeze; the records are readable at /api/insiden.
+    mttr: '1-13',
     mttrUnit: 'ms',
     mttrDeltaPct: null,
   },
@@ -587,7 +593,10 @@ const SCENARIO: DemoScenario = {
           sev: 'talos',
           title: 'Ransomware behavior confirmed — VANTAR · conf 0.97',
           host: ENGINE_ID,
-          detail: 'Detection latency 1.8s from first encryption event',
+          // The header stat on this same screen prints the measured engine p50 (6 ms). A second, larger
+          // latency number here read as a 300x contradiction on one screen, and 1.8s was fabricated:
+          // this now names the clock it is actually on, which is the fixture's own scenario timeline.
+          detail: 'Verdict raised 2.2 s into the scenario timeline (fixture clock, not engine latency)',
           conf: 0.97,
         },
         {
