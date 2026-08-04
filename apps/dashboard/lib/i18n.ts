@@ -868,6 +868,14 @@ export const STRINGS = {
   },
   // A HUMAN_GATED verdict is PROPOSED, not refused. Rendering it as a refusal made the panel header
   // contradict the reason quoted directly underneath it.
+  llm_ratelimit_title: {
+    en: 'Analysis quota reached, the model is fine',
+    id: 'Kuota analisis tercapai, modelnya baik-baik saja',
+  },
+  llm_ratelimit_body: {
+    en: 'Each live analysis is a real, paid call to the model, so this demo caps how many can run in a window. The cap has been reached; it resets shortly. Nothing is down.',
+    id: 'Setiap analisis langsung adalah panggilan berbayar sungguhan ke model, jadi demo ini membatasi berapa banyak yang bisa berjalan dalam satu jendela waktu. Batasnya sudah tercapai dan akan pulih sebentar lagi. Tidak ada yang mati.',
+  },
   lv_tunggu: { en: 'Held for a second approver', id: 'Ditahan menunggu penyetuju kedua' },
   lv_tunggu_head: { en: 'AWAITING A SECOND APPROVER', id: 'MENUNGGU PENYETUJU KEDUA' },
   lv_tunggu_lead: {

@@ -16,6 +16,19 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
+/**
+ * The incident the model is asked to analyse.
+ *
+ * Every value here MUST match what the Incident tab has on screen. It used to describe a different
+ * incident entirely: host h-0000, extension .brain, family BrainCipher, 1,240 files, while the screen
+ * beside it showed mrh-rad-ws-07, .vntr, VANTAR and 1,847. So the one genuinely live, genuinely
+ * expensive feature in the product returned a summary naming hosts and a family that appear nowhere else
+ * in the app. An app that disagrees with itself in its most credible moment reads as an app where
+ * nothing is connected to anything.
+ *
+ * The host ids stay in the C1 `h-` shape the contracts use; the labels a viewer reads come from the
+ * display names, and both now point at the same machines.
+ */
 function incidentContext(): IncidentContext {
   return {
     schema_version: SCHEMA_VERSION,
@@ -24,8 +37,8 @@ function incidentContext(): IncidentContext {
     trigger_verdict: {
       schema_version: SCHEMA_VERSION,
       verdict_id: 'vd-inc-004',
-      host_id: 'h-0000',
-      agent_id: 'agent-h-0000',
+      host_id: 'mrh-rad-ws-07',
+      agent_id: 'agent-mrh-rad-ws-07',
       decided_at: '2026-06-12T03:14:07.200Z',
       verdict: 'MASS_ENCRYPTION',
       confidence: 0.92,
@@ -39,7 +52,7 @@ function incidentContext(): IncidentContext {
           detail: '6 files structurally invalid',
         },
         { signal_type: 'OP_FREQUENCY', fired: true, score: 0.7, detail: 'peak 280 writes/s' },
-        { signal_type: 'TYPE_HEADER_CHANGE', fired: true, score: 0.6, detail: 'extension -> .brain' },
+        { signal_type: 'TYPE_HEADER_CHANGE', fired: true, score: 0.6, detail: 'extension -> .vntr' },
       ],
       corroborating_count: 4,
       recommended_action: 'ISOLATE_HOST',
@@ -49,29 +62,29 @@ function incidentContext(): IncidentContext {
     containment_actions: [],
     affected_hosts: [
       {
-        host_id: 'h-0000',
+        host_id: 'mrh-rad-ws-07',
         status: 'COMPROMISED',
         role: 'workstation',
         first_event_at: '2026-06-12T03:13:55.000Z',
       },
       {
-        host_id: 'h-0001',
+        host_id: 'mrh-ehr-app-02',
         status: 'CONTAINED',
         role: 'file-server',
         first_event_at: '2026-06-12T03:14:10.000Z',
       },
-      { host_id: 'h-0002', status: 'CONTAINED', role: 'domain-controller', first_event_at: null },
-      { host_id: 'h-0003', status: 'SCANNING', role: 'db-server', first_event_at: null },
+      { host_id: 'mrh-dc-01', status: 'CONTAINED', role: 'domain-controller', first_event_at: null },
+      { host_id: 'mrh-ehr-db-01', status: 'SCANNING', role: 'db-server', first_event_at: null },
     ],
     topology_edges: [
-      { from_host: 'h-0000', to_host: 'h-0001', reachable_service: 'SMB', status: 'BLOCKED' },
-      { from_host: 'h-0000', to_host: 'h-0002', reachable_service: 'RDP', status: 'BLOCKED' },
-      { from_host: 'h-0001', to_host: 'h-0003', reachable_service: 'SMB', status: 'ACTIVE' },
+      { from_host: 'mrh-rad-ws-07', to_host: 'mrh-ehr-app-02', reachable_service: 'SMB', status: 'BLOCKED' },
+      { from_host: 'mrh-rad-ws-07', to_host: 'mrh-dc-01', reachable_service: 'RDP', status: 'BLOCKED' },
+      { from_host: 'mrh-ehr-app-02', to_host: 'mrh-ehr-db-01', reachable_service: 'SMB', status: 'ACTIVE' },
     ],
     telemetry_summary: {
-      total_files_touched: 1240,
+      total_files_touched: 1847,
       encryption_rate_est: 80,
-      families_indicated: ['BrainCipher', 'LockBit-3.0'],
+      families_indicated: ['VANTAR', 'LockBit-class'],
     },
   };
 }

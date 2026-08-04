@@ -58,9 +58,28 @@ export function envLimit(key: string, dflt: number): number {
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : dflt;
 }
 
-/** Caller key for per-IP limits. Unknown proxies collapse to one shared bucket, which fails closed. */
+/**
+ * Caller key for per-IP limits. Unknown proxies collapse to one shared bucket, which fails closed.
+ *
+ * The leftmost x-forwarded-for hop is written by the CLIENT, so keying on it let anyone mint a fresh
+ * bucket per request just by rotating a header. That single hole gated two different things: unbounded
+ * password guesses against the console login, and the global spend cap on the live model. An adversarial
+ * judge rotating the header could have drained the model budget and 429ed the presenter's own demo.
+ *
+ * x-real-ip is set by the Vercel edge and cannot be overridden from outside, so it is preferred. The XFF
+ * fallback now reads the LAST hop, which is the one closest to the infrastructure rather than the one
+ * furthest from it, and a client-supplied prefix cannot displace it.
+ */
 export function callerIp(req: Request): string {
+  const real = req.headers.get('x-real-ip')?.trim();
+  if (real) return real;
   const fwd = req.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0]?.trim() || 'tak-dikenal';
-  return req.headers.get('x-real-ip')?.trim() || 'tak-dikenal';
+  if (fwd) {
+    const hops = fwd
+      .split(',')
+      .map((h) => h.trim())
+      .filter(Boolean);
+    return hops[hops.length - 1] || 'tak-dikenal';
+  }
+  return 'tak-dikenal';
 }

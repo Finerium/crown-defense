@@ -29,6 +29,8 @@ export interface ReportState {
   plan: {
     steps: { order: number; action: string; rationale: string; playbook_ref: string; priority: string }[];
   } | null;
+  /** Server-supplied explanation for a non-OK status. UI only; not part of the C7 contract. */
+  pesan?: string | null;
 }
 
 /* Clock anchored to the demo's frozen UTC moment (mirrors the page chrome clock); SSR-safe static seed. */
@@ -598,6 +600,27 @@ function RecoveryLLM({
         >
           <Glyph k="diamond" size={9} /> {t('routed_human', lang)}
           {report.faithfulness ? ` (${report.faithfulness.score})` : ''}
+        </div>
+      ) : report.status === 'RATE_LIMITED' ? (
+        // A spend cap is not an outage, and saying so matters: the venue is behind one NAT address, so
+        // every judge shares a bucket and the fifth report in ten minutes would otherwise announce that
+        // the model is dead at the exact moment the pitch says it is live and self-hosted.
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 6,
+            background: 'var(--bg2)',
+            border: '1px solid var(--line)',
+            fontSize: 12,
+            display: 'grid',
+            gap: 6,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--med)' }}>
+            <Glyph k="tri" size={9} />
+            <strong>{t('llm_ratelimit_title', lang)}</strong>
+          </div>
+          <p style={{ color: 'var(--t2)', margin: 0 }}>{report.pesan ?? t('llm_ratelimit_body', lang)}</p>
         </div>
       ) : report.status !== 'OK' ? (
         // Degraded must look degraded. Falling through to the success branch rendered an empty panel

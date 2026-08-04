@@ -137,7 +137,17 @@ export function requireSession(req: Request): Session | null {
     const eqAt = part.indexOf('=');
     if (eqAt < 0) continue;
     if (part.slice(0, eqAt).trim() !== SESSION_COOKIE) continue;
-    return readSession(decodeURIComponent(part.slice(eqAt + 1).trim()));
+    // A malformed percent-escape makes decodeURIComponent THROW, and this runs on every protected
+    // route, so `Cookie: konsol_sesi=%` turned four gated endpoints into 500s. No access was granted,
+    // but the highest-value auth path in the app must deny rather than throw: fail-safe means the
+    // failure mode is a closed door, not an error page.
+    let mentah: string;
+    try {
+      mentah = decodeURIComponent(part.slice(eqAt + 1).trim());
+    } catch {
+      return null;
+    }
+    return readSession(mentah);
   }
   return null;
 }

@@ -126,6 +126,23 @@ export default function Page() {
     setGenerating(true);
     try {
       const r = await fetch('/api/analyze', { method: 'POST' });
+      if (!r.ok) {
+        // Without this check a 429 body {pesan} was cast to ReportState, status came out undefined, and
+        // the panel announced "model layer unavailable". A rate limit is the model working and being
+        // rationed, which is close to the opposite claim.
+        const body = (await r.json().catch(() => null)) as { pesan?: string } | null;
+        setReport({
+          live: false,
+          status: r.status === 429 ? 'RATE_LIMITED' : 'LLM_UNAVAILABLE',
+          routed_to_human: false,
+          model_id: '-',
+          faithfulness: null,
+          report: null,
+          plan: null,
+          pesan: body?.pesan ?? null,
+        });
+        return;
+      }
       setReport((await r.json()) as ReportState);
     } catch {
       setReport({

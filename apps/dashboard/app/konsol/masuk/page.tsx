@@ -70,7 +70,10 @@ export default function Page() {
             ) : null}
           </div>
 
-          <form onSubmit={kirim} noValidate>
+          {/* method="post" matters even though onSubmit handles this: before hydration, or with JS off,
+              a submit falls back to the browser's native behaviour, and the default is GET. That would
+              put the operator password into the URL, the history, and the server access log. */}
+          <form onSubmit={kirim} method="post" noValidate>
             <label className="kn-field" htmlFor="kn-email">
               <span>Email</span>
               <input

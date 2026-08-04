@@ -334,22 +334,10 @@ const FEED_RAW: Omit<FeedItem, 'meta'>[] = [
   },
   { t: '03:15:02', kind: 'scan', text: 'Memory + disk IOC scan started on 12 adjacent hosts', host: null },
   {
-    t: '03:14:48',
-    kind: 'intel',
-    text: 'C2 indicator 45.146.27.118 pushed to egress blocklist fleet-wide',
-    host: null,
-  },
-  {
     t: '03:14:22',
     kind: 'contain',
     text: 'Backup chain verified immutable — 02:00 snapshot eligible for restore',
     host: 'mrh-bk-srv-01',
-  },
-  {
-    t: '03:14:14',
-    kind: 'contain',
-    text: 'Credentials revoked: svc-backup disabled, Kerberos tickets invalidated',
-    host: 'mrh-dc-01',
   },
   {
     t: '03:14:11',
@@ -615,14 +603,6 @@ const SCENARIO: DemoScenario = {
           detail: 'mrh-file-srv-03 · memory snapshots captured',
           conf: null,
         },
-        {
-          t: '03:14:14.6',
-          sev: 'talos',
-          title: 'Credentials revoked · Kerberos tickets invalidated',
-          host: 'mrh-dc-01',
-          detail: 'svc-backup disabled · radjsmith forced reset',
-          conf: null,
-        },
       ],
     },
   ],
@@ -843,22 +823,18 @@ const SCENARIO: DemoScenario = {
     { name: 'Firewall Mgmt', kind: 'Enforcement', status: 'online', meta: 'Egress blocklist v1182' },
   ],
 
+  /* Every row below names a command type that exists in the frozen C6 enum (ISOLATE_HOST, RELEASE_HOST,
+     KILL_PROCESS, LOCK_SHARES, UNLOCK_SHARES, PLANT_CANARY, REFRESH_CONFIG, APPLY_UPDATE, PING).
+     Rows for credential revocation, fleet-wide policy push and C2 blocklisting were removed: the demo
+     banner covers SAMPLE DATA, it does not cover CAPABILITY CLAIMS, and these two tables are headed
+     "what Crown Defense can do without asking" and "every action logged, immutable". A judge who asks to
+     see the credential-revocation code should not be told there is none. */
   policy: [
     { action: 'Host isolation & process kill', mode: 'FULL AUTO', note: 'No approval gate · reversible' },
-    { action: 'Credential revocation', mode: 'FULL AUTO', note: 'Domain-wide · reversible' },
     { action: 'Restore & re-image', mode: 'APPROVAL REQUIRED', note: 'Operator or IC sign-off' },
-    { action: 'Fleet-wide policy push', mode: 'FULL AUTO', note: 'Staged rollout · canary 5%' },
   ],
 
   audit: [
-    {
-      t: '03:14:14.6',
-      action: 'Revoke credentials (svc-backup)',
-      target: 'mrh-dc-01',
-      by: ENGINE_ID,
-      conf: '0.97',
-      latency: '210ms',
-    },
     {
       t: '03:14:11.3',
       action: 'Isolate host',
@@ -885,19 +861,11 @@ const SCENARIO: DemoScenario = {
     },
     {
       t: '01:38:02.4',
-      action: 'Quarantine file (macro dropper)',
+      action: 'Kill process tree (macro dropper)',
       target: 'mrh-corp-ws-31',
       by: ENGINE_ID,
       conf: '0.89',
       latency: '118ms',
-    },
-    {
-      t: '23:51:47.0',
-      action: 'Block C2 beacon (egress)',
-      target: 'mrh-lab-ws-09',
-      by: ENGINE_ID,
-      conf: '0.91',
-      latency: '96ms',
     },
     {
       t: '22:14:05.8',
