@@ -1105,21 +1105,33 @@ html.capture .panel-h .p-sub {
       "table table";
   }
 }
+/* ---------- topbar shrink order ----------
+   The header holds a brand, six tabs and a right-hand cluster of chips, and there is a width below which
+   they do not all fit. Measured at 1200px: the bar reported a 54px height around 70px of content, the
+   brand wrapped to three lines and pushed its own text above the visible area, and "Fleet & Hosts" broke
+   across two lines. That threshold moved when the sixth tab was added, so the collapse has to start
+   earlier than the grid changes do.
+
+   These rules define WHICH things give way and in what order, rather than letting the browser decide by
+   wrapping: the brand subtitle goes first, then the operator chip, then the tab padding tightens. Nothing
+   in the bar is allowed to wrap, because a wrapping header silently clips its own first line. */
+@media (max-width: 1400px) {
+  .brand-sub {
+    display: none;
+  }
+  .op-chip {
+    display: none;
+  }
+  .nav-tab {
+    padding: 6px 9px;
+  }
+}
 @media (max-width: 1100px) {
   .ov-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .kpi-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .op-chip {
-    display: none;
-  }
-  .brand-sub {
-    display: none;
-  }
-  .nav-tab {
-    padding: 6px 9px;
   }
   .sys-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1208,5 +1220,27 @@ html.capture .panel-h .p-sub {
   }
   .app-main {
     padding: 12px 12px 32px;
+  }
+}
+
+/* A header that wraps clips its own first line, which is how the brand ended up cut off at the top.
+   Above the phone breakpoint the bar stays on one row and its parts shrink or hide instead. */
+@media (min-width: 881px) {
+  .topbar {
+    flex-wrap: nowrap;
+  }
+  .brand-name,
+  .brand-sub,
+  .nav-tab {
+    white-space: nowrap;
+  }
+  .nav {
+    flex-wrap: nowrap;
+  }
+  .inc-chip {
+    max-width: 22vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
