@@ -1183,6 +1183,20 @@ html.capture .panel-h .p-sub {
   }
 }
 @media (max-width: 480px) {
+  /* Wrap the tab strip instead of scrolling it. Measured on a 390px viewport: the six tabs need 461px
+     inside a 356px strip, so Live and History sat off the right edge and needed a horizontal swipe to
+     find. Live is the one tab where anything actually runs, and the Overview panel tells a judge to
+     start there, so it must not be hidden behind a gesture nobody thinks to make. Two rows of tabs is a
+     cheaper price than an invisible tab. */
+  .nav {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    row-gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
   .brand-name {
     font-size: 15px;
     letter-spacing: 0.08em;
