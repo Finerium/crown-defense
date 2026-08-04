@@ -434,12 +434,7 @@ function ResponsePlan({ s, lang, clock }: { s: DemoScenario; lang: Lang; clock: 
                       <Glyph k="ring" size={8} />
                       {t('awaiting_approval', lang)}
                     </span>
-                    <Btn kind="primary" sm onClick={() => act(st.n, 'queued')}>
-                      {t('approve', lang)}
-                    </Btn>
-                    <Btn sm onClick={() => act(st.n, 'held')}>
-                      {t('override', lang)}
-                    </Btn>
+                    <span className="badge bd-mut">{t('demo_sample_control', lang)}</span>
                   </>
                 ) : null}
                 {st.status === 'queued' ? (
@@ -649,9 +644,11 @@ function RecoveryLLM({
                     {t('plan_cite', lang)}: {st.playbook_ref}
                   </div>
                 </div>
-                <Btn sm kind="primary">
-                  {t('approve', lang)}
-                </Btn>
+                {/* There used to be an "Approve" button here, one per plan step, with no onClick at all.
+                    Seven dead buttons sitting INSIDE the genuinely live LLM panel, borrowing its
+                    credibility, directly above a line that reads "advisory only, never issues an
+                    action". A button that contradicts the sentence beneath it is worse than no button,
+                    so it is gone. The C7 layer emits advice; approving is not its job. */}
               </div>
             ))}
           </div>
@@ -673,6 +670,14 @@ function ApprovalQueue({ s, lang }: { s: DemoScenario; lang: Lang }) {
   const [acted, setActed] = useState<Record<number, 'approved' | 'overridden' | undefined>>({});
   return (
     <Panel title={t('approval_queue', lang)} sub={t('dual_control_sub', lang)} bodyClass="flush">
+      {/* Say what this panel is before a judge has to work it out. Honesty here costs one line and buys
+          the credibility of everything on the Live tab that IS real. */}
+      <div
+        className="mono"
+        style={{ padding: '9px 16px', fontSize: 10.5, lineHeight: 1.5, color: 'var(--t3)' }}
+      >
+        {t('demo_sample_why', lang)}
+      </div>
       {pending.length === 0 ? (
         <div className="empty-note">{t('no_pending_approvals', lang)}</div>
       ) : (
@@ -685,16 +690,11 @@ function ApprovalQueue({ s, lang }: { s: DemoScenario; lang: Lang }) {
               <div className="plan-foot">
                 {!a ? (
                   <>
-                    <Btn
-                      kind="primary"
-                      sm
-                      onClick={() => setActed((prev) => ({ ...prev, [p.n]: 'approved' }))}
-                    >
-                      {t('approve', lang)} {t('approver_two', lang)}
-                    </Btn>
-                    <Btn sm onClick={() => setActed((prev) => ({ ...prev, [p.n]: 'overridden' }))}>
-                      {t('override', lang)}
-                    </Btn>
+                    <span className="badge bd-med">
+                      <Glyph k="ring" size={8} />
+                      {t('awaiting_approval', lang)}
+                    </span>
+                    <span className="badge bd-mut">{t('demo_sample_control', lang)}</span>
                     <span
                       className="mono"
                       style={{ fontSize: 10, color: 'var(--t3)', letterSpacing: '0.04em' }}

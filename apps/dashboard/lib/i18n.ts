@@ -148,6 +148,18 @@ export const STRINGS = {
     id: 'terakhir {at} UTC · {n} eskalasi operator',
   },
   vs_baseline: { en: 'vs 30-day baseline', id: 'vs baseline 30-hari' },
+  // Phase 7 (an approval flow that actually executes) is deliberately not built, and progress.json says
+  // so. Rendering working-looking Approve buttons for it was worse than saying that out loud: the
+  // "approved" state even stamped OPR-03, the operator in the topbar, as the SECOND approver, which is
+  // precisely the actor==approver case C4 requires to be rejected.
+  demo_sample_control: {
+    en: 'SAMPLE, sends no action',
+    id: 'CONTOH, tidak mengirim aksi',
+  },
+  demo_sample_why: {
+    en: 'Dual control that really executes is Phase 7 and is not built. The dial and the audit chain on the Live tab are real; this queue is sample data.',
+    id: 'Kendali ganda yang benar-benar mengeksekusi adalah Phase 7 dan belum dibangun. Dial dan rantai audit di tab Langsung nyata; antrean ini data contoh.',
+  },
   threat_sub: { en: 'events / min · last 60 min', id: 'peristiwa / mnt · 60 mnt terakhir' },
   active_incident: { en: 'Active incident', id: 'Insiden aktif' },
   n_open: { en: '{n} open', id: '{n} terbuka' },
