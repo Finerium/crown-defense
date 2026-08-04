@@ -114,6 +114,50 @@ sungguhan yang ditemukan peninjau berkonteks-segar, semuanya tercatat di
   bisa lulus dengan menghafal metadata alih-alih mendeteksi enkripsi. Diperbaiki, lalu dikunci uji
   separability yang falsifiable, dan uji itu sendiri sempat gagal sampai kebocoran terakhir tertutup.
 
+Gelombang terakhir dijalankan pada 4 Agustus 2026, semalam sebelum final, oleh tiga belas agen
+berkonteks-segar yang membaca kode dan menyerang produksi sungguhan, bukan membaca ringkasan. Yang
+mereka temukan lebih berat daripada yang kami harapkan, dan itulah gunanya:
+
+- **Riwayat insiden membuang catatan yang paling baru, bukan yang paling lama.** Seorang agen menulis 60
+  blob bertanggal lampau ke penyimpanan sungguhan lalu memanggil endpoint produksi: 50 baris kembali dan
+  tidak satu pun catatan asli ada di dalamnya, sementara detail run serangan sungguhan menjawab 404.
+  Penyebabnya `list()` mengembalikan urutan menaik dan `limit` memotong dari depan. Ini bentuk kegagalan
+  paling buruk yang bisa terjadi pada fitur ini: baru muncul setelah insiden ke-51, senyap total, dan
+  yang hilang justru run yang barusan dijalankan di depan ruangan.
+- **Satu penekanan tombol bisa menghasilkan dua catatan dengan satu runId dan dua hash kepala berbeda.**
+  Muncul sendiri saat agen bekerja dan masih terlihat di produksi. Antrean permintaan adalah
+  baca-ubah-tulis lintas instance, dua stream mem-pop permintaan yang sama, dan keduanya benar-benar
+  menjalankan skenarionya. Untuk produk yang menjanjikan rantai audit yang immutable dan attributable,
+  itu pertanyaan yang tidak layak dibawa ke panggung.
+- **Dua run yang tumpang tindih saling menghapus siarannya.** Terukur: run enam peristiwa tertimpa run
+  tiga puluh enam peristiwa, dan tidak ada satu pun penonton, termasuk dasbor eksekutornya sendiri, yang
+  menerima tiga tik terakhir dan peristiwa selesainya.
+- **Satu beban kerja yang sah menghapus rantai audit yang baru saja disegel.** Urutan paling alami dalam
+  demo, jalankan serangan lalu jalankan beban kerja sah lalu verifikasi rantainya, mengembalikan `count 0`
+  dan demo tamper tanpa apa pun untuk dirusak.
+- **Gerbang faithfulness ternyata punya bypass-nya sendiri, dan bentuknya yang paling buruk.** Isyarat
+  negasi diuji terhadap seluruh klaim, padahal klaim adalah aksi digabung rasional. Maka langkah dengan
+  aksi "bayar penyerang dan pulihkan data memakai kunci yang mereka berikan" dan rasional "jangan hapus
+  cadangan yang diketahui bersih" mendapat skor 1,0 dan lolos. Semakin bertanggung jawab prosa di
+  sekitarnya, semakin mudah instruksi berbahayanya lewat.
+- **Dasbor tidak terpakai di telepon.** Pada viewport 390 piksel dokumennya melebar 822 piksel dan tab
+  Live, satu-satunya tab tempat ada yang benar-benar berjalan, berada di luar layar. Juri menjangkau
+  dasbor ini lewat QR.
+- **Run HUMAN_GATED menampilkan centang hijau "ISOLASI DITOLAK" tepat di atas alasan yang berbunyi
+  "membutuhkan penyetuju kedua yang berbeda".** Judulnya membantah isinya sendiri, pada invarian yang
+  justru menjadi inti produk.
+- **Angka yang tidak bisa dipertahankan, termasuk satu yang kami perkenalkan sendiri saat memperbaiki
+  angka lain.** KPI containment berbunyi "p95 5 ms, vonis sampai dieksekusi", padahal tujuh run yang
+  tersimpan mengukur 1, 3, 3, 4, 4, 6, dan 13 ms, dan tidak satu pun dari run itu mengeksekusi perintah.
+  Kontradiksi 76 kali lipat yang pernah kami perbaiki ternyata hanya pindah rumah ke landing page.
+- **Tabel yang menjanjikan kapabilitas tanpa kode.** Pencabutan kredensial, dorong kebijakan armada, dan
+  pemblokiran beacon C2 tidak ada di enum perintah C6 mana pun. Banner demo menaungi **data contoh**, ia
+  tidak menaungi **klaim kapabilitas**, dan perbedaan itu penting.
+
+Semuanya diperbaiki dan diverifikasi ulang terhadap produksi pada malam yang sama. Dua di antaranya,
+urutan riwayat dan penggabungan run ganda, sebelumnya hanya terbukti lewat skrip sekali jalan, jadi
+keduanya sekarang dikunci uji yang sudah dipastikan gagal terhadap implementasi lamanya.
+
 Menyebut cacat yang benar-benar tertangkap lebih dapat dipercaya daripada mengklaim tidak ada cacat.
 
 ### Deviasi metode yang dicatat jujur
