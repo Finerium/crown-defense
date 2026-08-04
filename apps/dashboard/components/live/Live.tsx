@@ -1077,39 +1077,47 @@ export function Live({ lang }: { lang: Lang }) {
     };
   }, []);
 
-  const setDial = useCallback(async (position: AutonomyMode) => {
-    setDialPending(true);
-    setDialMsg(null);
-    try {
-      const res = await fetch('/api/dial', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ position }),
-      });
-      const body = (await res.json()) as { position?: AutonomyMode; pesan?: string };
-      if (res.ok && body.position) setDialFromApi(body.position);
-      else if (body.pesan) setDialMsg(body.pesan);
-    } catch {
+  const setDial = useCallback(
+    async (position: AutonomyMode) => {
+      setDialPending(true);
       setDialMsg(null);
-    } finally {
-      setDialPending(false);
-    }
-  }, []);
+      try {
+        const res = await fetch('/api/dial', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ position }),
+        });
+        const body = (await res.json()) as { position?: AutonomyMode; pesan?: string };
+        if (res.ok && body.position) setDialFromApi(body.position);
+        else if (body.pesan) setDialMsg(body.pesan);
+      } catch {
+        // Swallowing this made a dead network look like a button that does nothing, which on a dial that
+        // gates destructive action is the wrong thing to be quiet about.
+        setDialMsg(t('lv_err_request', lang));
+      } finally {
+        setDialPending(false);
+      }
+    },
+    [lang]
+  );
 
-  const startRun = useCallback(async (scenarioId: string) => {
-    setRunMsg(null);
-    try {
-      const res = await fetch('/api/konsol/jalankan', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ scenarioId }),
-      });
-      const body = (await res.json()) as { accepted?: boolean; pesan?: string };
-      if (!res.ok && body.pesan) setRunMsg(body.pesan);
-    } catch {
+  const startRun = useCallback(
+    async (scenarioId: string) => {
       setRunMsg(null);
-    }
-  }, []);
+      try {
+        const res = await fetch('/api/konsol/jalankan', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ scenarioId }),
+        });
+        const body = (await res.json()) as { accepted?: boolean; pesan?: string };
+        if (!res.ok && body.pesan) setRunMsg(body.pesan);
+      } catch {
+        setRunMsg(t('lv_err_request', lang));
+      }
+    },
+    [lang]
+  );
 
   const run = v.run;
   const busy = run !== null && run.selesai === null;

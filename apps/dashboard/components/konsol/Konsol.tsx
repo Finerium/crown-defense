@@ -78,7 +78,10 @@ function Kartu({
           <Glyph k={attack ? 'tri' : 'check'} size={11} color={attack ? '#ff8177' : '#6fd79b'} />
           {label}
         </span>
-        <span className="kn-scn-desc">{attack ? s.descId : t('kn_benign_line', lang)}</span>
+        {/* Each scenario carries its own description. The four legitimate cards used to share one
+            generic line claiming entropy AND op-frequency both spike, which is true of exactly one of
+            them, and it contradicted the per-scenario note printed directly beneath it. */}
+        <span className="kn-scn-desc">{s.descId}</span>
         <span className="kn-meta">
           <Meta k={t('col_host', lang)} v={s.host} />
           <Meta k={t('col_segment', lang)} v={s.segment} />

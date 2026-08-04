@@ -638,10 +638,6 @@ export const STRINGS = {
     en: 'This group is the proof the demo is not rigged: the detection engine has to hold back right here, on telemetry that looks like an attack.',
     id: 'Kelompok ini adalah bukti bahwa demo tidak diatur: justru di sinilah mesin deteksi harus menahan diri, di atas telemetri yang tampak seperti serangan.',
   },
-  kn_benign_line: {
-    en: 'This legitimate workload genuinely spikes entropy and file operation frequency exactly the way an attack does, and it still must not end in isolation.',
-    id: 'Beban kerja sah ini benar-benar melonjakkan entropi dan frekuensi operasi berkas persis seperti serangan, dan tetap tidak boleh berujung isolasi.',
-  },
   kn_start: { en: 'Start workload', id: 'Jalankan beban kerja' },
   kn_start_aria: { en: 'Start workload: {label}', id: 'Jalankan beban kerja: {label}' },
   kn_starting: { en: 'Starting...', id: 'Menjalankan...' },
@@ -868,6 +864,10 @@ export const STRINGS = {
   },
   // A HUMAN_GATED verdict is PROPOSED, not refused. Rendering it as a refusal made the panel header
   // contradict the reason quoted directly underneath it.
+  // The Overview feed is a scripted replay with synthetic timestamps and makes zero network calls.
+  // Labelling it LIVE, one tab away from a tab that genuinely is, blurs the only honest differentiator
+  // the product has.
+  feed_replay: { en: 'REPLAY, SAMPLE', id: 'REKA ULANG, CONTOH' },
   llm_ratelimit_title: {
     en: 'Analysis quota reached, the model is fine',
     id: 'Kuota analisis tercapai, modelnya baik-baik saja',

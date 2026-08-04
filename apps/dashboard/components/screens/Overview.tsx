@@ -141,8 +141,8 @@ function ActionFeed({ s, lang }: { s: DemoScenario; lang: Lang }) {
   return (
     <Panel
       title={t('autonomous_actions', lang)}
-      sub={t('live_live', lang)}
-      right={<Glyph k="circle" size={7} color="var(--acc)" className="pulse-dot" />}
+      sub={t('feed_replay', lang)}
+      right={<Glyph k="circle" size={7} color="var(--t3)" />}
       bodyClass="flush"
       style={{ height: '100%' }}
     >
