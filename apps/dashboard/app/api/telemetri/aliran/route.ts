@@ -41,6 +41,17 @@ export async function GET(req: NextRequest): Promise<Response> {
   // traffic: fast enough that a press shows up while the presenter's finger is still on the mouse, slow
   // enough not to hammer the cache for the whole length of an idle stream.
   const pollMs = envNum('TELEMETRI_POLL_MS', 750);
+  /**
+   * Idle cadence.
+   *
+   * Every open dashboard holds a stream, and every stream reads shared state twice per poll whether or
+   * not anything is happening. At 750 ms that is 160 reads per minute PER VIEWER, all of it spent
+   * discovering that nothing has changed: twenty viewers cost 3,200 a minute, a hundred cost 16,000.
+   * The account has just been suspended once for exactly this shape of waste, so idle polling now backs
+   * off. The cost is that a workload takes up to this long to be noticed instead of up to 750 ms, which
+   * nobody can perceive in a live demo, and the moment anything IS happening the fast cadence resumes.
+   */
+  const pollDiamMs = envNum('TELEMETRI_POLL_IDLE_MS', 1500);
   // How long a broadcast that never finished blocks the next run before it is treated as dead.
   const runGuardMs = envNum('TELEMETRI_RUN_GUARD_MS', 30000);
   // How often the executing stream republishes an in-flight run for everyone else to follow.
@@ -213,8 +224,11 @@ export async function GET(req: NextRequest): Promise<Response> {
               });
               sinceHeartbeat = 0;
             }
-            await sleep(pollMs);
-            sinceHeartbeat += pollMs;
+            // Fast while there is a run to follow, slow while there is genuinely nothing to see.
+            const adaKerja = aktif || (siaran !== null && !siaran.done);
+            const jeda = adaKerja ? pollMs : pollDiamMs;
+            await sleep(jeda);
+            sinceHeartbeat += jeda;
           }
         } finally {
           try {

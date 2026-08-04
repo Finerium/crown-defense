@@ -87,7 +87,10 @@ export default function Page() {
         });
     };
     baca();
-    const id = setInterval(baca, 5000);
+    // 10 s, not 5. This runs on every tab for every viewer whether or not the dial is on screen, and the
+    // Live tab already receives the dial in the server heartbeat every two seconds, so the faster poll
+    // bought nothing and cost one request per viewer per five seconds.
+    const id = setInterval(baca, 10_000);
     return () => {
       alive = false;
       clearInterval(id);
