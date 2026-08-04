@@ -39,7 +39,7 @@ export interface Bukti {
    */
   penyimpananInsidenAktif: boolean;
   /** 'hidup' answered, 'gagal' refused us, 'mati' not configured. */
-  penyimpananStatus: 'hidup' | 'gagal' | 'mati';
+  penyimpananStatus: 'hidup' | 'sesi' | 'gagal' | 'mati';
 }
 
 export async function GET(): Promise<NextResponse<Bukti>> {

@@ -162,15 +162,22 @@ function Detail({ c, lang }: { c: CatatanInsiden; lang: Lang }) {
 
 export function Riwayat({ lang }: { lang: Lang }) {
   const [rows, setRows] = useState<RingkasanInsiden[] | null>(null);
+  const [lapis, setLapis] = useState<'hidup' | 'sesi' | null>(null);
   const [dipilih, setDipilih] = useState<CatatanInsiden | null>(null);
   const [memuat, setMemuat] = useState(false);
 
   const muat = useCallback(() => {
     setMemuat(true);
     fetch('/api/insiden', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((d: RingkasanInsiden[]) => setRows(d))
-      .catch(() => setRows([]))
+      .then((r) => (r.ok ? r.json() : { lapis: null, baris: [] }))
+      .then((d: { lapis?: 'hidup' | 'sesi'; baris?: RingkasanInsiden[] }) => {
+        setRows(d.baris ?? []);
+        setLapis(d.lapis ?? null);
+      })
+      .catch(() => {
+        setRows([]);
+        setLapis(null);
+      })
       .finally(() => setMemuat(false));
   }, []);
 
@@ -188,6 +195,16 @@ export function Riwayat({ lang }: { lang: Lang }) {
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <BuktiHidup lang={lang} />
+      {/* Serving from the weaker tier is stated at the top of the surface it affects, not buried. A
+          viewer who is not told which tier they are looking at cannot judge the evidence in front of
+          them, and this whole tab exists to be judged. */}
+      {lapis === 'sesi' ? (
+        <Panel title={t('rw_lapis_sesi_judul', lang)} sub="FALLBACK">
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: 'var(--t2)' }}>
+            {t('rw_lapis_sesi', lang)}
+          </p>
+        </Panel>
+      ) : null}
       <Panel
         title={t('rw_judul', lang)}
         sub={t('rw_sub', lang)}

@@ -12,16 +12,19 @@ import type { RingkasanInsiden } from '../../../lib/server/insiden';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(): Promise<NextResponse<RingkasanInsiden[] | { pesan: string }>> {
+export async function GET(): Promise<
+  NextResponse<{ lapis: string; baris: RingkasanInsiden[] } | { pesan: string }>
+> {
   const { status, rows } = await daftarInsiden();
-  // The array shape stays, so the History table is unaffected. A store that refuses us is reported as
-  // 503 rather than as an empty history, because "nothing has happened yet" and "the record store is
-  // down" must not look identical to anyone reading this.
+  // The response names its own tier. 'hidup' is durable storage, 'sesi' is the bounded fallback, and the
+  // UI states the difference rather than presenting weaker data as if it were the stronger kind.
+  // 'gagal' is a 503, because "nothing has happened yet" and "the record store is down" must never look
+  // identical to a reader.
   if (status === 'gagal') {
     return NextResponse.json(
       { pesan: 'Penyimpanan catatan insiden sedang tidak dapat dihubungi.' },
       { status: 503 }
     );
   }
-  return NextResponse.json(rows);
+  return NextResponse.json({ lapis: status, baris: rows });
 }

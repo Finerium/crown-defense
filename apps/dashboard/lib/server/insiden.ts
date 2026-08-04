@@ -1,5 +1,6 @@
 import type { DetectionSignal } from '@crown/contracts';
 import { get, list, put } from '@vercel/blob';
+import { bacaRiwayat, tambahRiwayat } from './store';
 import type { CatatanInsiden, RingkasanInsiden } from './types';
 
 /**
@@ -44,7 +45,13 @@ const PREFIX = 'insiden/';
  * Two fixes, both here. Counting no longer reads any blob (see hitungInsiden). And the assembled list is
  * memoised per function instance, so N viewers polling cost one read burst per window instead of N.
  */
-const MEMO_MS = 30_000;
+const MEMO_MS = 120_000;
+/**
+ * The count changes only when a run finishes, and a finishing run clears this memo directly, so it can
+ * be held far longer than the list. Five minutes is the ceiling on how stale a count can be on an
+ * instance that has served no runs itself.
+ */
+const MEMO_HITUNG_MS = 300_000;
 /**
  * How long a FAILING store is left alone before we try again.
  *
@@ -66,15 +73,20 @@ function aktif(): boolean {
 /**
  * Storage health, said out loud.
  *
- * 'mati' means no token is configured. 'gagal' means one is configured and the store refused us, which
- * is what a suspended store looks like. 'hidup' means a read actually succeeded.
+ * 'hidup' means durable storage answered. 'sesi' means it did not, and what you are seeing comes from
+ * the session-scoped fallback tier instead: real records, really produced by real runs, but bounded and
+ * expiring rather than permanent. 'gagal' means neither tier had anything to show while storage was
+ * configured. 'mati' means no storage is configured at all.
+ *
+ * Four words instead of a boolean, because each one is a different promise about the data underneath and
+ * a viewer is entitled to know which promise is being made.
  *
  * The distinction is not pedantry. The previous version reported storage as active whenever the env var
  * merely EXISTED, so when the store was suspended the dashboard showed an empty history beside a green
  * "storage active" and no error anywhere. An empty history and a broken history are different claims and
  * must never render identically.
  */
-export type StatusPenyimpanan = 'mati' | 'gagal' | 'hidup';
+export type StatusPenyimpanan = 'mati' | 'gagal' | 'hidup' | 'sesi';
 
 export interface HasilDaftar {
   status: StatusPenyimpanan;
@@ -152,10 +164,32 @@ async function daftarNama(): Promise<{ pathname: string; ms: number }[]> {
   return [...perRun.values()].sort((a, b) => b.ms - a.ms);
 }
 
+/** One summary row from a full record. Used by both tiers so they cannot drift apart. */
+function ringkas(c: CatatanInsiden, pathname: string): RingkasanInsiden {
+  return {
+    runId: c.runId,
+    scenarioLabel: c.scenarioLabel,
+    group: c.group,
+    host: c.host,
+    startedAtUtc: c.startedAtUtc,
+    dialAtStart: c.dialAtStart,
+    finalVerdict: c.finalVerdict,
+    containmentExecuted: c.containmentExecuted,
+    chainLength: c.chain.length,
+    pathname,
+  };
+}
+
 /** Persist one finished incident. Fails soft: a storage outage must never break a running demo. */
 export type { CatatanInsiden, RingkasanInsiden };
 
 export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
+  // The fallback tier is written FIRST and unconditionally. It costs one cache write, it cannot fail the
+  // demo, and it is what keeps the History tab alive when durable storage is unavailable. Writing it
+  // second, or only on blob failure, would lose exactly the runs performed during an outage.
+  await tambahRiwayat(c, c.runId).catch(() => {
+    /* the fallback failing must not take the durable write down with it */
+  });
   if (!aktif()) return null;
   try {
     const r = await put(namaBerkas(c.startedAtUtc, c.runId), JSON.stringify(c, null, 2), {
@@ -167,7 +201,7 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
       addRandomSuffix: false,
       allowOverwrite: true,
     });
-    lupakanMemo(); // the next read must show the run that just finished, not a 30 s old list
+    lupakanMemo(); // the next read must show the run that just finished, not a stale list
     return r.pathname;
   } catch {
     return null; // history is a nice-to-have; detection, containment and audit are not
@@ -179,6 +213,32 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
  * pathname at write time, so listing costs one request and reading N incidents is not N requests.
  */
 export async function daftarInsiden(): Promise<HasilDaftar> {
+  // Freshness comes from the shared tier, durability from blob. Reading the shared tier first means the
+  // run a judge just watched is always present, even if this instance's durable memo is a minute stale,
+  // which in turn lets the durable memo be aggressive without anyone noticing a missing run.
+  const sesi = (await bacaRiwayat().catch(() => [])) as CatatanInsiden[];
+  const barisSesi = sesi
+    .filter((c) => c && typeof c.runId === 'string')
+    .map((c) => ringkas(c, `sesi:${c.runId}`));
+
+  const tahan = await daftarTahanLama();
+  const gabung = gabungBaris(tahan.rows, barisSesi);
+
+  if (tahan.status === 'hidup') return { status: 'hidup', rows: gabung };
+  // Durable storage is unavailable. If the session tier has anything, show it and SAY which tier it is.
+  if (barisSesi.length > 0) return { status: 'sesi', rows: gabung };
+  return { status: tahan.status, rows: [] };
+}
+
+/** Newest first, one row per runId, durable record preferred when both tiers hold the same run. */
+function gabungBaris(tahan: RingkasanInsiden[], sesi: RingkasanInsiden[]): RingkasanInsiden[] {
+  const per = new Map<string, RingkasanInsiden>();
+  for (const r of sesi) per.set(r.runId, r);
+  for (const r of tahan) per.set(r.runId, r); // durable wins: it carries the real pathname
+  return [...per.values()].sort((a, b) => b.startedAtUtc.localeCompare(a.startedAtUtc));
+}
+
+async function daftarTahanLama(): Promise<HasilDaftar> {
   if (!aktif()) return { status: 'mati', rows: [] };
   if (memo && Date.now() - memo.at < MEMO_MS) return memo.hasil;
   try {
@@ -189,18 +249,7 @@ export async function daftarInsiden(): Promise<HasilDaftar> {
           const g = await get(b.pathname, { access: 'private', useCache: false });
           if (!g) return null;
           const c = JSON.parse(await new Response(g.stream).text()) as CatatanInsiden;
-          return {
-            runId: c.runId,
-            scenarioLabel: c.scenarioLabel,
-            group: c.group,
-            host: c.host,
-            startedAtUtc: c.startedAtUtc,
-            dialAtStart: c.dialAtStart,
-            finalVerdict: c.finalVerdict,
-            containmentExecuted: c.containmentExecuted,
-            chainLength: c.chain.length,
-            pathname: b.pathname,
-          } satisfies RingkasanInsiden;
+          return ringkas(c, b.pathname);
         } catch {
           return null;
         }
@@ -239,8 +288,17 @@ function gagalDaftar(): HasilDaftar {
 let memoHitung: { at: number; hasil: { status: StatusPenyimpanan; jumlah: number } } | null = null;
 
 export async function hitungInsiden(): Promise<{ status: StatusPenyimpanan; jumlah: number }> {
+  const tahan = await hitungTahanLama();
+  if (tahan.status === 'hidup') return tahan;
+  const sesi = (await bacaRiwayat().catch(() => [])) as CatatanInsiden[];
+  const jumlah = new Set(sesi.filter((c) => c?.runId).map((c) => c.runId)).size;
+  if (jumlah > 0) return { status: 'sesi', jumlah };
+  return { status: tahan.status, jumlah: 0 };
+}
+
+async function hitungTahanLama(): Promise<{ status: StatusPenyimpanan; jumlah: number }> {
   if (!aktif()) return { status: 'mati', jumlah: 0 };
-  if (memoHitung && Date.now() - memoHitung.at < MEMO_MS) return memoHitung.hasil;
+  if (memoHitung && Date.now() - memoHitung.at < MEMO_HITUNG_MS) return memoHitung.hasil;
   try {
     const nama = await daftarNama();
     const jumlah = nama.length;
@@ -256,19 +314,28 @@ export async function hitungInsiden(): Promise<{ status: StatusPenyimpanan; juml
     }
     const hasil = { status, jumlah: status === 'hidup' ? jumlah : 0 };
     memoHitung = {
-      at: status === 'hidup' ? Date.now() : Date.now() - (MEMO_MS - MEMO_GAGAL_MS),
+      at: status === 'hidup' ? Date.now() : Date.now() - (MEMO_HITUNG_MS - MEMO_GAGAL_MS),
       hasil,
     };
     return hasil;
   } catch {
     const hasil = { status: 'gagal' as const, jumlah: 0 };
-    memoHitung = { at: Date.now() - (MEMO_MS - MEMO_GAGAL_MS), hasil };
+    memoHitung = { at: Date.now() - (MEMO_HITUNG_MS - MEMO_GAGAL_MS), hasil };
     return hasil;
   }
 }
 
 /** One incident in full, for the detail view and for export. */
 export async function ambilInsiden(runId: string): Promise<CatatanInsiden | null> {
+  const tahan = await ambilTahanLama(runId);
+  if (tahan) return tahan;
+  // The session tier stores FULL records, not summaries, precisely so that a detail view and its hash
+  // chain still open during a storage outage. A history you can list but not inspect proves nothing.
+  const sesi = (await bacaRiwayat().catch(() => [])) as CatatanInsiden[];
+  return sesi.find((c) => c && c.runId === runId) ?? null;
+}
+
+async function ambilTahanLama(runId: string): Promise<CatatanInsiden | null> {
   if (!aktif()) return null;
   try {
     // Walks the whole prefix, so a detail view still resolves past the 51st incident. find() on a

@@ -177,6 +177,18 @@ export const STRINGS = {
   // A configured store that refuses us is a THIRD state, and it used to render as the empty-history
   // case. Saying which one it is costs one string and buys the difference between "nothing has happened
   // yet" and "the record store is down".
+  bk_simpan_sesi: {
+    en: 'durable storage paused, showing the session-scoped fallback instead',
+    id: 'penyimpanan permanen sedang dijeda, yang tampil adalah cadangan berlingkup sesi',
+  },
+  rw_lapis_sesi_judul: {
+    en: 'These records are real, but they are not the durable ones',
+    id: 'Catatan ini nyata, tetapi bukan yang permanen',
+  },
+  rw_lapis_sesi: {
+    en: 'Durable storage is paused, so this history is being served from a bounded, expiring fallback tier that lives beside the run queue. Every record here was still produced by a real run: the same detection engine, the same containment decision, the same sealed audit chain, and you can still open any of them and check the hashes. What it does not have is permanence. It holds the most recent runs only and it does not survive a long quiet period. We would rather show you weaker evidence and name it than show you nothing, and we would rather name it than let you assume it is stronger than it is.',
+    id: 'Penyimpanan permanen sedang dijeda, jadi riwayat ini disajikan dari lapis cadangan yang terbatas dan bisa kedaluwarsa, yang hidup berdampingan dengan antrean run. Setiap catatan di sini tetap dihasilkan oleh run sungguhan: mesin deteksi yang sama, keputusan containment yang sama, rantai audit yang sama disegel, dan Anda tetap bisa membukanya satu per satu lalu memeriksa hash-nya. Yang tidak ia punya adalah keabadian. Ia hanya menyimpan run terbaru dan tidak bertahan melewati masa sepi yang panjang. Kami lebih memilih menunjukkan bukti yang lebih lemah sambil menyebut namanya, daripada tidak menunjukkan apa pun, dan lebih memilih menyebutnya daripada membiarkan Anda mengira ia lebih kuat dari yang sebenarnya.',
+  },
   bk_simpan_gagal: {
     en: 'durable storage configured but not answering, so this count is not the real one',
     id: 'penyimpanan permanen terkonfigurasi tetapi tidak menjawab, jadi angka ini bukan angka sebenarnya',

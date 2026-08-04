@@ -53,6 +53,7 @@ const KEY = {
   dial: `crown:demo:${SCOPE}:dial`,
   chain: `crown:demo:${SCOPE}:chain`,
   siaran: `crown:demo:${SCOPE}:siaran`,
+  riwayat: `crown:demo:${SCOPE}:riwayat`,
 } as const;
 
 /**
@@ -344,6 +345,47 @@ export async function claimRun(runId: string, streamId: string): Promise<boolean
   } catch {
     return true; // the cache is not the authority on whether work happens
   }
+}
+
+/**
+ * THE FALLBACK HISTORY TIER.
+ *
+ * The durable history lives in Vercel Blob. On demo morning that store was paused for thirty days
+ * because the account exhausted its free-tier operation allowance, and the History tab, the one surface
+ * whose whole argument is that this system has a PAST, went blank. One store meant one failure was total.
+ *
+ * So every incident is now also written here, to the same Runtime Cache the queue and the broadcast
+ * already use. This tier is deliberately weaker and is labelled as such wherever it is shown: it is
+ * bounded, it expires, and it does not survive a long quiet period. It is not a replacement for durable
+ * storage and must never be presented as one. What it buys is that a storage outage costs fidelity
+ * instead of costing the entire feature, which is the same reasoning the containment path already
+ * follows: degrade, do not disappear.
+ *
+ * Cost: one cache read to list, one read-modify-write to append. It cannot exhaust a blob allowance
+ * because it never touches blob.
+ *
+ * ponytail: single bounded array under one key. A read-modify-write can lose one entry if two runs
+ * finish in the same instant, which the one-run-on-the-wire guard already makes rare, and a lost entry
+ * costs a history row rather than a verdict. Per-key entries plus an index would trade that for an index
+ * race, which is worse. Dedupe on write keeps a retried write idempotent.
+ */
+const RIWAYAT_TTL_S =
+  Number(process.env.CROWN_RIWAYAT_TTL_S) > 0 ? Number(process.env.CROWN_RIWAYAT_TTL_S) : 86_400;
+// Full records, not summaries, so a detail view and its hash chain still work from this tier. Measured:
+// the durable blobs average about 2.1 KB each, so forty of them is roughly 85 KB in one cache value.
+const MAX_RIWAYAT = 40;
+
+export async function tambahRiwayat(catatan: unknown, runId: string): Promise<void> {
+  const ada = await bacaRiwayat();
+  // Idempotent by runId: a retried write, or the same request executed twice, must not double the row.
+  const tanpa = ada.filter((c) => (c as { runId?: string }).runId !== runId);
+  const baru = [catatan, ...tanpa].slice(0, MAX_RIWAYAT);
+  await push(KEY.riwayat, baru, RIWAYAT_TTL_S);
+}
+
+export async function bacaRiwayat(): Promise<unknown[]> {
+  const v = await pull(KEY.riwayat);
+  return Array.isArray(v) ? v : [];
 }
 
 /* The dial and the last run's audit chain live beside the queue but are deliberately NOT part of the

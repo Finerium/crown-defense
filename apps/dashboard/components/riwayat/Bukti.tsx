@@ -19,7 +19,7 @@ interface Bukti {
   waktuServerUtc: string;
   insidenTercatat: number;
   penyimpananInsidenAktif: boolean;
-  penyimpananStatus?: 'hidup' | 'gagal' | 'mati';
+  penyimpananStatus?: 'hidup' | 'sesi' | 'gagal' | 'mati';
 }
 
 const REPO = 'https://github.com/Finerium/crown-defense/commit/';
@@ -115,17 +115,21 @@ export function BuktiHidup({ lang }: { lang: Lang }) {
             marginLeft: 8,
             color:
               b.penyimpananStatus === 'gagal'
-                ? 'var(--med)'
-                : b.penyimpananInsidenAktif
-                  ? 'var(--ok)'
-                  : 'var(--crit)',
+                ? 'var(--crit)'
+                : b.penyimpananStatus === 'sesi'
+                  ? 'var(--med)'
+                  : b.penyimpananInsidenAktif
+                    ? 'var(--ok)'
+                    : 'var(--crit)',
           }}
         >
           {b.penyimpananStatus === 'gagal'
             ? t('bk_simpan_gagal', lang)
-            : b.penyimpananInsidenAktif
-              ? t('bk_simpan_aktif', lang)
-              : t('bk_simpan_mati', lang)}
+            : b.penyimpananStatus === 'sesi'
+              ? t('bk_simpan_sesi', lang)
+              : b.penyimpananInsidenAktif
+                ? t('bk_simpan_aktif', lang)
+                : t('bk_simpan_mati', lang)}
         </span>
       </Baris>
     </Panel>
