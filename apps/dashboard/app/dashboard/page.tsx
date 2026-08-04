@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Live } from '../../components/live/Live';
+import { Riwayat } from '../../components/riwayat/Riwayat';
 import { Fleet } from '../../components/screens/Fleet';
 import { Incident, type ReportState } from '../../components/screens/Incident';
 import { Overview } from '../../components/screens/Overview';
@@ -18,13 +19,14 @@ import '../live.css';
 // untouched by it, they keep rendering the seeded demo scenario exactly as before).
 const SCREENS: {
   id: string;
-  key: 'nav_overview' | 'nav_incident' | 'nav_fleet' | 'nav_system' | 'nav_live';
+  key: 'nav_overview' | 'nav_incident' | 'nav_fleet' | 'nav_system' | 'nav_live' | 'nav_riwayat';
 }[] = [
   { id: 'overview', key: 'nav_overview' },
   { id: 'incident', key: 'nav_incident' },
   { id: 'fleet', key: 'nav_fleet' },
   { id: 'system', key: 'nav_system' },
   { id: 'live', key: 'nav_live' },
+  { id: 'riwayat', key: 'nav_riwayat' },
 ];
 
 function useClock() {
@@ -215,6 +217,7 @@ export default function Page() {
         <div style={{ display: screen === 'live' ? 'contents' : 'none' }}>
           <Live lang={lang} />
         </div>
+        {screen === 'riwayat' ? <Riwayat lang={lang} /> : null}
       </main>
     </>
   );

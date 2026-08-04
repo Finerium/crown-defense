@@ -1,5 +1,6 @@
 import { get, list, put } from '@vercel/blob';
-import type { ActionRecord, AutonomyMode, DetectionSignal } from '@crown/contracts';
+import type { DetectionSignal } from '@crown/contracts';
+import type { CatatanInsiden, RingkasanInsiden } from './types';
 
 /**
  * THE INCIDENT LOG. Attacks that survive the session.
@@ -35,53 +36,6 @@ const PREFIX = 'insiden/';
 /** Bounded read. The dashboard shows a recent history, not an archive; nobody paginates on stage. */
 const MAX_LIST = 50;
 
-/** One recorded incident. Everything a judge could want to check about a run that already happened. */
-export interface CatatanInsiden {
-  runId: string;
-  scenarioId: string;
-  scenarioLabel: string;
-  group: 'serangan' | 'sah';
-  host: string;
-  segment: string;
-  family: string | null;
-  mode: string | null;
-  /** UTC ISO-8601 with milliseconds. Rendered as WIB by the UI, never stored as local time. */
-  startedAtUtc: string;
-  finishedAtUtc: string;
-  dialAtStart: AutonomyMode;
-  finalVerdict: string;
-  destructiveVerdictReached: boolean;
-  corroboratingCount: number | null;
-  fastPath: boolean | null;
-  signalsFired: string[];
-  suppressedByAllowlist: boolean;
-  suppressionReason: string | null;
-  disposition: string | null;
-  containmentExecuted: boolean;
-  commandIssued: boolean;
-  filesTouched: number;
-  eventsIngested: number;
-  detectionWallMs: number | null;
-  containmentWallMs: number | null;
-  chain: ActionRecord[];
-  chainHeadHash: string | null;
-  scratchRemoved: boolean;
-}
-
-/** Summary row for the history list. Deliberately small: the list must load in one request. */
-export interface RingkasanInsiden {
-  runId: string;
-  scenarioLabel: string;
-  group: 'serangan' | 'sah';
-  host: string;
-  startedAtUtc: string;
-  dialAtStart: AutonomyMode;
-  finalVerdict: string;
-  containmentExecuted: boolean;
-  chainLength: number;
-  pathname: string;
-}
-
 function aktif(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
@@ -92,6 +46,8 @@ function namaBerkas(startedAtUtc: string, runId: string): string {
 }
 
 /** Persist one finished incident. Fails soft: a storage outage must never break a running demo. */
+export type { CatatanInsiden, RingkasanInsiden };
+
 export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
   if (!aktif()) return null;
   try {

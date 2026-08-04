@@ -289,3 +289,55 @@ export interface DialResponse {
 export interface PesanResponse {
   pesan: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Incident log. Client components import these type-only, so they must live    */
+/* here and not in insiden.ts, which pulls in the Blob SDK.                     */
+/* -------------------------------------------------------------------------- */
+
+/** One recorded incident. Everything a judge could want to check about a run that already happened. */
+export interface CatatanInsiden {
+  runId: string;
+  scenarioId: string;
+  scenarioLabel: string;
+  group: 'serangan' | 'sah';
+  host: string;
+  segment: string;
+  family: string | null;
+  mode: string | null;
+  /** UTC ISO-8601 with milliseconds. Rendered as WIB by the UI, never stored as local time. */
+  startedAtUtc: string;
+  finishedAtUtc: string;
+  dialAtStart: AutonomyMode;
+  finalVerdict: string;
+  destructiveVerdictReached: boolean;
+  corroboratingCount: number | null;
+  fastPath: boolean | null;
+  signalsFired: string[];
+  suppressedByAllowlist: boolean;
+  suppressionReason: string | null;
+  disposition: string | null;
+  containmentExecuted: boolean;
+  commandIssued: boolean;
+  filesTouched: number;
+  eventsIngested: number;
+  detectionWallMs: number | null;
+  containmentWallMs: number | null;
+  chain: ActionRecord[];
+  chainHeadHash: string | null;
+  scratchRemoved: boolean;
+}
+
+/** Summary row for the history list. Deliberately small: the list must load in one request. */
+export interface RingkasanInsiden {
+  runId: string;
+  scenarioLabel: string;
+  group: 'serangan' | 'sah';
+  host: string;
+  startedAtUtc: string;
+  dialAtStart: AutonomyMode;
+  finalVerdict: string;
+  containmentExecuted: boolean;
+  chainLength: number;
+  pathname: string;
+}
