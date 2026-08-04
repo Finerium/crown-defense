@@ -329,14 +329,14 @@ const FEED_RAW: Omit<FeedItem, 'meta'>[] = [
   {
     t: '03:15:30',
     kind: 'scan',
-    text: 'IOC sweep 3/12 complete — no VANTAR artifacts on',
+    text: 'IOC sweep 3/12 complete, no VANTAR artifacts on',
     host: 'mrh-ehr-db-01',
   },
   { t: '03:15:02', kind: 'scan', text: 'Memory + disk IOC scan started on 12 adjacent hosts', host: null },
   {
     t: '03:14:22',
     kind: 'contain',
-    text: 'Backup chain verified immutable — 02:00 snapshot eligible for restore',
+    text: 'Backup chain verified immutable, 02:00 snapshot eligible for restore',
     host: 'mrh-bk-srv-01',
   },
   {
@@ -361,23 +361,23 @@ const FEED_RAW: Omit<FeedItem, 'meta'>[] = [
   {
     t: '02:47:55',
     kind: 'scan',
-    text: 'Scheduled integrity sweep completed — Finance segment clean',
+    text: 'Scheduled integrity sweep completed, Finance segment clean',
     host: null,
   },
 ];
 const FEED_QUEUE_RAW: Omit<FeedItem, 'meta'>[] = [
-  { kind: 'scan', text: 'IOC sweep 5/12 complete — no VANTAR artifacts on', host: 'mrh-rad-ws-11' },
-  { kind: 'scan', text: 'IOC sweep 7/12 complete — no VANTAR artifacts on', host: 'mrh-nas-02' },
+  { kind: 'scan', text: 'IOC sweep 5/12 complete, no VANTAR artifacts on', host: 'mrh-rad-ws-11' },
+  { kind: 'scan', text: 'IOC sweep 7/12 complete, no VANTAR artifacts on', host: 'mrh-nas-02' },
   { kind: 'intel', text: 'VANTAR file-marker signature distributed to all agents', host: null },
-  { kind: 'scan', text: 'IOC sweep 9/12 complete — no VANTAR artifacts on', host: 'mrh-pacs-srv-01' },
+  { kind: 'scan', text: 'IOC sweep 9/12 complete, no VANTAR artifacts on', host: 'mrh-pacs-srv-01' },
   {
     kind: 'contain',
-    text: 'Quarantine integrity re-verified on isolated hosts — no egress observed',
+    text: 'Quarantine integrity re-verified on isolated hosts, no egress observed',
     host: 'mrh-rad-ws-07',
   },
-  { kind: 'scan', text: 'IOC sweep 11/12 complete — no VANTAR artifacts on', host: 'mrh-dc-02' },
+  { kind: 'scan', text: 'IOC sweep 11/12 complete, no VANTAR artifacts on', host: 'mrh-dc-02' },
   { kind: 'intel', text: 'Phishing sender domain added to mail gateway blocklist', host: 'mrh-mail-gw-01' },
-  { kind: 'scan', text: 'IOC sweep 12/12 complete — adjacent hosts clean', host: null },
+  { kind: 'scan', text: 'IOC sweep 12/12 complete, adjacent hosts clean', host: null },
 ];
 const withMeta = (rows: Omit<FeedItem, 'meta'>[]): FeedItem[] => rows.map((f) => ({ ...f, meta: FEED_META }));
 
@@ -427,7 +427,7 @@ const SCENARIO: DemoScenario = {
     detectedAt: '03:14:07.2 UTC',
     detectLatency: '6 ms', // measured p50, reports/detection/coverage.json. Was a fabricated '1.8s'.
     patientZero: 'mrh-rad-ws-07',
-    vector: 'Phishing — XLSM macro (Invoice_Q2_2026.xlsm)',
+    vector: 'Phishing: XLSM macro (Invoice_Q2_2026.xlsm)',
     cve: 'CVE-2026-21412',
     filesEncrypted: 1847,
     hostsAffected: 6,
@@ -510,7 +510,7 @@ const SCENARIO: DemoScenario = {
         {
           t: '03:12:44.3',
           sev: 'critical',
-          title: 'LSASS memory read — credential dumping',
+          title: 'LSASS memory read: credential dumping',
           host: 'mrh-rad-ws-07',
           detail: 'Harvested: svc-backup, radjsmith (domain)',
           conf: 0.94,
@@ -541,7 +541,7 @@ const SCENARIO: DemoScenario = {
         {
           t: '03:13:52.2',
           sev: 'high',
-          title: 'RDP authentication attempt → mrh-dc-01 — BLOCKED',
+          title: 'RDP authentication attempt to mrh-dc-01: BLOCKED',
           host: 'mrh-file-srv-03',
           detail: 'svc-backup denied · conditional access policy',
           conf: 0.92,
@@ -549,14 +549,14 @@ const SCENARIO: DemoScenario = {
       ],
     },
     {
-      name: 'Impact — Encryption',
+      name: 'Impact: Encryption',
       tactic: 'TA0040',
       talos: false,
       events: [
         {
           t: '03:14:05.0',
           sev: 'critical',
-          title: 'Mass file rename + entropy spike — .vntr extension',
+          title: 'Mass file rename + entropy spike: .vntr extension',
           host: 'mrh-rad-ws-07',
           detail: '1,847 files in 2.2s · D:\\studies\\',
           conf: 0.99,
@@ -566,7 +566,7 @@ const SCENARIO: DemoScenario = {
           sev: 'critical',
           title: 'Volume shadow copy deletion attempted',
           host: 'mrh-rad-ws-07',
-          detail: 'vssadmin delete shadows /all — intercepted',
+          detail: 'vssadmin delete shadows /all, intercepted',
           conf: 0.98,
         },
       ],
@@ -579,7 +579,7 @@ const SCENARIO: DemoScenario = {
         {
           t: '03:14:07.2',
           sev: 'talos',
-          title: 'Ransomware behavior confirmed — VANTAR · conf 0.97',
+          title: 'Ransomware behavior confirmed: VANTAR · conf 0.97',
           host: ENGINE_ID,
           // The header stat on this same screen prints the measured engine p50 (6 ms). A second, larger
           // latency number here read as a 300x contradiction on one screen, and 1.8s was fabricated:
@@ -633,7 +633,7 @@ const SCENARIO: DemoScenario = {
       n: 4,
       status: 'done',
       t: '03:14:22',
-      title: 'Verify backup integrity — VaultSync',
+      title: 'Verify backup integrity: VaultSync',
       detail: '02:00 snapshot chain intact · immutable copy confirmed',
     },
     {
@@ -662,8 +662,8 @@ const SCENARIO: DemoScenario = {
       n: 8,
       status: 'approval',
       t: null,
-      title: 'Force password reset — Radiology OU (38 accounts)',
-      detail: 'Credential exposure window 03:12–03:14 · notify on next login',
+      title: 'Force password reset: Radiology OU (38 accounts)',
+      detail: 'Credential exposure window 03:12-03:14 · notify on next login',
     },
   ],
 
@@ -713,7 +713,7 @@ const SCENARIO: DemoScenario = {
       ip: '10.20.14.32',
       seg: 'Infrastructure',
       status: 'scanning',
-      first: '—',
+      first: '-',
       last: '03:15:02',
       risk: 22,
       files: 0,
@@ -723,7 +723,7 @@ const SCENARIO: DemoScenario = {
       ip: '10.20.31.103',
       seg: 'Radiology',
       status: 'scanning',
-      first: '—',
+      first: '-',
       last: '03:15:02',
       risk: 19,
       files: 0,
@@ -733,7 +733,7 @@ const SCENARIO: DemoScenario = {
       ip: '10.20.12.10',
       seg: 'EHR Core',
       status: 'protected',
-      first: '—',
+      first: '-',
       last: '03:15:30',
       risk: 8,
       files: 0,
@@ -743,7 +743,7 @@ const SCENARIO: DemoScenario = {
       ip: '10.20.15.8',
       seg: 'Infrastructure',
       status: 'protected',
-      first: '—',
+      first: '-',
       last: '03:14:22',
       risk: 5,
       files: 0,
@@ -819,7 +819,7 @@ const SCENARIO: DemoScenario = {
     { name: 'Active Directory', kind: 'Identity', status: 'online', meta: 'mrh.local · 2 DCs' },
     { name: 'VaultSync Backup', kind: 'Recovery', status: 'online', meta: 'Last immutable snapshot 02:00' },
     { name: 'SIEM Forwarder', kind: 'Export', status: 'online', meta: 'CEF' },
-    { name: 'Email Gateway', kind: 'Prevention', status: 'degraded', meta: 'Sync latency 4m — retrying' },
+    { name: 'Email Gateway', kind: 'Prevention', status: 'degraded', meta: 'Sync latency 4m, retrying' },
     { name: 'Firewall Mgmt', kind: 'Enforcement', status: 'online', meta: 'Egress blocklist v1182' },
   ],
 
@@ -872,8 +872,8 @@ const SCENARIO: DemoScenario = {
       action: 'Approve restore from snapshot',
       target: 'mrh-fin-ws-09',
       by: 'OPR-03',
-      conf: '—',
-      latency: '—',
+      conf: '-',
+      latency: '-',
     },
   ],
 };

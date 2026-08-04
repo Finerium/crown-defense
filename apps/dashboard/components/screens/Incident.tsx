@@ -532,7 +532,7 @@ function AffectedHosts({ s, lang }: { s: DemoScenario; lang: Lang }) {
                 <td>
                   <RiskCell v={r.risk} />
                 </td>
-                <td className="mono">{r.files ? r.files.toLocaleString() : '—'}</td>
+                <td className="mono">{r.files ? r.files.toLocaleString() : '-'}</td>
               </tr>
             ))}
             {out.length === 0 ? (

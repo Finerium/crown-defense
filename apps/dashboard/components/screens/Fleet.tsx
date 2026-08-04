@@ -30,7 +30,7 @@ function HostDrawer({
           t: '03:15:02',
           e:
             host.status === 'scanning'
-              ? `IOC sweep in progress — ${s.incident.id}`
+              ? `IOC sweep in progress, ${s.incident.id}`
               : 'Telemetry heartbeat nominal',
         },
         { t: '02:00:00', e: 'VaultSync snapshot verified immutable' },
