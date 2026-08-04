@@ -99,7 +99,7 @@
         "live_demo": "https://crown-defense.vercel.app (public, 200) - browser-verified: scenario plays, live DeepSeek report renders (faithfulness 1, 7 cited steps). reports/dashboard/deploy.json",
         "repo": "https://github.com/Finerium/crown-defense (private; auto-redeploy on push to main)",
         "report": "Report-hackathon.md",
-        "tests": "18 files / 174 tests pass (134 at the Gate 6 checkpoint, +40 added by the final-round sprint); tsc -b clean.",
+        "tests": "HISTORIS, angka pada saat checkpoint Gate 6: 18 berkas / 174 uji lulus (134 sebelum sprint babak final menambah 40 uji konsol). JANGAN kutip angka ini sebagai jumlah sekarang; yang berlaku ada di session_state_at_pause. tsc -b bersih.",
         "STOP": "Bank-grade Phases 7-15 intentionally NOT built (later relaunch)."
       }
     }
@@ -118,7 +118,7 @@
       6
     ],
     "checkpoint": "GATE 6 REACHED — hackathon checkpoint complete. Deliberate STOP. Bank-grade Phases 7-15 are a later relaunch and intentionally NOT built.",
-    "tests": "20 files / 190 tests, 186 passing; the 4 failures all require a live Postgres on 5432 (3 audit store + 1 audit binding) and fail identically on an unmodified tree because Docker will not start on this machine; tsc -b clean, biome lint exits 0",
+    "tests": "20 berkas / 190 uji, 186 lulus. Terukur 4 Agustus 2026. Empat yang gagal menuntut Postgres hidup di 5432 (packages/audit store.test.ts 3 uji + test-infra live-audit.test.ts 1 uji); Docker tidak mau naik di mesin ini dan keempatnya gagal identik pada pohon kerja yang belum diubah, jadi bukan regresi tetapi juga BELUM diverifikasi ulang sesi ini. Tanpa DEEPSEEK_API_KEY, 1 uji integrasi model langsung DILEWATI (describe.runIf), bukan gagal: 185 lulus / 4 gagal / 1 dilewati. tsc -b bersih, biome lint keluar 0.",
     "packages": "contracts, audit, simulator, test-infra, detection, agent, containment, control-plane, llm + apps/dashboard",
     "feature_list": "24/70 criteria passing (gates 0-5; gate-6 closed-loop/demo tracked in the gate-6 manifest, not added to the locked 70-criterion set)",
     "live_demo": "https://crown-defense.vercel.app (Vercel project crown-defense, root apps/dashboard, auto-redeploy on push to main; DeepSeek key server-side env var)",

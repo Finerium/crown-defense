@@ -223,9 +223,13 @@ Seluruh dasar pernyataan ini bisa diperiksa langsung dari repositori ini, tanpa 
 ```bash
 pnpm install
 pnpm typecheck                # tsc -b, keluar dengan kode 0
-pnpm test                     # 174 uji di 18 berkas
-                              # tanpa pnpm db:up dan tanpa DEEPSEEK_API_KEY,
-                              # 169 lulus dan 5 uji yang bergantung layanan luar gagal
+pnpm test                     # 190 uji di 20 berkas, 186 lulus
+                              # 4 yang gagal semuanya menuntut Postgres hidup di 5432
+                              # (3 uji store audit + 1 uji pengikatan audit); jalankan
+                              # pnpm db:up lebih dulu bila ingin keempatnya ikut lulus.
+                              # Tanpa DEEPSEEK_API_KEY, 1 uji integrasi model langsung
+                              # DILEWATI, bukan gagal: 185 lulus, 4 gagal, 1 dilewati.
+                              # Terukur 4 Agustus 2026.
 ```
 
 Aturan pembangunannya ada di `CLAUDE.md` dan `.claude/rules/`. Penegakannya ada di `.claude/hooks/`.

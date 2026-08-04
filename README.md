@@ -510,7 +510,7 @@ pnpm typecheck
 pnpm --filter @crown/dashboard dev     # http://localhost:3100
 ```
 
-Tanpa langkah 3 dan 4, empat uji yang bergantung basis data langsung akan gagal; 186 uji sisanya tetap lulus, dengan catatan `DEEPSEEK_API_KEY` terisi. Tanpa kunci itu, uji integrasi model langsung ikut gagal sehingga yang gagal menjadi lima. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
+Tanpa langkah 3 dan 4, empat uji yang bergantung basis data langsung akan gagal dan 186 uji sisanya tetap lulus. Tanpa `DEEPSEEK_API_KEY`, satu uji integrasi model langsung **dilewati, bukan gagal** (`describe.runIf` pada `packages/test-infra/src/llm.test.ts:191`), sehingga hasilnya menjadi 185 lulus, 4 gagal, 1 dilewati. Rinciannya ada di [Status dan verifikasi](#status-dan-verifikasi).
 
 ## Perintah
 
@@ -560,7 +560,7 @@ Setiap klaim di bawah ini menyebut perintah atau berkas bukti yang membuktikanny
 | --- | --- | --- |
 | Typecheck bersih | `tsc -b` keluar dengan kode 0 | `pnpm typecheck` |
 | Suite uji | 190 uji di 20 berkas, 186 lulus | `pnpm test` |
-| Uji tanpa basis data | 186 dari 190 lulus; 4 yang gagal semuanya menuntut Postgres yang hidup, yaitu 3 uji store audit dan 1 uji pengikatan audit. Mesin pembangunan ini tidak menjalankan daemon Docker, jadi keempatnya gagal karena tidak menemukan basis data, bukan karena logikanya salah | `pnpm test` tanpa `pnpm db:up` |
+| Uji tanpa basis data | 186 dari 190 lulus; 4 yang gagal semuanya menuntut Postgres yang hidup, yaitu 3 uji `packages/audit/src/store.test.ts` dan 1 uji `packages/test-infra/src/live-audit.test.ts`. Mesin pembangunan ini tidak menjalankan daemon Docker, jadi keempatnya gagal karena tidak menemukan basis data, bukan karena logikanya salah | `pnpm test` tanpa `pnpm db:up` |
 | Cakupan keluarga dan mode evasi | 24 keluarga, 5 mode evasi | `reports/sim/coverage.json` |
 | Deteksi pada battery simulator aman | 24 dari 24 terdeteksi, laju deteksi 1,0 | `reports/detection/coverage.json` |
 | Berkas hilang sebelum containment | maksimum 2, p95 2, dari anggaran 10 | `reports/detection/coverage.json`, `reports/containment/files_lost.json` |
