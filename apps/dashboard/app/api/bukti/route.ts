@@ -14,7 +14,7 @@
  * open-source repository, and the rest is metadata about the running process.
  */
 import { NextResponse } from 'next/server';
-import { daftarInsiden } from '../../../lib/server/insiden';
+import { hitungInsiden } from '../../../lib/server/insiden';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,12 +30,21 @@ export interface Bukti {
   waktuServerUtc: string;
   /** Incidents durably recorded so far. Only grows when a run genuinely completes. */
   insidenTercatat: number;
+  /**
+   * Whether the record store actually ANSWERED, not whether a token happens to be configured.
+   *
+   * The earlier version reported true whenever the env var existed. When the store was suspended on
+   * demo morning the dashboard therefore showed an empty history beside a green "storage active" and
+   * no error anywhere, which is precisely the shape of dishonesty this panel exists to prevent.
+   */
   penyimpananInsidenAktif: boolean;
+  /** 'hidup' answered, 'gagal' refused us, 'mati' not configured. */
+  penyimpananStatus: 'hidup' | 'gagal' | 'mati';
 }
 
 export async function GET(): Promise<NextResponse<Bukti>> {
   const commit = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
-  const rows = await daftarInsiden();
+  const { status, jumlah } = await hitungInsiden();
   return NextResponse.json({
     commit,
     commitPendek: commit ? commit.slice(0, 7) : null,
@@ -43,7 +52,8 @@ export async function GET(): Promise<NextResponse<Bukti>> {
     wilayah: process.env.VERCEL_REGION ?? null,
     lingkungan: process.env.VERCEL_ENV ?? null,
     waktuServerUtc: new Date().toISOString(),
-    insidenTercatat: rows.length,
-    penyimpananInsidenAktif: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    insidenTercatat: jumlah,
+    penyimpananInsidenAktif: status === 'hidup',
+    penyimpananStatus: status,
   });
 }

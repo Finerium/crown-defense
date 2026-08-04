@@ -87,8 +87,9 @@ describe('incident history ordering past the page limit', () => {
       tulis(`insiden/${iso.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, iso, `Run ${i}`));
     }
     const { daftarInsiden } = await modul();
-    const rows = await daftarInsiden();
+    const { status, rows } = await daftarInsiden();
 
+    expect(status).toBe('hidup');
     expect(rows.length).toBeGreaterThan(0);
     // The single assertion the old implementation could not pass: the most recent run is present.
     expect(rows[0]?.scenarioLabel).toBe('Run 79');
@@ -132,7 +133,7 @@ describe('one request that was executed twice is still one incident', () => {
     expect(p1).toBe(p2);
 
     tulis(p1 as string, b);
-    const rows = await daftarInsiden();
+    const { rows } = await daftarInsiden();
     expect(rows.filter((r) => r.runId === id)).toHaveLength(1);
   });
 
@@ -146,8 +147,60 @@ describe('one request that was executed twice is still one incident', () => {
     tulis(`insiden/${t2.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, t2, 'Enkripsi arsip sah'));
 
     const { daftarInsiden } = await modul();
-    const rows = await daftarInsiden();
+    const { rows } = await daftarInsiden();
     expect(rows.filter((r) => r.runId === id)).toHaveLength(1);
+  });
+});
+
+describe('a store that refuses us is not an empty history', () => {
+  /**
+   * The demo-morning outage. The blob store was SUSPENDED for exceeding its operation allowance, so
+   * every read threw. The old code caught that and returned [], and /api/bukti reported storage as
+   * active because the env var still existed. The dashboard therefore showed an empty history beside a
+   * green "storage active" and no error anywhere. Two different facts must never render identically.
+   */
+  it('reports gagal, not an empty list, when the store throws', async () => {
+    const { list } = (await import('@vercel/blob')) as unknown as { list: ReturnType<typeof vi.fn> };
+    list.mockImplementationOnce(() => {
+      throw new Error('Vercel Blob: Access denied, please provide a valid token for this resource.');
+    });
+    const { daftarInsiden } = await modul();
+    const hasil = await daftarInsiden();
+    expect(hasil.status).toBe('gagal');
+    expect(hasil.rows).toEqual([]);
+  });
+
+  it('does not memoise a failure, so the history returns as soon as the store does', async () => {
+    const ms = Date.UTC(2026, 7, 5, 1, 0, 0);
+    const id = runId(ms, 'pulih');
+    const iso = new Date(ms).toISOString();
+    tulis(`insiden/${iso.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, iso, 'Setelah pulih'));
+
+    const { list } = (await import('@vercel/blob')) as unknown as { list: ReturnType<typeof vi.fn> };
+    list.mockImplementationOnce(() => {
+      throw new Error('suspended');
+    });
+    const { daftarInsiden } = await modul();
+    expect((await daftarInsiden()).status).toBe('gagal');
+    // Immediately afterwards, inside what would be the memo window, the store answers again.
+    const pulih = await daftarInsiden();
+    expect(pulih.status).toBe('hidup');
+    expect(pulih.rows).toHaveLength(1);
+  });
+
+  it('counts without reading a single incident blob, which is what suspended the store', async () => {
+    for (let i = 0; i < 12; i++) {
+      const ms = Date.UTC(2026, 7, 5, 2, i, 0);
+      const id = runId(ms, `c${i}`);
+      const iso = new Date(ms).toISOString();
+      tulis(`insiden/${iso.replace(/[:.]/g, '-')}_${id}.json`, catatan(id, iso, `Run ${i}`));
+    }
+    const { get } = (await import('@vercel/blob')) as unknown as { get: ReturnType<typeof vi.fn> };
+    get.mockClear();
+    const { hitungInsiden } = await modul();
+    const hasil = await hitungInsiden();
+    expect(hasil).toEqual({ status: 'hidup', jumlah: 12 });
+    expect(get).not.toHaveBeenCalled(); // the whole point: a count costs list(), never a read per record
   });
 });
 
@@ -155,7 +208,7 @@ describe('storage that is not configured must not take the demo down with it', (
   it('returns an empty history rather than throwing when the token is absent', async () => {
     process.env.BLOB_READ_WRITE_TOKEN = '';
     const { daftarInsiden, ambilInsiden, simpanInsiden } = await modul();
-    expect(await daftarInsiden()).toEqual([]);
+    expect(await daftarInsiden()).toEqual({ status: 'mati', rows: [] });
     expect(await ambilInsiden('run-apa-pun')).toBeNull();
     expect(await simpanInsiden(catatan('run-x-1', new Date().toISOString(), 'x') as never)).toBeNull();
   });

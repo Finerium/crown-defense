@@ -19,6 +19,7 @@ interface Bukti {
   waktuServerUtc: string;
   insidenTercatat: number;
   penyimpananInsidenAktif: boolean;
+  penyimpananStatus?: 'hidup' | 'gagal' | 'mati';
 }
 
 const REPO = 'https://github.com/Finerium/crown-defense/commit/';
@@ -106,9 +107,25 @@ export function BuktiHidup({ lang }: { lang: Lang }) {
         <span className="mono">{wib(jam)} WIB</span>
       </Baris>
       <Baris label={t('bk_insiden', lang)}>
-        {b.insidenTercatat}
-        <span style={{ marginLeft: 8, color: b.penyimpananInsidenAktif ? 'var(--ok)' : 'var(--crit)' }}>
-          {b.penyimpananInsidenAktif ? t('bk_simpan_aktif', lang) : t('bk_simpan_mati', lang)}
+        {/* Three states, three sentences. A store that is refusing us must never be shown as an empty
+            history: the count below it is meaningless in that case and says so. */}
+        {b.penyimpananStatus === 'gagal' ? '-' : b.insidenTercatat}
+        <span
+          style={{
+            marginLeft: 8,
+            color:
+              b.penyimpananStatus === 'gagal'
+                ? 'var(--med)'
+                : b.penyimpananInsidenAktif
+                  ? 'var(--ok)'
+                  : 'var(--crit)',
+          }}
+        >
+          {b.penyimpananStatus === 'gagal'
+            ? t('bk_simpan_gagal', lang)
+            : b.penyimpananInsidenAktif
+              ? t('bk_simpan_aktif', lang)
+              : t('bk_simpan_mati', lang)}
         </span>
       </Baris>
     </Panel>

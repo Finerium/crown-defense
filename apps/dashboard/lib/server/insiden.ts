@@ -33,6 +33,18 @@ import type { CatatanInsiden, RingkasanInsiden } from './types';
  */
 
 const PREFIX = 'insiden/';
+/**
+ * How long an assembled history is reused before the blobs are read again.
+ *
+ * This exists because of a real outage. Building the history reads EVERY incident blob, and /api/bukti
+ * called it just to obtain a count while the proof-of-life panel polled /api/bukti on a timer. One panel
+ * render therefore cost about thirty blob operations, and thirteen hours of that suspended the store on
+ * demo morning: 28 files, 59 KB, nothing to do with storage size, entirely operation count.
+ *
+ * Two fixes, both here. Counting no longer reads any blob (see hitungInsiden). And the assembled list is
+ * memoised per function instance, so N viewers polling cost one read burst per window instead of N.
+ */
+const MEMO_MS = 30_000;
 /** How many incidents the history shows. The dashboard shows a recent history, not an archive. */
 const MAX_TAMPIL = 30;
 /** Pages of list() to walk before giving up. 5 x 1000 is far past anything a demo store will hold. */
@@ -40,6 +52,31 @@ const MAX_HALAMAN = 5;
 
 function aktif(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+/**
+ * Storage health, said out loud.
+ *
+ * 'mati' means no token is configured. 'gagal' means one is configured and the store refused us, which
+ * is what a suspended store looks like. 'hidup' means a read actually succeeded.
+ *
+ * The distinction is not pedantry. The previous version reported storage as active whenever the env var
+ * merely EXISTED, so when the store was suspended the dashboard showed an empty history beside a green
+ * "storage active" and no error anywhere. An empty history and a broken history are different claims and
+ * must never render identically.
+ */
+export type StatusPenyimpanan = 'mati' | 'gagal' | 'hidup';
+
+export interface HasilDaftar {
+  status: StatusPenyimpanan;
+  rows: RingkasanInsiden[];
+}
+
+let memo: { at: number; hasil: HasilDaftar } | null = null;
+
+/** Called after a write so the next read reflects it immediately rather than after the memo window. */
+function lupakanMemo(): void {
+  memo = null;
 }
 
 /**
@@ -120,6 +157,7 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
       addRandomSuffix: false,
       allowOverwrite: true,
     });
+    lupakanMemo(); // the next read must show the run that just finished, not a 30 s old list
     return r.pathname;
   } catch {
     return null; // history is a nice-to-have; detection, containment and audit are not
@@ -130,8 +168,9 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
  * The history, newest first. Built from list() alone: the summary fields are packed into the blob's own
  * pathname at write time, so listing costs one request and reading N incidents is not N requests.
  */
-export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
-  if (!aktif()) return [];
+export async function daftarInsiden(): Promise<HasilDaftar> {
+  if (!aktif()) return { status: 'mati', rows: [] };
+  if (memo && Date.now() - memo.at < MEMO_MS) return memo.hasil;
   try {
     const blobs = (await daftarNama()).slice(0, MAX_TAMPIL);
     const rows = await Promise.all(
@@ -159,9 +198,43 @@ export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
     );
     // Order was already decided by daftarNama() on the request time; do not re-sort on the execution
     // start, which is what let two executions of one request interleave in the list.
-    return rows.filter((r): r is RingkasanInsiden => r !== null);
+    const hasil: HasilDaftar = {
+      status: 'hidup',
+      rows: rows.filter((r): r is RingkasanInsiden => r !== null),
+    };
+    memo = { at: Date.now(), hasil };
+    return hasil;
   } catch {
-    return [];
+    // A configured store that refuses us is NOT an empty history. Do not memoise a failure: the store
+    // may come back, and a cached error would keep the history blank long after it did.
+    return { status: 'gagal', rows: [] };
+  }
+}
+
+/**
+ * How many incidents exist, WITHOUT reading a single one.
+ *
+ * list() returns metadata only, so this is one operation regardless of how many incidents there are.
+ * The previous count went through daftarInsiden(), which reads every blob; /api/bukti called it on a
+ * polling loop and that is what suspended the store. A count must never cost a read per record.
+ */
+export async function hitungInsiden(): Promise<{ status: StatusPenyimpanan; jumlah: number }> {
+  if (!aktif()) return { status: 'mati', jumlah: 0 };
+  try {
+    const perRun = new Set<string>();
+    let cursor: string | undefined;
+    for (let i = 0; i < MAX_HALAMAN; i++) {
+      const r = await list({ prefix: PREFIX, limit: 1000, cursor });
+      for (const b of r.blobs) {
+        const runId = runIdDari(b.pathname);
+        if (runId) perRun.add(runId);
+      }
+      if (!r.hasMore || !r.cursor) break;
+      cursor = r.cursor;
+    }
+    return { status: 'hidup', jumlah: perRun.size };
+  } catch {
+    return { status: 'gagal', jumlah: 0 };
   }
 }
 

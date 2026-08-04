@@ -171,8 +171,15 @@ export const STRINGS = {
   bk_insiden: { en: 'Incidents recorded', id: 'Insiden tercatat' },
   bk_simpan_aktif: { en: 'durable storage active', id: 'penyimpanan permanen aktif' },
   bk_simpan_mati: {
-    en: 'durable storage unavailable, history will not persist',
-    id: 'penyimpanan permanen tidak tersedia, riwayat tidak akan bertahan',
+    en: 'durable storage not configured, history will not persist',
+    id: 'penyimpanan permanen belum dikonfigurasi, riwayat tidak akan bertahan',
+  },
+  // A configured store that refuses us is a THIRD state, and it used to render as the empty-history
+  // case. Saying which one it is costs one string and buys the difference between "nothing has happened
+  // yet" and "the record store is down".
+  bk_simpan_gagal: {
+    en: 'durable storage configured but not answering, so this count is not the real one',
+    id: 'penyimpanan permanen terkonfigurasi tetapi tidak menjawab, jadi angka ini bukan angka sebenarnya',
   },
   bk_lokal: {
     en: 'running locally, no deployment metadata',
