@@ -287,7 +287,13 @@ export const store = {
     return true;
   },
 
-  /** Pop the oldest pending request, or null. Only the telemetry stream calls this. */
+  /**
+   * Pop the oldest pending request, or null. Only the telemetry stream calls this.
+   *
+   * NOT atomic, and it cannot be: the read, the modify and the write are three separate cache round
+   * trips across independent function instances. Measured on production, two streams polling in the same
+   * instant both popped the SAME request and both executed it. See claimRun() for what narrows that.
+   */
   async takePending(): Promise<WorkloadRequest | null> {
     const queue = await sharedQueue();
     const [next, ...rest] = queue;
@@ -306,6 +312,39 @@ export const store = {
     return toProgress(await pull(KEY.progress)) ?? read().progress;
   },
 };
+
+/**
+ * Arbitrate between two streams that popped the same request.
+ *
+ * takePending() is a read-modify-write across instances, so two streams polling together can both come
+ * back holding the same run. That was visible as a cosmetic bug, two history rows for one runId, and the
+ * blob naming now collapses those. But the underlying event is not cosmetic: at FULL_AUTO one verdict
+ * would issue TWO ISOLATE_HOST commands, which is precisely the "acting wrongly" this product claims
+ * never happens.
+ *
+ * There is no compare-and-set in the cache, so this is a write-then-read-back: each claimant writes its
+ * own id, waits out the propagation, and reads. Last writer wins, everyone else stands down. It narrows
+ * the window from a full poll interval to one round trip; it does NOT close it, and an atomic SETNX on a
+ * real key-value store is the honest fix. That is written here rather than implied.
+ *
+ * The tie-break defaults to PROCEEDING, not to standing down. A read that comes back empty means the
+ * cache did not answer, and if every claimant stood down on a cache miss the run would be lost entirely:
+ * takePending already removed it from the queue, so nobody would execute a workload the operator pressed
+ * a button for. Running twice is a bug; silently running zero times is a broken demo.
+ */
+export async function claimRun(runId: string, streamId: string): Promise<boolean> {
+  const key = `crown:demo:${SCOPE}:klaim:${runId}`;
+  try {
+    const held = await pull(key);
+    if (typeof held === 'string' && held !== streamId) return false;
+    await push(key, streamId, 120);
+    await new Promise((r) => setTimeout(r, 200));
+    const menang = await pull(key);
+    return menang === undefined || menang === streamId;
+  } catch {
+    return true; // the cache is not the authority on whether work happens
+  }
+}
 
 /* The dial and the last run's audit chain live beside the queue but are deliberately NOT part of the
  * console-visible progress type. Separate accessors keep KonsolStatus verdict-free. */
