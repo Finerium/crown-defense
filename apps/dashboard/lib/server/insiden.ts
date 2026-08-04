@@ -1,4 +1,4 @@
-import { head, list, put } from '@vercel/blob';
+import { get, list, put } from '@vercel/blob';
 import type { ActionRecord, AutonomyMode, DetectionSignal } from '@crown/contracts';
 
 /**
@@ -96,7 +96,10 @@ export async function simpanInsiden(c: CatatanInsiden): Promise<string | null> {
   if (!aktif()) return null;
   try {
     const r = await put(namaBerkas(c.startedAtUtc, c.runId), JSON.stringify(c, null, 2), {
-      access: 'public',
+      // The store is PRIVATE, so blobs are private too. Reads go through get() with the server-side
+      // token, never through a public URL. Judges reach this data via our own API route, which is what
+      // we want anyway: the history is readable by anyone, the storage credentials are not.
+      access: 'private',
       contentType: 'application/json',
       addRandomSuffix: false,
       allowOverwrite: true,
@@ -118,9 +121,9 @@ export async function daftarInsiden(): Promise<RingkasanInsiden[]> {
     const rows = await Promise.all(
       blobs.map(async (b) => {
         try {
-          const res = await fetch(b.url, { cache: 'no-store' });
-          if (!res.ok) return null;
-          const c = (await res.json()) as CatatanInsiden;
+          const g = await get(b.pathname, { access: 'private', useCache: false });
+          if (!g) return null;
+          const c = JSON.parse(await new Response(g.stream).text()) as CatatanInsiden;
           return {
             runId: c.runId,
             scenarioLabel: c.scenarioLabel,
@@ -153,10 +156,9 @@ export async function ambilInsiden(runId: string): Promise<CatatanInsiden | null
     const { blobs } = await list({ prefix: PREFIX, limit: MAX_LIST });
     const match = blobs.find((b) => b.pathname.endsWith(`_${runId}.json`));
     if (!match) return null;
-    const meta = await head(match.url);
-    const res = await fetch(meta.url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return (await res.json()) as CatatanInsiden;
+    const g = await get(match.pathname, { access: 'private', useCache: false });
+    if (!g) return null;
+    return JSON.parse(await new Response(g.stream).text()) as CatatanInsiden;
   } catch {
     return null;
   }
