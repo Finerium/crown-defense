@@ -406,11 +406,14 @@ const SCENARIO: DemoScenario = {
     // Showing 0.066 next to a live 5 was a 76x contradiction inside one product.
     //
     // Third correction, and this one is mine to own: "5" was a single observation dressed up as a p95,
-    // and "verdict to executed" described a path it had not taken. Seven runs persisted in the incident
-    // log on 2026-08-04 measured containment_wall_ms of 1, 3, 3, 4, 4, 6 and 13, so 5 is neither the p95
-    // nor the median, and every one of those runs finished ALERT_ONLY or MONITOR_ONLY with executed=false
-    // and command=null. A range across a stated number of recorded runs is what the evidence supports.
-    // Re-measure if more runs are recorded before the freeze; the records are readable at /api/insiden.
+    // and "verdict to executed" described a path it had not taken. Re-measured across every run in the
+    // incident log on 2026-08-04, now 12 runs carrying timings: containment_wall_ms of 1, 1, 3, 3, 3, 3,
+    // 3, 3, 4, 6, 11 and 13, so 5 was neither the p95 nor the median, and every one of those runs
+    // finished ALERT_ONLY or MONITOR_ONLY with executed=false and command=null.
+    //
+    // The RANGE is the claim, not a count, because the population grows every time anyone presses a
+    // button. Anyone can recount it: GET /api/insiden lists the runs and each detail carries its own
+    // measured latency. If a future run falls outside 1-13, this constant is wrong and should be moved.
     mttr: '1-13',
     mttrUnit: 'ms',
     mttrDeltaPct: null,

@@ -18,9 +18,11 @@ export const STRINGS = {
     en: 'Containment decision, measured range',
     id: 'Keputusan containment, rentang terukur',
   },
+  // No run count here on purpose. Every scenario anyone runs adds one, so a number baked into the label
+  // is stale the moment someone presses a button. The History tab is the live source and can be counted.
   kpi_mttr_sub: {
-    en: 'VERDICT TO CONTAINMENT OUTCOME, 7 RECORDED RUNS, NOT A FIELD TREND',
-    id: 'VONIS SAMPAI HASIL CONTAINMENT, 7 RUN TEREKAM, BUKAN TREN LAPANGAN',
+    en: 'VERDICT TO CONTAINMENT OUTCOME, EVERY RECORDED RUN, NOT A FIELD TREND',
+    id: 'VONIS SAMPAI HASIL CONTAINMENT, SELURUH RUN TEREKAM, BUKAN TREN LAPANGAN',
   },
   dial: { en: 'Autonomy dial', id: 'Dial otonomi' },
   dial_monitor: { en: 'Monitor only', id: 'Hanya pantau' },
