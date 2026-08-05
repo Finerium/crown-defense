@@ -20,10 +20,15 @@ function HostDrawer({
   const affected = AFFECTED.includes(host.status);
   // ponytail: per-host agent-event history has no contract/data field — presentational demo content
   // derived from status + incident/policy data, mirroring the design's hardcoded drawer log.
+  // The drawer is an overlay, so the recorded-incident notice at the top of the page is NOT visible from
+  // in here. That matters: this log was the single most direct contradiction of "no command issued", it
+  // signed the claim with the product's own name, and it shipped with literal `0x` and `xx` placeholders
+  // in its timestamps. The wording no longer asserts an executed action, and the drawer carries its own
+  // badge below.
   const events = affected
     ? [
-        { t: '03:14:0x', e: `${PRODUCT_NAME} containment action executed` },
-        { t: '03:13:xx', e: `Linked to ${s.incident.id} (${s.incident.family})` },
+        { t: '03:14:09', e: `Recorded in ${s.incident.id}, containment step logged` },
+        { t: '03:13:40', e: `Linked to ${s.incident.id} (${s.incident.family})` },
         { t: '02:00:00', e: 'VaultSync snapshot verified immutable' },
       ]
     : [
@@ -101,7 +106,7 @@ function HostDrawer({
             className="mono"
             style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--t3)', margin: '20px 0 8px' }}
           >
-            {t('recent_agent_events', lang)}
+            {t('recent_agent_events', lang)} <span className="badge bd-mut">{t('tr_sub', lang)}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {events.map((ev) => (
