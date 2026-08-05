@@ -200,16 +200,7 @@ function NodeShape({ x, y, r, status }: { x: number; y: number; r: number; statu
   return (
     <g>
       {status === 'compromised' ? (
-        <circle
-          cx={x}
-          cy={y}
-          r={r + 6}
-          fill="none"
-          stroke="var(--crit)"
-          strokeWidth="1.2"
-          opacity="0.5"
-          className="pulse-dot"
-        />
+        <circle cx={x} cy={y} r={r + 6} fill="none" stroke="var(--crit)" strokeWidth="1.2" opacity="0.5" />
       ) : null}
       {status === 'scanning' ? (
         <circle
@@ -277,7 +268,22 @@ function BlastRadius({ s, lang }: { s: DemoScenario; lang: Lang }) {
       sub={tf('blast_sub', lang, { n: G.nodes.length })}
       bodyClass="flush"
       className="a-graph"
+      right={<span className="badge bd-mut">{t('br_contoh', lang)}</span>}
     >
+      {/* The most convincing-looking element in the app, centred on the exact host the console attacks.
+          A notice at the top of the page is not enough for a panel this assertive: by the time a reader
+          scrolls here they have lost that context, so it repeats itself where it is needed. */}
+      <p
+        style={{
+          margin: 0,
+          padding: '8px 16px 0',
+          fontSize: 11,
+          lineHeight: 1.6,
+          color: 'var(--t3)',
+        }}
+      >
+        {t('br_ket', lang)}
+      </p>
       <div className="blast-wrap">
         <svg
           width="100%"
@@ -394,7 +400,9 @@ function ResponsePlan({ s, lang, clock }: { s: DemoScenario; lang: Lang; clock: 
     st.status === 'done' ? (
       <Glyph k="check" size={9} color="var(--acc)" />
     ) : st.status === 'active' ? (
-      <Glyph k="arc" size={9} color="var(--acc)" className="spin" />
+      // No spinner on a recorded incident. Animation is the visual language for "happening right now",
+      // and nothing on a sample screen is happening right now. The step still reads as active by label.
+      <Glyph k="arc" size={9} color="var(--acc)" />
     ) : st.status === 'queued' ? (
       <Glyph k="check" size={9} color="var(--acc)" />
     ) : st.status === 'held' ? (

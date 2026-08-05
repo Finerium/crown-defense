@@ -216,6 +216,14 @@ export const STRINGS = {
   // ---- Catatan insiden terekam. Label paling penting di aplikasi ini, karena tanpa dia tab Armada
   // membantah klaim inti produk: juri menjalankan serangan pada MONITOR_ONLY, membaca "tidak ada
   // perintah diterbitkan", lalu melihat empat host tertulis ISOLATED dan menyimpulkan dialnya bohong.
+  br_contoh: {
+    en: 'Recorded incident, not your run',
+    id: 'Insiden terekam, bukan run Anda',
+  },
+  br_ket: {
+    en: 'This map belongs to INC-2026-0612-004 and does not change when you run a workload. The safe simulator is single-directory and non-propagating, so a run has no lateral spread to map. Your run is on the Live tab.',
+    id: 'Peta ini milik INC-2026-0612-004 dan tidak berubah saat Anda menjalankan beban kerja. Simulator aman bersifat satu direktori dan tidak menyebar, jadi sebuah run tidak punya penyebaran lateral untuk dipetakan. Run Anda ada di tab Langsung.',
+  },
   tr_judul: {
     en: 'A recorded incident, not the result of your run',
     id: 'Insiden terekam, bukan hasil dari run Anda',
