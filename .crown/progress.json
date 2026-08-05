@@ -134,6 +134,13 @@
       "riwayat": "10 incidents, 10 unique runIds, descending order, detail resolves, JSON export",
       "bukti_hidup": "GET /api/bukti publishes the deployed commit SHA; matched local HEAD exactly on every deploy tonight",
       "telepon": "390px viewport: document 380 wide, no overflow, all six tabs visible without a swipe"
+    },
+    "insiden_penyimpanan_2026_08_05": {
+      "peristiwa": "Vercel Blob store paused 30 days at 06:08:30 WIB. Cause: free-tier Simple Requests (10,000) exhausted, NOT storage (0.36 GB of a 5 GB allowance). /api/bukti counted incidents by reading every blob while the proof panel polled it every 15 s: 31 ops per poll, 124/min, one open tab exhausts the allowance in 81 minutes.",
+      "perbaikan": "count reads nothing (list metadata + one probe), history memoised 120 s and count 300 s, failures backed off 60 s, telemetry idle poll 750->1500 ms, dial poll 5->10 s. Per-viewer idle cost 190 -> 110 cache reads/min.",
+      "ketahanan": "two-tier history: durable Blob plus a bounded 40-record Runtime Cache tier holding FULL records, merged by runId, durable copy preferred. Storage reports hidup/sesi/gagal/mati instead of a boolean and the UI names the tier it is serving.",
+      "terverifikasi_produksi": "run-msfb7y77-59b978 executed with durable storage down: /api/insiden returned lapis 'sesi', the detail view opened with its chain, and the record hash matched the one emitted on the live stream (c723c1da3c340a36).",
+      "tersisa_untuk_pengguna": "reactivating the store is a billing action (Pro upgrade) or a 30-day wait; neither is mine to take."
     }
   }
 }

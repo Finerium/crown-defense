@@ -374,3 +374,53 @@ fail-safe, so it was made VISIBLE with a live countdown rather than removed, and
 CROWN_DIAL_TTL_S); a HUMAN_GATED verdict rendered as a refusal instead of a proposal; the dashboard
 unusable at 390px with the Live tab off-screen; --t3 failing WCAG AA in both themes; a per-IP rate limit
 keyed on a client-writable header that gated both login brute-force and the model spend cap.
+
+## Demo-morning outage, 2026-08-05: one store meant one failure was total
+
+WHAT HAPPENED. The Vercel Blob store was paused for thirty days at 06:08:30 WIB. Not storage size: the
+account holds 0.36 GB against a 5 GB allowance. The billing email named the real limit, Simple Requests,
+10,000 operations, and the burn rate was ours. The proof-of-life panel polls /api/bukti every fifteen
+seconds and that endpoint produced its incident COUNT by reading every incident blob. Thirty-one
+operations per poll, 124 per minute. One browser tab left open on the History tab for eighty-one minutes
+exhausts the entire monthly allowance.
+
+LESSON 1: a count must never cost a read per record. This is the same N+1 that ruins databases, but on a
+metered API it does not merely run slowly, it silently spends a resource until the resource is gone. The
+question to ask of any endpoint on a polling loop is not "is this fast" but "what does this cost, times
+how often, times how many viewers".
+
+LESSON 2, and the more important one: the failure was invisible because two different facts rendered
+identically. Reads threw, the fail-soft catch turned that into an empty array, and the proof panel
+reported storage as active because it only checked that the env var existed. So the dashboard showed an
+empty history beside a green "durable storage active" with no error anywhere. "Nothing has happened yet"
+and "the record store is down" are different claims and must never look the same. Storage now reports
+four states (hidup / sesi / gagal / mati) instead of a boolean, because each is a different promise about
+the data underneath.
+
+LESSON 2b: the first fix made it worse before it made it better. list() still worked while get() was
+refused, so counting from list() alone produced "27 incidents, storage healthy" beside an empty table.
+Two surfaces contradicting each other in one click is worse than either failure alone. A health check has
+to exercise the path it is vouching for, so the count now carries a single read probe.
+
+LESSON 3: one store means one failure is total. Incidents are now written to two tiers, the durable blob
+store and a bounded expiring tier in the Runtime Cache, merged on read by runId with the durable copy
+winning. The fallback holds FULL records, not summaries, because a history you can list but not inspect
+proves nothing. It is labelled as the weaker tier everywhere it is served: showing fallback data silently
+would overstate the evidence a judge is being asked to trust.
+
+LESSON 4: the fallback is what makes the fix affordable. Because freshness comes from the shared tier,
+the durable list can be memoised for two minutes and the count for five without ever hiding a run someone
+just watched. Long memos are what keep the operation count near zero, and they are only safe because the
+second tier exists. The two changes are one design, not two.
+
+SWEEP, not patch. The same shape was hunted everywhere else: the telemetry stream read shared state twice
+per 750 ms poll per viewer whether or not anything was happening (160 reads per minute each, 3,200 for
+twenty viewers), now backed off to 1500 ms while idle; the dial polled every 5 s on every tab for every
+viewer while the Live tab already receives it in the heartbeat, now 10 s. Everything else with a timer was
+checked and is either capped (console status, MAX_POLLS) or touches no network at all.
+
+PROCESS NOTE. An audit agent running instrumentation rewrote eight package.json manifests to absolute
+dist/ paths, dropping version, private, types and dependencies. It broke the local build and would have
+broken the deploy. Caught by reading the build failure instead of retrying it, restored from git, and the
+workflow was stopped. On a demo day, background agents must not run build or instrumentation commands in
+the live tree. Verified separately that `vercel --prod` does NOT do this: the tree is clean after a deploy.
