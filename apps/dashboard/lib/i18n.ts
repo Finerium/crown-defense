@@ -213,6 +213,30 @@ export const STRINGS = {
     en: 'Resting at the shipped default. This position does not expire.',
     id: 'Berada di posisi bawaan. Posisi ini tidak kedaluwarsa.',
   },
+  // ---- Catatan insiden terekam. Label paling penting di aplikasi ini, karena tanpa dia tab Armada
+  // membantah klaim inti produk: juri menjalankan serangan pada MONITOR_ONLY, membaca "tidak ada
+  // perintah diterbitkan", lalu melihat empat host tertulis ISOLATED dan menyimpulkan dialnya bohong.
+  tr_judul: {
+    en: 'A recorded incident, not the result of your run',
+    id: 'Insiden terekam, bukan hasil dari run Anda',
+  },
+  tr_sub: { en: 'SAMPLE DATA', id: 'DATA CONTOH' },
+  tr_p1: {
+    en: 'Every host state on this page belongs to one finished, fictional incident: INC-2026-0612-004, 12 June 2026, at a hospital that does not exist. Nothing on this page reacts to the workloads you run from the console.',
+    id: 'Semua status host di halaman ini milik satu insiden fiktif yang sudah selesai: INC-2026-0612-004, 12 Juni 2026, di rumah sakit yang tidak ada. Tidak ada satu pun di halaman ini yang bereaksi terhadap beban kerja yang Anda jalankan dari konsol.',
+  },
+  tr_p2: {
+    en: 'That is why a host here can read as isolated while your dial sits at MONITOR_ONLY, and why hosts are already marked compromised before you have run anything at all. Both are part of the recorded story, not an action the system just took.',
+    id: 'Karena itu ada host di sini yang tertulis terisolasi padahal dial Anda berada di MONITOR_ONLY, dan ada host yang sudah berstatus compromised sebelum Anda menjalankan apa pun. Keduanya bagian dari cerita yang direkam, bukan tindakan yang barusan diambil sistem.',
+  },
+  tr_p3: {
+    en: 'The host names here are deliberately the same as the ones in the console, so that one hospital feels whole, and that genuinely does make the two easy to confuse. So, plainly: mrh-rad-ws-07 in this table is not the mrh-rad-ws-07 you just attacked.',
+    id: 'Nama host di sini sengaja sama dengan yang di konsol supaya satu rumah sakit terasa utuh, dan itu memang membuat keduanya gampang tertukar. Jadi tegasnya: mrh-rad-ws-07 di tabel ini bukan mrh-rad-ws-07 yang barusan Anda serang.',
+  },
+  tr_p4: {
+    en: 'Your run appears on the Live tab while it happens, and on the History tab afterwards. That is where the dial genuinely decides whether a command is issued.',
+    id: 'Hasil run Anda ada di tab Langsung selagi berjalan, dan di tab Riwayat sesudahnya. Di sanalah dial benar-benar menentukan apakah sebuah perintah diterbitkan.',
+  },
   jj_judul: { en: 'What is live, and what is sample data', id: 'Mana yang hidup, mana data contoh' },
   jj_sub: { en: 'WE SAY IT FIRST', id: 'KAMI SEBUT DULUAN' },
   jj_intro: {
@@ -226,8 +250,8 @@ export const STRINGS = {
   },
   jj_contoh_judul: { en: 'Sample data', id: 'Data contoh' },
   jj_contoh: {
-    en: 'This Overview, plus the Incident, Fleet and System tabs. They render a fictional hospital and a fictional incident, ported from the interface design so the operator experience can be shown at full scale. Controls there that would need a real fleet behind them are labelled and do not pretend to act. Dual control that actually executes is Phase 7 and is deliberately not built.',
-    id: 'Halaman Ringkasan ini, ditambah tab Insiden, Armada, dan Sistem. Keduanya menampilkan rumah sakit fiktif dan insiden fiktif, hasil port dari rancangan antarmuka supaya pengalaman operator bisa ditunjukkan dalam skala penuh. Kontrol di sana yang menuntut armada sungguhan sudah dilabeli dan tidak berpura-pura bertindak. Kendali ganda yang benar-benar mengeksekusi adalah Phase 7 dan sengaja belum dibangun.',
+    en: 'This Overview, plus the Incident, Fleet and System tabs. They render a fictional hospital and a fictional incident, ported from the interface design so the operator experience can be shown at full scale. Controls there that would need a real fleet behind them are labelled and do not pretend to act. Note one trap in particular: the host states on Fleet and Incident belong to a finished fictional incident, so a host can read as isolated even with your dial at MONITOR_ONLY. That is not an action the system took, and those pages say so at the top. Dual control that actually executes is Phase 7 and is deliberately not built.',
+    id: 'Halaman Ringkasan ini, ditambah tab Insiden, Armada, dan Sistem. Keduanya menampilkan rumah sakit fiktif dan insiden fiktif, hasil port dari rancangan antarmuka supaya pengalaman operator bisa ditunjukkan dalam skala penuh. Kontrol di sana yang menuntut armada sungguhan sudah dilabeli dan tidak berpura-pura bertindak. Perhatikan satu jebakan khusus: status host di tab Armada dan Insiden milik insiden fiktif yang sudah selesai, jadi ada yang tertulis terisolasi meskipun dial Anda di MONITOR_ONLY. Itu bukan tindakan sistem, dan halaman-halaman itu menyebutkannya sendiri di atas. Kendali ganda yang benar-benar mengeksekusi adalah Phase 7 dan sengaja belum dibangun.',
   },
   jj_ajakan: {
     en: 'Start at the Live tab if you want to see the parts that work, then open History to check that what you just watched was actually recorded.',

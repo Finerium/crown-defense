@@ -9,6 +9,7 @@ import {
   type SevLevel,
 } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
+import { CatatanTerekam } from '../CatatanTerekam';
 import { Btn, Chip, Glyph, Panel, RiskCell, SearchBox, Sev, StatusPill } from '../ui';
 
 /**
@@ -769,6 +770,7 @@ export function Incident({
   const clock = useDemoClock();
   return (
     <div data-screen-label="Incident Detail">
+      <CatatanTerekam lang={lang} />
       <div className="screen-title">
         <h1>{t('incident_detail', lang)}</h1>
         <span className="sub">{t('incident_loop_sub', lang)}</span>

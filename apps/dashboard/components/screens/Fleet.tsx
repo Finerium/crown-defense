@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { type DemoHost, type DemoScenario, PRODUCT_NAME } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
+import { CatatanTerekam } from '../CatatanTerekam';
 import { Btn, Chip, Glyph, Panel, RiskCell, SearchBox, StatusPill } from '../ui';
 
 // BOUNDED: never render the whole fleet at once (CLAUDE.md invariant #5 — bounded resource).
@@ -182,6 +183,7 @@ export function Fleet({ s, lang }: { s: DemoScenario; lang: Lang }) {
 
   return (
     <div data-screen-label="Fleet & Hosts">
+      <CatatanTerekam lang={lang} />
       <div className="screen-title">
         <h1>{t('nav_fleet', lang)}</h1>
         <span className="sub">
