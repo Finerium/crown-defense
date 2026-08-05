@@ -29,16 +29,31 @@ const SCREENS: {
   { id: 'riwayat', key: 'nav_riwayat' },
 ];
 
+/**
+ * The chrome clock, and it is the REAL one now.
+ *
+ * It used to be anchored to Date.UTC(2026, 5, 12, 3, 19, 30), the fictional incident's moment, and tick
+ * forward from there. That put a clock reading 03:19 UTC on EVERY screen, including Live and History,
+ * which are the two surfaces whose whole job is to be true. Worse, the proof-of-life panel offers "the
+ * server clock advances while you watch it" as evidence, and the chrome directly above it was showing a
+ * different time two months in the past. Two clocks disagreeing is not a detail a careful reader misses.
+ *
+ * Showing real UTC also repairs the sample screens rather than hurting them: the fixture's 03:14:07
+ * timestamps now read as what they are, a recorded incident from 12 June, instead of masquerading as
+ * something happening right now.
+ *
+ * Rendered only after mount, because server and client would otherwise disagree on the first paint.
+ */
 function useClock() {
-  const [now, setNow] = useState('03:19:30');
+  const [now, setNow] = useState('--:--:--');
   useEffect(() => {
-    const base = Date.UTC(2026, 5, 12, 3, 19, 30);
-    const t0 = Date.now();
-    const id = setInterval(() => {
-      const d = new Date(base + (Date.now() - t0));
+    const tick = () => {
+      const d = new Date();
       const p = (x: number) => String(x).padStart(2, '0');
       setNow(`${p(d.getUTCHours())}:${p(d.getUTCMinutes())}:${p(d.getUTCSeconds())}`);
-    }, 1000);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
   return now;

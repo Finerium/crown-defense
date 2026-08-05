@@ -2,6 +2,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { type DemoScenario, ENGINE_ID, PRODUCT_NAME } from '../../lib/data';
 import { type Lang, t, tf } from '../../lib/i18n';
+import { CatatanTerekam } from '../CatatanTerekam';
 import { Glyph, Panel, StatusPill } from '../ui';
 
 /* Detection-engine metric tile (ported from the design's StatTile; inline styles mirror the source). */
@@ -168,6 +169,10 @@ export function System({
         <h1>{t('system_health', lang)}</h1>
         <span className="sub">{tf('system_sub', lang, { product: PRODUCT_NAME })}</span>
       </div>
+      {/* This screen carried no honesty label at all, while its audit table sits under the words "every
+          action logged, immutable" and lists isolations that never happened. The real, verifiable chain
+          is on Live and History; this one is part of the recorded fiction and now says so. */}
+      <CatatanTerekam lang={lang} />
       <div className="sys-grid">
         {/* Detection Engine */}
         <Panel title={t('panel_detection_engine', lang)} sub={e.model} right={<StatusPill status="online" />}>

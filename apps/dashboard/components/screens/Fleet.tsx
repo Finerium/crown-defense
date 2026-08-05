@@ -133,6 +133,9 @@ function HostDrawer({
             <Btn sm onClick={() => act('scan')} disabled={queued.scan}>
               {queued.scan ? `✓ ${t('scan_queued', lang)}` : t('run_ioc_scan', lang)}
             </Btn>
+            {/* These three only flip local state. They look like they queue an isolation, which is the
+                same theatre already removed from the approval queue, so they carry the same badge. */}
+            <span className="badge bd-mut">{t('demo_sample_control', lang)}</span>
           </div>
           {affected ? (
             <div
