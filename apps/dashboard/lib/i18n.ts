@@ -224,6 +224,13 @@ export const STRINGS = {
     en: 'This map belongs to INC-2026-0612-004 and does not change when you run a workload. The safe simulator is single-directory and non-propagating, so a run has no lateral spread to map. Your run is on the Live tab.',
     id: 'Peta ini milik INC-2026-0612-004 dan tidak berubah saat Anda menjalankan beban kerja. Simulator aman bersifat satu direktori dan tidak menyebar, jadi sebuah run tidak punya penyebaran lateral untuk dipetakan. Run Anda ada di tab Langsung.',
   },
+  // Angka nyatanya, disebut di sebelah angka fiktifnya. Melabeli sesuatu "contoh" tidak menjawab
+  // pertanyaan "terus yang aslinya berapa", dan pertanyaan itulah yang akan ditanyakan.
+  tr_angka_judul: { en: 'The real numbers, since you will ask', id: 'Angka nyatanya, karena pasti ditanya' },
+  tr_angka: {
+    en: '0 endpoints are running this agent, anywhere. 1 host is simulated per run. 7 distinct hosts exist in the console catalogue. The 1,291 on these screens is a fictional hospital, shown at bank scale so the operator experience is legible; a fleet view with seven rows would demonstrate nothing about the product. Fleet-scale validation is Phase 11 and is stated as not measured in the README.',
+    id: 'Nol endpoint menjalankan agen ini, di mana pun. Satu host disimulasikan per run. Tujuh host berbeda ada di katalog konsol. Angka 1.291 di layar-layar ini adalah rumah sakit fiktif, ditampilkan dalam skala bank supaya pengalaman operatornya terbaca; tampilan armada berisi tujuh baris tidak akan menunjukkan apa pun tentang produknya. Validasi skala armada adalah Phase 11 dan di README dinyatakan belum diukur.',
+  },
   tr_judul: {
     en: 'A recorded incident, not the result of your run',
     id: 'Insiden terekam, bukan hasil dari run Anda',

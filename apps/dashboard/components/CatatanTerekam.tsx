@@ -35,8 +35,22 @@ export function CatatanTerekam({ lang }: { lang: Lang }) {
           <p style={{ margin: '0 0 8px', fontSize: 12, lineHeight: 1.6, color: 'var(--t2)' }}>
             {t('tr_p3', lang)}
           </p>
-          <p className="mono" style={{ margin: 0, fontSize: 10.5, lineHeight: 1.6, color: 'var(--t3)' }}>
+          <p
+            className="mono"
+            style={{ margin: '0 0 10px', fontSize: 10.5, lineHeight: 1.6, color: 'var(--t3)' }}
+          >
             {t('tr_p4', lang)}
+          </p>
+        </div>
+        {/* The real figures, printed beside the fictional ones. Labelling a number as sample does not
+            answer "so what is the actual one", and that is the question that gets asked. Making the
+            comparison ours to state rather than theirs to discover is the whole point. */}
+        <div style={{ borderLeft: '2px solid var(--t3)', paddingLeft: 12, marginTop: 12 }}>
+          <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--t1)', marginBottom: 4 }}>
+            {t('tr_angka_judul', lang)}
+          </div>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--t2)' }}>
+            {t('tr_angka', lang)}
           </p>
         </div>
       </Panel>

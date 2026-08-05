@@ -37,6 +37,14 @@ export function Kejujuran({ lang }: { lang: Lang }) {
           </p>
         </div>
       </div>
+      {/* Sits directly above the KPI row that reads "1,284 hosts protected", which is the number a judge
+          points at first. The real one belongs next to it, not three clicks away. */}
+      <div style={{ borderLeft: '2px solid var(--t3)', paddingLeft: 12, marginTop: 12 }}>
+        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--t1)', marginBottom: 4 }}>
+          {t('tr_angka_judul', lang)}
+        </div>
+        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--t2)' }}>{t('tr_angka', lang)}</p>
+      </div>
       <p className="mono" style={{ margin: '12px 0 0', fontSize: 10.5, lineHeight: 1.6, color: 'var(--t3)' }}>
         {t('jj_ajakan', lang)}
       </p>
